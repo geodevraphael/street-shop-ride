@@ -21,7 +21,7 @@ type Shop = { id: string; name: string; category: string | null; street: string 
 function Index() {
   const [tab, setTab] = useState<"categories" | "shops">("categories");
 
-  const { data: shops = [] } = useQuery({
+  const { data: shops = [], isLoading: shopsLoading } = useQuery({
     queryKey: ["shops", "home"],
     queryFn: async () => {
       const { data } = await supabase.from("shops").select("id,name,category,street,cover_url,rating").limit(60);
@@ -29,7 +29,7 @@ function Index() {
     },
   });
 
-  const { data: counts = new Map<string, number>() } = useQuery({
+  const { data: counts = new Map<string, number>(), isLoading: countsLoading } = useQuery({
     queryKey: ["category-counts"],
     queryFn: async () => {
       const { data } = await supabase.rpc("category_counts");
@@ -68,7 +68,7 @@ function Index() {
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
             <CategoryChip
               to={{ to: "/products/search" } as any}
-              label="Zote" sub="All" count={total}
+              label="Zote" sub="All" count={countsLoading ? undefined : total}
               icon={Package}
             />
             {CATEGORIES.map((c) => (
@@ -76,7 +76,7 @@ function Index() {
                 key={c.key}
                 to={{ to: "/products/search", search: { category: c.key } } as any}
                 label={c.sw} sub={c.en}
-                count={counts.get(c.key) ?? 0}
+                count={countsLoading ? undefined : (counts.get(c.key) ?? 0)}
                 icon={c.icon}
               />
             ))}
@@ -84,7 +84,11 @@ function Index() {
         </section>
       ) : (
         <section className="mt-4">
-          {shops.length === 0 ? (
+          {shopsLoading ? (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => <ShopSkeleton key={i} />)}
+            </div>
+          ) : shops.length === 0 ? (
             <EmptyState text="Hakuna maduka bado. Jisajili kama muuzaji ili kuanza." />
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -140,7 +144,7 @@ function SwitchBtn({ active, onClick, icon: Icon, children }: { active: boolean;
 
 function CategoryChip({
   to, label, sub, count, icon: Icon,
-}: { to: any; label: string; sub: string; count: number; icon: any }) {
+}: { to: any; label: string; sub: string; count?: number; icon: any }) {
   return (
     <Link
       {...to}
@@ -150,8 +154,27 @@ function CategoryChip({
         <Icon className="h-5 w-5" />
       </span>
       <span className="truncate text-xs font-medium leading-tight">{label}</span>
-      <span className="truncate text-[10px] text-muted-foreground leading-tight">{sub}{count ? ` · ${count}` : ""}</span>
+      <span className="truncate text-[10px] text-muted-foreground leading-tight">
+        {sub}
+        {count === undefined ? (
+          <span className="ml-1 inline-block h-2 w-6 animate-pulse rounded bg-muted align-middle" />
+        ) : count ? (
+          ` · ${count}`
+        ) : ""}
+      </span>
     </Link>
+  );
+}
+
+function ShopSkeleton() {
+  return (
+    <div className="overflow-hidden rounded-2xl border bg-card">
+      <div className="aspect-[5/3] animate-pulse bg-secondary" />
+      <div className="space-y-2 p-3">
+        <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
+        <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
+      </div>
+    </div>
   );
 }
 
