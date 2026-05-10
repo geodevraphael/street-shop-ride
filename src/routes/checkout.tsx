@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { useCart, cart } from "@/lib/cart";
-import { computeFare, distanceKm, etaMinutes, formatTSh } from "@/lib/pricing";
+import { computeFare, distanceKm, etaMinutes, formatKES } from "@/lib/pricing";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";

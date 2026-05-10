@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { formatTSh } from "@/lib/pricing";
+import { formatKES } from "@/lib/pricing";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/subscriptions")({ component: AdminSubs });

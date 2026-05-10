@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { useCart, cart } from "@/lib/cart";
-import { formatTSh } from "@/lib/pricing";
+import { formatKES } from "@/lib/pricing";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 
 export const Route = createFileRoute("/cart")({ component: Cart });

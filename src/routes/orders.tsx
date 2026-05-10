@@ -4,7 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { OrderStatusPill } from "@/components/OrderStatusPill";
-import { formatTSh } from "@/lib/pricing";
+import { formatKES } from "@/lib/pricing";
 
 export const Route = createFileRoute("/orders")({ component: Orders });
 

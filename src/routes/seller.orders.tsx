@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { OrderStatusPill } from "@/components/OrderStatusPill";
 import { Button } from "@/components/ui/button";
-import { formatTSh } from "@/lib/pricing";
+import { formatKES } from "@/lib/pricing";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/seller/orders")({ component: SellerOrders });

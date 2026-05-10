@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cart } from "@/lib/cart";
-import { formatTSh } from "@/lib/pricing";
+import { formatKES } from "@/lib/pricing";
 import { Plus, Search, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
