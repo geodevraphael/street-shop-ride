@@ -3,11 +3,13 @@ import { useEffect, useState } from "react";
 const KEY = "soko_splash_seen_v1";
 
 export function SplashScreen() {
-  const [show, setShow] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return !sessionStorage.getItem(KEY);
-  });
+  const [show, setShow] = useState(false);
   const [leaving, setLeaving] = useState(false);
+
+  useEffect(() => {
+    try { if (sessionStorage.getItem(KEY)) return; } catch { return; }
+    setShow(true);
+  }, []);
 
   useEffect(() => {
     if (!show) return;

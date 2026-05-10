@@ -38,12 +38,25 @@ function Checkout() {
     if (!navigator.geolocation) return toast.error("Geolocation haitumiki");
     setLocating(true);
     navigator.geolocation.getCurrentPosition(async (p) => {
+      const lat = p.coords.latitude;
+      const lng = p.coords.longitude;
+      const street = `GPS ±${Math.round(p.coords.accuracy)}m`;
+      // Reuse the existing "Eneo langu sasa" record instead of creating duplicates
+      const existing = addresses.find((a) => a.label === "Eneo langu sasa");
+      if (existing) {
+        const { data, error } = await supabase.from("addresses")
+          .update({ lat, lng, street })
+          .eq("id", existing.id)
+          .select("*").single();
+        setLocating(false);
+        if (error || !data) return toast.error(error?.message ?? "Imeshindikana");
+        toast.success("Eneo limesasishwa");
+        setAddresses((prev) => prev.map((a) => (a.id === data.id ? data : a)));
+        setAddressId(data.id);
+        return;
+      }
       const { data, error } = await supabase.from("addresses").insert({
-        user_id: user.id,
-        label: "Eneo langu sasa",
-        lat: p.coords.latitude,
-        lng: p.coords.longitude,
-        street: `GPS ±${Math.round(p.coords.accuracy)}m`,
+        user_id: user.id, label: "Eneo langu sasa", lat, lng, street,
       }).select("*").single();
       setLocating(false);
       if (error || !data) return toast.error(error?.message ?? "Imeshindikana");

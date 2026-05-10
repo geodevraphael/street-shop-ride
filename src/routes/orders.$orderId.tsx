@@ -30,7 +30,7 @@ function OrderDetail() {
   const isClient = user && order && order.client_id === user.id;
   const isSeller = user && shop && shop.owner_id === user.id;
 
-  const trackingActive = order && ["picked_up", "delivered"].includes(order.status);
+  const trackingActive = order && ["payment_confirmed", "rider_assigned", "picked_up", "delivered"].includes(order.status);
   const liveRider = useTrackOrder(trackingActive ? orderId : null);
 
   const load = async () => {
