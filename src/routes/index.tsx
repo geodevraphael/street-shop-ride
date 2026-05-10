@@ -68,7 +68,7 @@ function Index() {
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
             <CategoryChip
               to={{ to: "/products/search" } as any}
-              label="Zote" sub="All" count={total}
+              label="Zote" sub="All" count={countsLoading ? undefined : total}
               icon={Package}
             />
             {CATEGORIES.map((c) => (
@@ -76,7 +76,7 @@ function Index() {
                 key={c.key}
                 to={{ to: "/products/search", search: { category: c.key } } as any}
                 label={c.sw} sub={c.en}
-                count={counts.get(c.key) ?? 0}
+                count={countsLoading ? undefined : (counts.get(c.key) ?? 0)}
                 icon={c.icon}
               />
             ))}
@@ -84,7 +84,11 @@ function Index() {
         </section>
       ) : (
         <section className="mt-4">
-          {shops.length === 0 ? (
+          {shopsLoading ? (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => <ShopSkeleton key={i} />)}
+            </div>
+          ) : shops.length === 0 ? (
             <EmptyState text="Hakuna maduka bado. Jisajili kama muuzaji ili kuanza." />
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
