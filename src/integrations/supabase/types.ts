@@ -137,6 +137,10 @@ export type Database = {
           eta_min: number | null
           id: string
           notes: string | null
+          payment_confirmed_at: string | null
+          payment_proof_url: string | null
+          payment_ref: string | null
+          payment_submitted_at: string | null
           rider_id: string | null
           shop_id: string
           status: Database["public"]["Enums"]["order_status"]
@@ -151,6 +155,10 @@ export type Database = {
           eta_min?: number | null
           id?: string
           notes?: string | null
+          payment_confirmed_at?: string | null
+          payment_proof_url?: string | null
+          payment_ref?: string | null
+          payment_submitted_at?: string | null
           rider_id?: string | null
           shop_id: string
           status?: Database["public"]["Enums"]["order_status"]
@@ -165,6 +173,10 @@ export type Database = {
           eta_min?: number | null
           id?: string
           notes?: string | null
+          payment_confirmed_at?: string | null
+          payment_proof_url?: string | null
+          payment_ref?: string | null
+          payment_submitted_at?: string | null
           rider_id?: string | null
           shop_id?: string
           status?: Database["public"]["Enums"]["order_status"]
@@ -577,6 +589,8 @@ export type Database = {
       order_status:
         | "placed"
         | "accepted"
+        | "payment_submitted"
+        | "payment_confirmed"
         | "rider_assigned"
         | "picked_up"
         | "delivered"
@@ -728,6 +742,8 @@ export const Constants = {
       order_status: [
         "placed",
         "accepted",
+        "payment_submitted",
+        "payment_confirmed",
         "rider_assigned",
         "picked_up",
         "delivered",

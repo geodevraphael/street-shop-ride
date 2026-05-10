@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cart } from "@/lib/cart";
 import { formatKES } from "@/lib/pricing";
 import { getCategory } from "@/lib/categories";
-import { ChevronLeft, MapPin, Plus, Star } from "lucide-react";
+import { ChevronLeft, MapPin, Plus, ShoppingBag, Star } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/products/$productId")({
@@ -25,6 +25,7 @@ export const Route = createFileRoute("/products/$productId")({
 
 function ProductDetail() {
   const { productId } = Route.useParams();
+  const nav = useNavigate();
   const [product, setProduct] = useState<any>(null);
   const [shop, setShop] = useState<any>(null);
   const [missing, setMissing] = useState(false);
@@ -58,6 +59,15 @@ function ProductDetail() {
     toast.success("Imeongezwa kikapuni");
   };
 
+  const orderNow = () => {
+    cart.clear();
+    cart.add({
+      productId: product.id, shopId: product.shop_id, shopName: shop?.name ?? "Shop",
+      name: product.name, price: Number(product.price), qty: 1, image_url: product.image_url,
+    });
+    nav({ to: "/checkout" });
+  };
+
   return (
     <AppShell>
       <Link to="/products/search" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
@@ -84,8 +94,11 @@ function ProductDetail() {
           {product.description && <p className="mt-3 text-sm text-muted-foreground">{product.description}</p>}
 
           <div className="mt-4 flex flex-wrap gap-2">
-            <Button size="lg" className="gap-1.5" onClick={addToCart} disabled={product.stock <= 0}>
-              <Plus className="h-4 w-4" /> {product.stock > 0 ? "Ongeza kikapuni" : "Imeisha"}
+            <Button size="lg" className="gap-1.5" onClick={orderNow} disabled={product.stock <= 0}>
+              <ShoppingBag className="h-4 w-4" /> {product.stock > 0 ? "Agiza sasa" : "Imeisha"}
+            </Button>
+            <Button size="lg" variant="outline" className="gap-1.5" onClick={addToCart} disabled={product.stock <= 0}>
+              <Plus className="h-4 w-4" /> Kikapuni
             </Button>
             <ShareButton url={shareUrl} title={product.name} text={shareText} />
           </div>

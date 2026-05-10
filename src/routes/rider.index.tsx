@@ -11,7 +11,8 @@ import { WizardStepper } from "@/components/WizardStepper";
 import { GeoAverager } from "@/components/GeoAverager";
 import { uploadFile } from "@/lib/upload";
 import { OrderStatusPill } from "@/components/OrderStatusPill";
-import { ShieldCheck, Locate } from "lucide-react";
+import { ShieldCheck, Locate, Radio } from "lucide-react";
+import { useBroadcastPosition } from "@/lib/tracking";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/rider/")({ component: RiderHome });
@@ -50,6 +51,8 @@ function RiderHome() {
   if (loading) return <p className="text-muted-foreground">Loading…</p>;
   if (!rider) return <RiderWizard onDone={load} />;
 
+  const activeDelivery = openOrders.find((o) => o.status === "picked_up");
+
   const remaining = Math.max(0, 10 - rider.deliveries_count);
 
   return (
@@ -67,6 +70,8 @@ function RiderHome() {
         </div>
         <Button variant="outline" size="sm" className="mt-3 gap-1.5" onClick={updateLocation}><Locate className="h-3.5 w-3.5" /> Update my location</Button>
       </div>
+
+      {activeDelivery && <LiveBroadcastCard orderId={activeDelivery.id} riderId={rider.id} />}
 
       <div className="rounded-2xl border bg-gradient-to-br from-primary/10 to-accent p-4">
         <h3 className="font-semibold">Subscription</h3>
@@ -172,6 +177,24 @@ function RiderWizard({ onDone }: { onDone: () => void }) {
             <Button onClick={finish} disabled={busy}>{busy ? "Saving…" : "Finish"}</Button>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function LiveBroadcastCard({ orderId, riderId }: { orderId: string; riderId: string }) {
+  const [on, setOn] = useState(true);
+  const pos = useBroadcastPosition(orderId, riderId, on);
+  return (
+    <div className="rounded-2xl border bg-warning/10 p-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="flex items-center gap-2 font-semibold"><Radio className={`h-4 w-4 ${on ? "text-warning animate-pulse" : "text-muted-foreground"}`} /> Tuma eneo moja kwa moja</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {pos ? `Eneo: ${pos.lat.toFixed(5)}, ${pos.lng.toFixed(5)}` : "Inasubiri GPS…"}
+          </p>
+        </div>
+        <Switch checked={on} onCheckedChange={setOn} />
       </div>
     </div>
   );

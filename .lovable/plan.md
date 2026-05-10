@@ -1,112 +1,75 @@
+# Streamlined Order & Delivery Flow
 
-# LocalMarket — Minimalist Local Shops + Boda Delivery
+## New end-to-end flow
 
-A clean, icon-rich marketplace where local shops list products, clients order (incl. food delivery), boda boda riders pick up and deliver, and admin/support manages subscriptions and billing.
+1. **Client taps a product** → product detail page opens (already exists).
+2. **Place Order** button (no checkout cart needed for single-product flow): creates order with status `placed`. Cart-based checkout is kept for multi-item orders but funnels into the same status machine.
+3. **Seller accepts** → status `accepted`. Client gets notified.
+4. **Client pays** outside the app (M-Pesa Lipa Number / QR shown), then:
+   - Uploads SMS screenshot **or** receipt photo
+   - Enters M-Pesa transaction code
+   - Taps **Nimelipia** → status `payment_submitted`
+5. **Seller confirms payment** (sees uploaded proof + code) → status `payment_confirmed`.
+6. **Seller finds boda boda** using existing nearby finder → assigns rider → status `rider_assigned`.
+7. **Seller marks "Send product"** when handed to rider → status `picked_up`. Rider live-tracking begins.
+8. **Client tracks on map** → sees own location, shop pickup point, delivery address, and rider's near-real-time position.
+9. **Rider marks delivered** → status `delivered`. Client confirms received → `completed`.
 
-## Roles & Onboarding
+## Lightweight live tracking (no DB bloat)
 
-1. **Seller (Shop)** — wizard: business name → ID type (National ID / Passport / Driving Licence / Business Permit) + ID photo → selfie → 30s GPS averaging for accurate shop location → Lipa Number + Scan-to-Pay QR upload → done.
-2. **Client** — minimal: phone/email + name + selfie optional. Saved addresses with labels (Home, Office, Mom's, custom) added via wizard with map pin.
-3. **Boda Boda** — phone + selfie + ID photo. ID type chosen; **Driving Licence holders flagged "Verified Rider"** and ranked higher in nearby search. Plate number, vehicle photo.
-4. **Admin / Support** — manages users, subscriptions, billing, invoices, reports, region GeoJSON upload.
+**Approach: Supabase Realtime Broadcast (ephemeral channels), NOT postgres_changes.**
 
-## Core Features
+- Rider app sends position via `channel.send({ type: 'broadcast', event: 'pos', payload: {lat,lng,t} })` every 8–12s while on an active order.
+- Client subscribes to the same channel `track:{orderId}` and updates marker.
+- Broadcast messages are **never persisted** — zero DB writes, zero storage cost.
+- Only the rider's *last known* position is optionally upserted to `riders.current_lat/lng` (already exists) at most every 60s as a fallback for when the client opens the map cold.
+- Channel auto-cleans when both parties leave.
 
-- **Browse shops** by: nearby me / my street / pick another street / search products / recommendations.
-- **Product catalog** per shop with food category support; add-to-cart, checkout.
-- **Payment display**: shop's Lipa Number + Scan QR shown at checkout (manual confirmation v1).
-- **Delivery**: client or seller searches nearby boda. Pricing: `max(1500, 1500 + 100·km + 20·min)`.
-- **Order lifecycle**: placed → seller accepts → boda assigned → picked up → delivered → confirmed.
-- **Subscriptions** (auto-tracked):
-  - Boda: free until 10 completed routes, then **KES 10,000/month**.
-  - Seller: free until 10 sales, then **KES 20,000/month**.
-- **Reports**: report seller / report boda with reason + notes; admin queue.
-- **Admin GeoJSON**: upload Region → County → Sub-county → Ward → Village layers; preview on map (Leaflet).
-- **Wizards**: seller registration, add product, add saved address, boda registration.
+This avoids accumulating a `rider_locations` history table.
 
-## Pages (TanStack routes)
+## Branded map
 
-```
-/                       Landing + role picker
-/auth/login             Phone/email login
-/auth/register          Pick role → role wizard
-/shops                  Browse shops (filters: nearby, street, search)
-/shops/$shopId          Shop detail + products
-/products/search        Product search + recommendations
-/cart                   Cart
-/checkout               Address pick + payment (Lipa/QR)
-/orders                 Client orders
-/orders/$orderId        Track order, request boda
+- Use **Leaflet + react-leaflet** (lightweight, ~40KB) with **CartoDB Voyager** tiles (free, no API key) styled via CSS filter to match brand warm-orange palette (hue-rotate + saturate to nudge tiles toward our `--primary` warm tones).
+- Custom markers using brand colors: shop (primary orange), rider (warning amber, animated pulse), client (accent), destination (success green).
+- Polyline shop→rider→destination in `--primary`.
 
-/seller                 Seller dashboard
-/seller/products        Manage products (+ wizard)
-/seller/orders          Incoming orders, find boda
-/seller/billing         Subscription status
+## Schema changes
 
-/rider                  Boda dashboard (nearby pickup requests)
-/rider/history          Routes history + earnings
-/rider/billing          Subscription status
+Add to `orders`:
+- `payment_proof_url text` — uploaded SMS/receipt image
+- `payment_ref text` — M-Pesa code entered by client
+- `payment_submitted_at timestamptz`
+- `payment_confirmed_at timestamptz`
 
-/admin                  KPIs
-/admin/users            Users by role
-/admin/subscriptions    Billing & invoices
-/admin/reports          Report queue
-/admin/regions          GeoJSON upload + map preview
+Extend `orders.status` enum/check to include: `payment_submitted`, `payment_confirmed` (insert before `rider_assigned`).
 
-/account/addresses      Saved addresses (wizard)
-/account/profile        Profile
-```
+Storage bucket: `payment-proofs` (private, RLS: client uploads to own order folder; seller of that shop can read).
 
-## Backend (Lovable Cloud)
+## Files to add/edit
 
-Tables:
-- `profiles` (id, full_name, phone, role, avatar_url, created_at)
-- `user_roles` (user_id, role enum: client|seller|rider|admin|support) — separate table per security best practice
-- `shops` (id, owner_id, name, category, lipa_number, qr_code_url, lat, lng, street, ward_id, verified, sales_count, subscription_active)
-- `seller_documents` (id, shop_id, id_type, id_photo_url, selfie_url)
-- `riders` (id, user_id, plate, vehicle_photo_url, id_type, id_photo_url, selfie_url, license_verified, current_lat, current_lng, available, deliveries_count, subscription_active)
-- `products` (id, shop_id, name, description, price, image_url, category, stock, is_food)
-- `addresses` (id, user_id, label, lat, lng, street, notes)
-- `orders` (id, client_id, shop_id, address_id, status, subtotal, delivery_fee, distance_km, eta_min, rider_id, created_at)
-- `order_items` (id, order_id, product_id, qty, price)
-- `reports` (id, reporter_id, target_type, target_id, reason, notes, status, created_at)
-- `subscriptions` (id, user_id, role, started_at, monthly_amount, active, last_invoice_at)
-- `invoices` (id, subscription_id, amount, period_start, period_end, paid, created_at)
-- `regions` (id, level [region|county|subcounty|ward|village], name, parent_id, geojson jsonb)
+- **Migration**: new columns, status values, storage bucket + policies.
+- `src/lib/tracking.ts` — `useLiveTracking(orderId, role)` hook wrapping Supabase Realtime broadcast (publish for rider, subscribe for client/seller).
+- `src/components/TrackingMap.tsx` — Leaflet map with branded tiles + markers + polyline.
+- `src/components/PaymentProofDialog.tsx` — upload image + enter ref + submit.
+- `src/components/OrderStatusPill.tsx` — add 2 new statuses.
+- `src/routes/products.$productId.tsx` — add **Place Order Now** button (skips cart).
+- `src/routes/orders.$orderId.tsx` — render different action panels per status (Pay & upload proof → Track map → Confirm received). Embed `TrackingMap` from `picked_up` onward.
+- `src/routes/seller.orders.tsx` — add buttons: Accept, Confirm payment (with proof preview), Find boda (link to detail), Mark sent.
+- `src/routes/rider.index.tsx` — when on active order, start broadcasting position via `navigator.geolocation.watchPosition`; toggle button.
+- Install: `bun add leaflet react-leaflet @types/leaflet`.
 
-RLS: users see own data; shops/products public read; admin role has full access via `has_role()` security-definer function.
+## Brand map theme (CSS)
 
-Storage buckets: `id-photos` (private), `selfies` (private), `qr-codes` (public), `products` (public), `vehicles` (public).
-
-## Design System
-
-- Minimalist, icon-led. **OKLCH tokens** in `src/styles.css`.
-- Primary: warm amber (`oklch(0.74 0.16 65)`), neutral slate background, generous whitespace, rounded-xl cards, subtle shadows. No purple.
-- Inter font. Lucide icons everywhere.
-- Reusable: `RoleCard`, `WizardStepper`, `ShopCard`, `ProductCard`, `OrderStatusPill`, `MapPicker` (Leaflet), `GeoAverager` (30s sampler).
-
-## Pricing Engine
-
-```ts
-const fee = Math.max(1500, 1500 + 100 * km + 20 * etaMin);
+```css
+.brand-map .leaflet-tile-pane {
+  filter: saturate(1.15) hue-rotate(-8deg) brightness(0.98);
+}
 ```
 
-## Deliverables this turn
+Plus custom `divIcon` markers using Tailwind tokens.
 
-1. Enable Cloud + create schema + RLS + storage buckets.
-2. Design system + landing + role picker + auth scaffolding.
-3. All role dashboards (seller, client, rider, admin) with the routes above.
-4. Wizards: seller registration (incl. 30s GPS averager), add product, add address, rider registration.
-5. Shops browse + product search + cart + checkout (Lipa/QR display) + orders.
-6. Boda nearby search + pricing engine + assignment.
-7. Admin: users list, subscriptions/invoices, reports queue, GeoJSON upload with Leaflet preview.
-8. Reporting flows.
+## Out of scope (this turn)
 
-## Out of scope for v1 (flagged for next turns)
-
-- Real M-Pesa STK push integration (display only for now).
-- SMS/push notifications.
-- Live rider GPS streaming (we'll use last-known location).
-- Auto-charging subscriptions (we mark due; admin marks paid).
-
-I'll ship this as one coherent build, then we iterate on whatever you want sharpened first.
+- Push notifications (in-app toasts only for now)
+- Payment gateway integration (manual M-Pesa proof remains)
+- Historical route playback

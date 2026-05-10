@@ -123,3 +123,30 @@
   }
   h1, h2, h3, h4 { letter-spacing: -0.02em; }
 }
+
+@import "leaflet/dist/leaflet.css";
+
+/* Branded map tiles — warm orange tint to match Soko palette */
+.brand-map { border-radius: var(--radius); overflow: hidden; }
+.brand-map .leaflet-tile-pane {
+  filter: saturate(1.1) hue-rotate(-10deg) brightness(0.98) contrast(1.02);
+}
+.brand-map .leaflet-control-attribution { font-size: 9px; opacity: 0.7; }
+.brand-marker {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: grid; place-items: center;
+  border: 3px solid var(--background);
+  box-shadow: 0 4px 12px oklch(0 0 0 / 0.25);
+  color: var(--primary-foreground); font-weight: 700; font-size: 14px;
+}
+.brand-marker.shop { background: var(--primary); }
+.brand-marker.dest { background: var(--success); color: var(--success-foreground); }
+.brand-marker.client { background: var(--accent-foreground); color: var(--background); }
+.brand-marker.rider {
+  background: var(--warning); color: var(--warning-foreground);
+  animation: pulse-rider 1.6s ease-in-out infinite;
+}
+@keyframes pulse-rider {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(from var(--warning) l c h / 0.6); }
+  50% { box-shadow: 0 0 0 12px oklch(from var(--warning) l c h / 0); }
+}
