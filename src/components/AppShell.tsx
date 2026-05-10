@@ -1,23 +1,26 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Store, Home, ShoppingBag, User, Bike, Shield, LogOut, Menu, MapPin } from "lucide-react";
+import {
+  Store, Home, ShoppingBag, User, Bike, Shield, LogOut, MapPin, Search,
+} from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/lib/cart";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, roles, signOut } = useAuth();
   const items = useCart();
   const path = useRouterState({ select: (r) => r.location.pathname });
   const nav = useNavigate();
-  const [open, setOpen] = useState(false);
 
-  const navItems = [
-    { to: "/", label: "Home", icon: Home },
-    { to: "/shops", label: "Shops", icon: Store },
-    { to: "/products/search", label: "Search", icon: MapPin },
-    { to: "/cart", label: "Cart", icon: ShoppingBag, badge: items.length || undefined },
+  const desktopNav = [
+    { to: "/", label: "Nyumbani", icon: Home },
+    { to: "/shops", label: "Maduka", icon: Store },
+    { to: "/products/search", label: "Tafuta", icon: Search },
+    { to: "/cart", label: "Kikapu", icon: ShoppingBag, badge: items.length || undefined },
   ];
+
+  const isActive = (to: string) =>
+    to === "/" ? path === "/" : path === to || path.startsWith(to + "/");
 
   return (
     <div className="min-h-screen bg-background">
@@ -27,16 +30,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">
               <Store className="h-4 w-4" />
             </span>
-            <span className="hidden sm:inline">Soko</span>
+            <span>Soko</span>
           </Link>
 
           <nav className="ml-4 hidden items-center gap-1 md:flex">
-            {navItems.map((it) => (
+            {desktopNav.map((it) => (
               <Link
                 key={it.to}
                 to={it.to}
                 className={`relative rounded-md px-3 py-1.5 text-sm transition ${
-                  path === it.to ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
+                  isActive(it.to) ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {it.label}
@@ -52,65 +55,116 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="ml-auto flex items-center gap-1.5">
             {roles.includes("seller") && (
               <Link to="/seller" className="hidden md:inline">
-                <Button variant="ghost" size="sm" className="gap-1.5">
-                  <Store className="h-4 w-4" /> Seller
-                </Button>
+                <Button variant="ghost" size="sm" className="gap-1.5"><Store className="h-4 w-4" /> Muuzaji</Button>
               </Link>
             )}
             {roles.includes("rider") && (
               <Link to="/rider" className="hidden md:inline">
-                <Button variant="ghost" size="sm" className="gap-1.5">
-                  <Bike className="h-4 w-4" /> Rider
-                </Button>
+                <Button variant="ghost" size="sm" className="gap-1.5"><Bike className="h-4 w-4" /> Boda</Button>
               </Link>
             )}
             {(roles.includes("admin") || roles.includes("support")) && (
               <Link to="/admin" className="hidden md:inline">
-                <Button variant="ghost" size="sm" className="gap-1.5">
-                  <Shield className="h-4 w-4" /> Admin
-                </Button>
+                <Button variant="ghost" size="sm" className="gap-1.5"><Shield className="h-4 w-4" /> Admin</Button>
               </Link>
             )}
             {user ? (
               <>
-                <Link to="/account/profile">
-                  <Button variant="ghost" size="icon"><User className="h-4 w-4" /></Button>
+                <Link to="/account/profile" className="hidden md:inline">
+                  <Button variant="ghost" size="icon" aria-label="Akaunti"><User className="h-4 w-4" /></Button>
                 </Link>
-                <Button variant="ghost" size="icon" onClick={() => signOut()}>
+                <Button variant="ghost" size="icon" onClick={() => signOut()} aria-label="Toka">
                   <LogOut className="h-4 w-4" />
                 </Button>
               </>
             ) : (
-              <Button size="sm" onClick={() => nav({ to: "/auth/login" })}>Sign in</Button>
+              <Button size="sm" onClick={() => nav({ to: "/auth/login" })}>Ingia</Button>
             )}
-            <button className="md:hidden" onClick={() => setOpen((o) => !o)} aria-label="Menu">
-              <Menu className="h-5 w-5" />
-            </button>
           </div>
         </div>
-        {open && (
-          <div className="border-t bg-card md:hidden">
-            <div className="mx-auto grid max-w-6xl grid-cols-2 gap-1 p-2">
-              {navItems.map((it) => (
-                <Link key={it.to} to={it.to} onClick={() => setOpen(false)} className="rounded-md px-3 py-2 text-sm hover:bg-secondary">
-                  {it.label}
-                </Link>
-              ))}
-              {roles.includes("seller") && <Link to="/seller" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 text-sm hover:bg-secondary">Seller</Link>}
-              {roles.includes("rider") && <Link to="/rider" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 text-sm hover:bg-secondary">Rider</Link>}
-              {(roles.includes("admin") || roles.includes("support")) && <Link to="/admin" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 text-sm hover:bg-secondary">Admin</Link>}
-              <Link to="/orders" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 text-sm hover:bg-secondary">My Orders</Link>
-              <Link to="/account/addresses" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 text-sm hover:bg-secondary">Addresses</Link>
-            </div>
-          </div>
-        )}
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
+      {/* Add bottom padding on mobile so content isn't hidden behind the bottom nav */}
+      <main className="mx-auto max-w-6xl px-4 py-6 pb-28 md:pb-6">{children}</main>
 
-      <footer className="mt-12 border-t py-6 text-center text-xs text-muted-foreground">
-        Soko · Buy local, deliver fast
+      <footer className="hidden border-t py-6 text-center text-xs text-muted-foreground md:block">
+        Soko · Nunua karibu nawe
       </footer>
+
+      {/* Mobile bottom navigation */}
+      <MobileBottomNav path={path} cartCount={items.length} hasRole={roles} />
     </div>
+  );
+}
+
+function MobileBottomNav({
+  path, cartCount, hasRole,
+}: { path: string; cartCount: number; hasRole: string[] }) {
+  const accountTo = hasRole.includes("seller")
+    ? "/seller"
+    : hasRole.includes("rider")
+    ? "/rider"
+    : hasRole.includes("admin") || hasRole.includes("support")
+    ? "/admin"
+    : "/account/profile";
+  const accountLabel = hasRole.includes("seller")
+    ? "Muuzaji"
+    : hasRole.includes("rider")
+    ? "Boda"
+    : hasRole.includes("admin") || hasRole.includes("support")
+    ? "Admin"
+    : "Akaunti";
+  const AccountIcon = hasRole.includes("seller")
+    ? Store : hasRole.includes("rider")
+    ? Bike : (hasRole.includes("admin") || hasRole.includes("support"))
+    ? Shield : User;
+
+  const items = [
+    { to: "/", label: "Nyumbani", icon: Home, exact: true },
+    { to: "/shops", label: "Maduka", icon: MapPin, exact: false },
+    { to: "/products/search", label: "Tafuta", icon: Search, exact: false },
+    { to: "/cart", label: "Kikapu", icon: ShoppingBag, exact: false, badge: cartCount || undefined },
+    { to: accountTo, label: accountLabel, icon: AccountIcon, exact: false },
+  ] as const;
+
+  const isActive = (to: string, exact: boolean) => (exact ? path === to : path === to || path.startsWith(to + "/"));
+
+  return (
+    <nav
+      className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur md:hidden"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      aria-label="Menyu kuu"
+    >
+      <ul className="mx-auto grid max-w-6xl grid-cols-5">
+        {items.map((it) => {
+          const active = isActive(it.to, it.exact);
+          const Icon = it.icon;
+          return (
+            <li key={it.to + it.label}>
+              <Link
+                to={it.to}
+                className={`relative flex flex-col items-center gap-0.5 px-1 py-2 text-[10px] font-medium transition ${
+                  active ? "text-primary" : "text-muted-foreground"
+                }`}
+              >
+                <span
+                  className={`grid h-8 w-12 place-items-center rounded-full transition ${
+                    active ? "bg-primary/15" : ""
+                  }`}
+                >
+                  <Icon className="h-5 w-5" />
+                  {"badge" in it && it.badge ? (
+                    <span className="absolute right-3 top-1 min-w-[16px] rounded-full bg-primary px-1 text-center text-[9px] font-bold text-primary-foreground">
+                      {it.badge}
+                    </span>
+                  ) : null}
+                </span>
+                <span className="truncate">{it.label}</span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
   );
 }
