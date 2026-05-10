@@ -71,6 +71,8 @@ function RiderHome() {
         <Button variant="outline" size="sm" className="mt-3 gap-1.5" onClick={updateLocation}><Locate className="h-3.5 w-3.5" /> Update my location</Button>
       </div>
 
+      {activeDelivery && <LiveBroadcastCard orderId={activeDelivery.id} riderId={rider.id} />}
+
       <div className="rounded-2xl border bg-gradient-to-br from-primary/10 to-accent p-4">
         <h3 className="font-semibold">Subscription</h3>
         {rider.subscription_active ? <p className="mt-1 text-sm">Active — TSh 10,000/month.</p>
