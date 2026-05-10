@@ -45,6 +45,7 @@ function ShopDetail() {
               <ShareButton url={`/shops/${shop.id}`} title={shop.name} text={`${shop.name} — ${shop.category ?? "Duka"} on Soko`} />
               <ReportDialog targetType="seller" targetId={shop.id} />
             </div>
+          </div>
           <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
             {shop.lipa_number && <span className="rounded-full bg-secondary px-3 py-1">Lipa: <b className="text-foreground">{shop.lipa_number}</b></span>}
             {shop.qr_code_url && <a href={shop.qr_code_url} target="_blank" className="rounded-full bg-secondary px-3 py-1 underline">View Scan QR</a>}
