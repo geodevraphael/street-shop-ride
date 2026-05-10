@@ -42,7 +42,7 @@ function SearchPage() {
 
   // Sync q to URL (debounced lightly)
   useEffect(() => {
-    const t = setTimeout(() => navigate({ search: (s) => ({ ...s, q: q || undefined }), replace: true }), 250);
+    const t = setTimeout(() => navigate({ search: (s: any) => ({ ...s, q: q || undefined }), replace: true }), 250);
     return () => clearTimeout(t);
   }, [q, navigate]);
 
