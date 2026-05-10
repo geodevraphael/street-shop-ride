@@ -25,6 +25,7 @@ export const Route = createFileRoute("/products/$productId")({
 
 function ProductDetail() {
   const { productId } = Route.useParams();
+  const nav = useNavigate();
   const [product, setProduct] = useState<any>(null);
   const [shop, setShop] = useState<any>(null);
   const [missing, setMissing] = useState(false);
