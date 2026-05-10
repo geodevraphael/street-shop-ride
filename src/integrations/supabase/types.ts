@@ -575,7 +575,14 @@ export type Database = {
         | "delivered"
         | "completed"
         | "cancelled"
-      region_level: "region" | "county" | "subcounty" | "ward" | "village"
+      region_level:
+        | "region"
+        | "county"
+        | "subcounty"
+        | "ward"
+        | "village"
+        | "district"
+        | "street"
       report_target: "seller" | "rider"
     }
     CompositeTypes: {
@@ -720,7 +727,15 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
-      region_level: ["region", "county", "subcounty", "ward", "village"],
+      region_level: [
+        "region",
+        "county",
+        "subcounty",
+        "ward",
+        "village",
+        "district",
+        "street",
+      ],
       report_target: ["seller", "rider"],
     },
   },
