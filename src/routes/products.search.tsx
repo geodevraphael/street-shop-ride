@@ -9,12 +9,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { cart } from "@/lib/cart";
 import { formatKES } from "@/lib/pricing";
 import { CATEGORIES, getCategory } from "@/lib/categories";
-import { Plus, Search, Sparkles, X, Package } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Search, Sparkles, X, Package } from "lucide-react";
 import { toast } from "sonner";
+
+const PAGE_SIZE = 24;
 
 const searchSchema = z.object({
   category: z.string().optional(),
   q: z.string().optional(),
+  page: z.number().int().min(1).optional(),
 });
 
 export const Route = createFileRoute("/products/search")({
@@ -28,28 +31,37 @@ export const Route = createFileRoute("/products/search")({
 });
 
 function SearchPage() {
-  const { category, q: q0 } = Route.useSearch();
+  const { category, q: q0, page: pageParam } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
   const [q, setQ] = useState(q0 ?? "");
+  const page = Math.max(1, pageParam ?? 1);
 
-  const { data: products = [], isLoading: loading } = useQuery({
-    queryKey: ["products", "search", category ?? "all"],
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ["products", "search", category ?? "all", page],
     queryFn: async () => {
+      const from = (page - 1) * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
       let query = supabase
         .from("products")
-        .select("id,name,description,price,image_url,category,shop_id,shops(name,street)")
+        .select("id,name,description,price,image_url,category,shop_id,shops(name,street)", { count: "exact" })
         .eq("active", true)
         .order("created_at", { ascending: false })
-        .limit(120);
+        .range(from, to);
       if (category) query = query.eq("category", category);
-      const { data } = await query;
-      return data ?? [];
+      const { data, count } = await query;
+      return { items: data ?? [], total: count ?? 0 };
     },
   });
+  const products = data?.items ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  // Sync q to URL (debounced lightly)
+  // Sync q to URL (debounced lightly) — reset to page 1 on search change
   useEffect(() => {
-    const t = setTimeout(() => navigate({ search: (s: any) => ({ ...s, q: q || undefined }), replace: true }), 250);
+    const t = setTimeout(
+      () => navigate({ search: (s: any) => ({ ...s, q: q || undefined, page: undefined }), replace: true }),
+      250,
+    );
     return () => clearTimeout(t);
   }, [q, navigate]);
 
@@ -116,12 +128,91 @@ function SearchPage() {
       )}
 
       <section className="mt-6">
-        <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
-          {loading ? "Inapakia…" : q ? `${filtered.length} matokeo` : `${filtered.length} bidhaa`}
+        <h2 className="mb-2 flex items-center justify-between text-sm font-semibold text-muted-foreground">
+          <span>{loading ? "Inapakia…" : q ? `${filtered.length} matokeo` : `${total} bidhaa`}</span>
+          {!q && totalPages > 1 && (
+            <span className="text-xs font-normal">Ukurasa {page} / {totalPages}</span>
+          )}
         </h2>
         <Grid items={filtered} emptyText={cat ? `Hakuna bidhaa katika ${cat.sw} bado.` : "Hakuna bidhaa."} />
+        {!q && totalPages > 1 && (
+          <Pager page={page} totalPages={totalPages} onGo={(p) => {
+            navigate({ search: (s: any) => ({ ...s, page: p === 1 ? undefined : p }) });
+            if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+          }} />
+        )}
       </section>
     </AppShell>
+  );
+}
+
+function Pager({ page, totalPages, onGo }: { page: number; totalPages: number; onGo: (p: number) => void }) {
+  // Compact window of pages around current — mobile friendly
+  const window: number[] = [];
+  const start = Math.max(1, page - 1);
+  const end = Math.min(totalPages, start + 2);
+  for (let i = start; i <= end; i++) window.push(i);
+
+  const baseBtn = "inline-flex h-10 min-w-10 items-center justify-center rounded-xl border bg-card px-3 text-sm font-semibold transition active:scale-95 disabled:opacity-40 disabled:active:scale-100";
+
+  return (
+    <nav aria-label="Pagination" className="mt-5">
+      {/* Mobile: prev / page indicator / next — sticky-feel chunky pills */}
+      <div className="flex items-center justify-between gap-2 sm:hidden">
+        <button type="button" className={baseBtn} disabled={page <= 1} onClick={() => onGo(page - 1)} aria-label="Iliyotangulia">
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        <div className="flex flex-1 items-center justify-center gap-1.5">
+          {Array.from({ length: totalPages }).slice(0, 8).map((_, i) => {
+            const p = i + 1;
+            const isActive = p === page;
+            return (
+              <span
+                key={p}
+                className={`h-2 rounded-full transition-all ${isActive ? "w-6 bg-primary" : "w-2 bg-border"}`}
+              />
+            );
+          })}
+          {totalPages > 8 && <span className="ml-1 text-xs text-muted-foreground">+{totalPages - 8}</span>}
+        </div>
+        <button type="button" className={baseBtn} disabled={page >= totalPages} onClick={() => onGo(page + 1)} aria-label="Inayofuata">
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Desktop / tablet: numbered pager */}
+      <div className="hidden flex-wrap items-center justify-center gap-1.5 sm:flex">
+        <button type="button" className={baseBtn} disabled={page <= 1} onClick={() => onGo(page - 1)}>
+          <ChevronLeft className="h-4 w-4" /> Nyuma
+        </button>
+        {start > 1 && (
+          <>
+            <button type="button" className={baseBtn} onClick={() => onGo(1)}>1</button>
+            {start > 2 && <span className="px-1 text-muted-foreground">…</span>}
+          </>
+        )}
+        {window.map((p) => (
+          <button
+            key={p}
+            type="button"
+            onClick={() => onGo(p)}
+            aria-current={p === page ? "page" : undefined}
+            className={`${baseBtn} ${p === page ? "border-primary bg-primary text-primary-foreground" : ""}`}
+          >
+            {p}
+          </button>
+        ))}
+        {end < totalPages && (
+          <>
+            {end < totalPages - 1 && <span className="px-1 text-muted-foreground">…</span>}
+            <button type="button" className={baseBtn} onClick={() => onGo(totalPages)}>{totalPages}</button>
+          </>
+        )}
+        <button type="button" className={baseBtn} disabled={page >= totalPages} onClick={() => onGo(page + 1)}>
+          Mbele <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+    </nav>
   );
 }
 
