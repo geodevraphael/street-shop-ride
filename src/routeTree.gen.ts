@@ -27,6 +27,7 @@ import { Route as SellerBillingRouteImport } from './routes/seller.billing'
 import { Route as RiderHistoryRouteImport } from './routes/rider.history'
 import { Route as RiderBillingRouteImport } from './routes/rider.billing'
 import { Route as ProductsSearchRouteImport } from './routes/products.search'
+import { Route as ProductsProductIdRouteImport } from './routes/products.$productId'
 import { Route as OrdersOrderIdRouteImport } from './routes/orders.$orderId'
 import { Route as AuthRegisterRouteImport } from './routes/auth.register'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
@@ -127,6 +128,11 @@ const ProductsSearchRoute = ProductsSearchRouteImport.update({
   path: '/products/search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProductsProductIdRoute = ProductsProductIdRouteImport.update({
+  id: '/products/$productId',
+  path: '/products/$productId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OrdersOrderIdRoute = OrdersOrderIdRouteImport.update({
   id: '/$orderId',
   path: '/$orderId',
@@ -191,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
+  '/products/$productId': typeof ProductsProductIdRoute
   '/products/search': typeof ProductsSearchRoute
   '/rider/billing': typeof RiderBillingRoute
   '/rider/history': typeof RiderHistoryRoute
@@ -217,6 +224,7 @@ export interface FileRoutesByTo {
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
+  '/products/$productId': typeof ProductsProductIdRoute
   '/products/search': typeof ProductsSearchRoute
   '/rider/billing': typeof RiderBillingRoute
   '/rider/history': typeof RiderHistoryRoute
@@ -247,6 +255,7 @@ export interface FileRoutesById {
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
+  '/products/$productId': typeof ProductsProductIdRoute
   '/products/search': typeof ProductsSearchRoute
   '/rider/billing': typeof RiderBillingRoute
   '/rider/history': typeof RiderHistoryRoute
@@ -278,6 +287,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/register'
     | '/orders/$orderId'
+    | '/products/$productId'
     | '/products/search'
     | '/rider/billing'
     | '/rider/history'
@@ -304,6 +314,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/register'
     | '/orders/$orderId'
+    | '/products/$productId'
     | '/products/search'
     | '/rider/billing'
     | '/rider/history'
@@ -333,6 +344,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/register'
     | '/orders/$orderId'
+    | '/products/$productId'
     | '/products/search'
     | '/rider/billing'
     | '/rider/history'
@@ -358,6 +370,7 @@ export interface RootRouteChildren {
   AccountProfileRoute: typeof AccountProfileRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
+  ProductsProductIdRoute: typeof ProductsProductIdRoute
   ProductsSearchRoute: typeof ProductsSearchRoute
 }
 
@@ -487,6 +500,13 @@ declare module '@tanstack/react-router' {
       path: '/products/search'
       fullPath: '/products/search'
       preLoaderRoute: typeof ProductsSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/products/$productId': {
+      id: '/products/$productId'
+      path: '/products/$productId'
+      fullPath: '/products/$productId'
+      preLoaderRoute: typeof ProductsProductIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/orders/$orderId': {
@@ -638,6 +658,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountProfileRoute: AccountProfileRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
+  ProductsProductIdRoute: ProductsProductIdRoute,
   ProductsSearchRoute: ProductsSearchRoute,
 }
 export const routeTree = rootRouteImport
