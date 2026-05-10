@@ -6,7 +6,7 @@ import { ShareButton } from "@/components/ShareButton";
 import { supabase } from "@/integrations/supabase/client";
 import { cart } from "@/lib/cart";
 import { formatKES } from "@/lib/pricing";
-import { MapPin, Plus, Star, Share2 } from "lucide-react";
+import { MapPin, Plus, Star } from "lucide-react";
 import { ReportDialog } from "@/components/ReportDialog";
 import { toast } from "sonner";
 
