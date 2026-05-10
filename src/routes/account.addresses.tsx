@@ -59,7 +59,7 @@ function Addresses() {
   );
 }
 
-function AddressWizard({ userId, onDone }: { userId: string; onDone: () => void }) {
+export function AddressWizard({ userId, onDone, trigger }: { userId: string; onDone: () => void; trigger?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
   const steps = ["Label", "Location", "Notes"];
