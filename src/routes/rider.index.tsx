@@ -181,3 +181,21 @@ function RiderWizard({ onDone }: { onDone: () => void }) {
     </div>
   );
 }
+
+function LiveBroadcastCard({ orderId, riderId }: { orderId: string; riderId: string }) {
+  const [on, setOn] = useState(true);
+  const pos = useBroadcastPosition(orderId, riderId, on);
+  return (
+    <div className="rounded-2xl border bg-warning/10 p-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="flex items-center gap-2 font-semibold"><Radio className={`h-4 w-4 ${on ? "text-warning animate-pulse" : "text-muted-foreground"}`} /> Tuma eneo moja kwa moja</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {pos ? `Eneo: ${pos.lat.toFixed(5)}, ${pos.lng.toFixed(5)}` : "Inasubiri GPS…"}
+          </p>
+        </div>
+        <Switch checked={on} onCheckedChange={setOn} />
+      </div>
+    </div>
+  );
+}
