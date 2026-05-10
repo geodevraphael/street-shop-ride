@@ -82,7 +82,7 @@ export function AddressWizard({ userId, onDone, trigger }: { userId: string; onD
 
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
-      <DialogTrigger asChild><Button className="gap-1.5"><Plus className="h-4 w-4" /> Add address</Button></DialogTrigger>
+      <DialogTrigger asChild>{trigger ?? <Button className="gap-1.5"><Plus className="h-4 w-4" /> Add address</Button>}</DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader><DialogTitle>New saved address</DialogTitle></DialogHeader>
         <WizardStepper steps={steps} current={step} />
