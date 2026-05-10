@@ -14,16 +14,569 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      addresses: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          lat: number
+          lng: number
+          notes: string | null
+          street: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          lat: number
+          lng: number
+          notes?: string | null
+          street?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          lat?: number
+          lng?: number
+          notes?: string | null
+          street?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      invoices: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          paid: boolean
+          paid_at: string | null
+          period_end: string
+          period_start: string
+          subscription_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          paid?: boolean
+          paid_at?: string | null
+          period_end: string
+          period_start: string
+          subscription_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          paid?: boolean
+          paid_at?: string | null
+          period_end?: string
+          period_start?: string
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_items: {
+        Row: {
+          id: string
+          order_id: string
+          price: number
+          product_id: string
+          qty: number
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          price?: number
+          product_id: string
+          qty?: number
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          price?: number
+          product_id?: string
+          qty?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          address_id: string | null
+          client_id: string
+          created_at: string
+          delivery_fee: number
+          distance_km: number | null
+          eta_min: number | null
+          id: string
+          notes: string | null
+          rider_id: string | null
+          shop_id: string
+          status: Database["public"]["Enums"]["order_status"]
+          subtotal: number
+        }
+        Insert: {
+          address_id?: string | null
+          client_id: string
+          created_at?: string
+          delivery_fee?: number
+          distance_km?: number | null
+          eta_min?: number | null
+          id?: string
+          notes?: string | null
+          rider_id?: string | null
+          shop_id: string
+          status?: Database["public"]["Enums"]["order_status"]
+          subtotal?: number
+        }
+        Update: {
+          address_id?: string | null
+          client_id?: string
+          created_at?: string
+          delivery_fee?: number
+          distance_km?: number | null
+          eta_min?: number | null
+          id?: string
+          notes?: string | null
+          rider_id?: string | null
+          shop_id?: string
+          status?: Database["public"]["Enums"]["order_status"]
+          subtotal?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_address_id_fkey"
+            columns: ["address_id"]
+            isOneToOne: false
+            referencedRelation: "addresses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_rider_id_fkey"
+            columns: ["rider_id"]
+            isOneToOne: false
+            referencedRelation: "riders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          active: boolean
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_food: boolean
+          name: string
+          price: number
+          shop_id: string
+          stock: number
+        }
+        Insert: {
+          active?: boolean
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_food?: boolean
+          name: string
+          price?: number
+          shop_id: string
+          stock?: number
+        }
+        Update: {
+          active?: boolean
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_food?: boolean
+          name?: string
+          price?: number
+          shop_id?: string
+          stock?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          phone: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          phone?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+        }
+        Relationships: []
+      }
+      regions: {
+        Row: {
+          created_at: string
+          geojson: Json | null
+          id: string
+          level: Database["public"]["Enums"]["region_level"]
+          name: string
+          parent_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          geojson?: Json | null
+          id?: string
+          level: Database["public"]["Enums"]["region_level"]
+          name: string
+          parent_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          geojson?: Json | null
+          id?: string
+          level?: Database["public"]["Enums"]["region_level"]
+          name?: string
+          parent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "regions_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reports: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          reason: string
+          reporter_id: string
+          status: string
+          target_id: string
+          target_type: Database["public"]["Enums"]["report_target"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reason: string
+          reporter_id: string
+          status?: string
+          target_id: string
+          target_type: Database["public"]["Enums"]["report_target"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reason?: string
+          reporter_id?: string
+          status?: string
+          target_id?: string
+          target_type?: Database["public"]["Enums"]["report_target"]
+        }
+        Relationships: []
+      }
+      riders: {
+        Row: {
+          available: boolean
+          created_at: string
+          current_lat: number | null
+          current_lng: number | null
+          deliveries_count: number
+          full_name: string | null
+          id: string
+          id_photo_url: string | null
+          id_type: Database["public"]["Enums"]["id_doc_type"] | null
+          license_verified: boolean
+          plate: string | null
+          rating: number | null
+          selfie_url: string | null
+          subscription_active: boolean
+          user_id: string
+          vehicle_photo_url: string | null
+        }
+        Insert: {
+          available?: boolean
+          created_at?: string
+          current_lat?: number | null
+          current_lng?: number | null
+          deliveries_count?: number
+          full_name?: string | null
+          id?: string
+          id_photo_url?: string | null
+          id_type?: Database["public"]["Enums"]["id_doc_type"] | null
+          license_verified?: boolean
+          plate?: string | null
+          rating?: number | null
+          selfie_url?: string | null
+          subscription_active?: boolean
+          user_id: string
+          vehicle_photo_url?: string | null
+        }
+        Update: {
+          available?: boolean
+          created_at?: string
+          current_lat?: number | null
+          current_lng?: number | null
+          deliveries_count?: number
+          full_name?: string | null
+          id?: string
+          id_photo_url?: string | null
+          id_type?: Database["public"]["Enums"]["id_doc_type"] | null
+          license_verified?: boolean
+          plate?: string | null
+          rating?: number | null
+          selfie_url?: string | null
+          subscription_active?: boolean
+          user_id?: string
+          vehicle_photo_url?: string | null
+        }
+        Relationships: []
+      }
+      seller_documents: {
+        Row: {
+          created_at: string
+          id: string
+          id_photo_url: string | null
+          id_type: Database["public"]["Enums"]["id_doc_type"]
+          selfie_url: string | null
+          shop_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          id_photo_url?: string | null
+          id_type: Database["public"]["Enums"]["id_doc_type"]
+          selfie_url?: string | null
+          shop_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          id_photo_url?: string | null
+          id_type?: Database["public"]["Enums"]["id_doc_type"]
+          selfie_url?: string | null
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_documents_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shops: {
+        Row: {
+          category: string | null
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          id: string
+          lat: number | null
+          lipa_number: string | null
+          lng: number | null
+          name: string
+          owner_id: string
+          qr_code_url: string | null
+          rating: number | null
+          sales_count: number
+          street: string | null
+          subscription_active: boolean
+          verified: boolean
+          ward_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          lat?: number | null
+          lipa_number?: string | null
+          lng?: number | null
+          name: string
+          owner_id: string
+          qr_code_url?: string | null
+          rating?: number | null
+          sales_count?: number
+          street?: string | null
+          subscription_active?: boolean
+          verified?: boolean
+          ward_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          lat?: number | null
+          lipa_number?: string | null
+          lng?: number | null
+          name?: string
+          owner_id?: string
+          qr_code_url?: string | null
+          rating?: number | null
+          sales_count?: number
+          street?: string | null
+          subscription_active?: boolean
+          verified?: boolean
+          ward_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shops_ward_id_fkey"
+            columns: ["ward_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          active: boolean
+          id: string
+          last_invoice_at: string | null
+          monthly_amount: number
+          role: Database["public"]["Enums"]["app_role"]
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          id?: string
+          last_invoice_at?: string | null
+          monthly_amount: number
+          role: Database["public"]["Enums"]["app_role"]
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          id?: string
+          last_invoice_at?: string | null
+          monthly_amount?: number
+          role?: Database["public"]["Enums"]["app_role"]
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "client" | "seller" | "rider" | "admin" | "support"
+      id_doc_type:
+        | "national_id"
+        | "passport"
+        | "driving_licence"
+        | "business_permit"
+      order_status:
+        | "placed"
+        | "accepted"
+        | "rider_assigned"
+        | "picked_up"
+        | "delivered"
+        | "completed"
+        | "cancelled"
+      region_level: "region" | "county" | "subcounty" | "ward" | "village"
+      report_target: "seller" | "rider"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +703,25 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["client", "seller", "rider", "admin", "support"],
+      id_doc_type: [
+        "national_id",
+        "passport",
+        "driving_licence",
+        "business_permit",
+      ],
+      order_status: [
+        "placed",
+        "accepted",
+        "rider_assigned",
+        "picked_up",
+        "delivered",
+        "completed",
+        "cancelled",
+      ],
+      region_level: ["region", "county", "subcounty", "ward", "village"],
+      report_target: ["seller", "rider"],
+    },
   },
 } as const
