@@ -100,9 +100,25 @@ function Checkout() {
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-4">
           <section className="rounded-2xl border bg-card p-4">
-            <h3 className="mb-2 font-semibold">Deliver to</h3>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="font-semibold">Deliver to</h3>
+              <span className="text-xs text-muted-foreground">{addresses.length} hifadhi</span>
+            </div>
+
+            <div className="mb-3 flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={useCurrentLocation} disabled={locating} className="gap-1.5">
+                {locating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Locate className="h-4 w-4" />}
+                Tumia eneo langu sasa
+              </Button>
+              <AddressWizard
+                userId={user.id}
+                onDone={loadAddresses}
+                trigger={<Button size="sm" className="gap-1.5"><Plus className="h-4 w-4" /> Ongeza eneo</Button>}
+              />
+            </div>
+
             {addresses.length === 0 ? (
-              <Button variant="outline" onClick={() => nav({ to: "/account/addresses" })}><Plus className="mr-1 h-4 w-4" /> Add address</Button>
+              <p className="text-sm text-muted-foreground">Bado huna eneo lolote lililohifadhiwa. Tumia GPS au ongeza moja.</p>
             ) : (
               <div className="space-y-2">
                 {addresses.map((a) => (
