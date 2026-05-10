@@ -31,28 +31,37 @@ export const Route = createFileRoute("/products/search")({
 });
 
 function SearchPage() {
-  const { category, q: q0 } = Route.useSearch();
+  const { category, q: q0, page: pageParam } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
   const [q, setQ] = useState(q0 ?? "");
+  const page = Math.max(1, pageParam ?? 1);
 
-  const { data: products = [], isLoading: loading } = useQuery({
-    queryKey: ["products", "search", category ?? "all"],
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ["products", "search", category ?? "all", page],
     queryFn: async () => {
+      const from = (page - 1) * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
       let query = supabase
         .from("products")
-        .select("id,name,description,price,image_url,category,shop_id,shops(name,street)")
+        .select("id,name,description,price,image_url,category,shop_id,shops(name,street)", { count: "exact" })
         .eq("active", true)
         .order("created_at", { ascending: false })
-        .limit(120);
+        .range(from, to);
       if (category) query = query.eq("category", category);
-      const { data } = await query;
-      return data ?? [];
+      const { data, count } = await query;
+      return { items: data ?? [], total: count ?? 0 };
     },
   });
+  const products = data?.items ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  // Sync q to URL (debounced lightly)
+  // Sync q to URL (debounced lightly) — reset to page 1 on search change
   useEffect(() => {
-    const t = setTimeout(() => navigate({ search: (s: any) => ({ ...s, q: q || undefined }), replace: true }), 250);
+    const t = setTimeout(
+      () => navigate({ search: (s: any) => ({ ...s, q: q || undefined, page: undefined }), replace: true }),
+      250,
+    );
     return () => clearTimeout(t);
   }, [q, navigate]);
 
