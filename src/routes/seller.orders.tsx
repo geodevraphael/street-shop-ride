@@ -48,11 +48,12 @@ function SellerOrders() {
           </div>
           <OrderStatusPill status={o.status} />
           <div className="flex flex-wrap gap-1">
-            {o.status === "placed" && <Button size="sm" onClick={() => update(o.id, "accepted")}>Accept</Button>}
-            {o.status === "accepted" && <Button size="sm" variant="outline" onClick={() => update(o.id, "picked_up")}>Mark picked up</Button>}
-            {o.status === "picked_up" && <Button size="sm" variant="outline" onClick={() => update(o.id, "delivered")}>Mark delivered</Button>}
-            {o.status === "delivered" && <Button size="sm" onClick={() => update(o.id, "completed")}>Complete sale</Button>}
-            <Link to="/orders/$orderId" params={{ orderId: o.id }}><Button size="sm" variant="ghost">View</Button></Link>
+            {o.status === "placed" && <Button size="sm" onClick={() => update(o.id, "accepted")}>Kubali</Button>}
+            {o.status === "payment_submitted" && <Link to="/orders/$orderId" params={{ orderId: o.id }}><Button size="sm">Thibitisha malipo</Button></Link>}
+            {o.status === "payment_confirmed" && <Link to="/orders/$orderId" params={{ orderId: o.id }}><Button size="sm">Tafuta boda</Button></Link>}
+            {o.status === "rider_assigned" && <Button size="sm" variant="outline" onClick={() => update(o.id, "picked_up")}>Mkabidhi boda</Button>}
+            {o.status === "delivered" && <Button size="sm" onClick={() => update(o.id, "completed")}>Kamilisha</Button>}
+            <Link to="/orders/$orderId" params={{ orderId: o.id }}><Button size="sm" variant="ghost">Fungua</Button></Link>
           </div>
         </div>
       ))}
