@@ -9,7 +9,7 @@ import { MapPin, Truck, Radio } from "lucide-react";
 
 export const Route = createFileRoute("/orders")({ component: Orders });
 
-const TRACKING_STATUSES = new Set(["accepted", "payment_submitted", "payment_confirmed", "rider_assigned", "picked_up", "delivered"]);
+const TRACKING_STATUSES = new Set(["placed", "accepted", "payment_submitted", "payment_confirmed", "rider_assigned", "picked_up", "delivered"]);
 const LIVE_STATUSES = new Set(["picked_up"]);
 
 function Orders() {
