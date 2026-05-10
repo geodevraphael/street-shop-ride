@@ -59,21 +59,32 @@ function ShopDetail() {
       ) : (
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {products.map((p) => (
-            <div key={p.id} className="overflow-hidden rounded-2xl border bg-card">
-              <div className="aspect-square bg-secondary">
-                {p.image_url ? <img src={p.image_url} alt={p.name} className="h-full w-full object-cover" /> : null}
-              </div>
+            <div key={p.id} className="group overflow-hidden rounded-2xl border bg-card transition hover:border-primary hover:shadow-md">
+              <Link to="/products/$productId" params={{ productId: p.id }} className="block aspect-square bg-secondary">
+                {p.image_url ? <img src={p.image_url} alt={p.name} className="h-full w-full object-cover transition group-hover:scale-105" loading="lazy" /> : null}
+              </Link>
               <div className="p-3">
-                <h3 className="truncate font-semibold">{p.name}</h3>
-                <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{p.description}</p>
-                <div className="mt-2 flex items-center justify-between">
+                <Link to="/products/$productId" params={{ productId: p.id }} className="block">
+                  <h3 className="truncate font-semibold hover:text-primary">{p.name}</h3>
+                  <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{p.description}</p>
+                </Link>
+                <div className="mt-2 flex items-center justify-between gap-1">
                   <span className="font-semibold text-primary">{formatKES(Number(p.price))}</span>
-                  <Button size="sm" className="gap-1" onClick={() => {
-                    cart.add({ productId: p.id, shopId: shop.id, shopName: shop.name, name: p.name, price: Number(p.price), qty: 1, image_url: p.image_url });
-                    toast.success("Added to cart");
-                  }}>
-                    <Plus className="h-3.5 w-3.5" /> Add
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <ShareButton
+                      url={`/products/${p.id}`}
+                      title={p.name}
+                      text={`${p.name} — ${formatKES(Number(p.price))} · ${shop.name}`}
+                      iconOnly
+                      label="Shiriki bidhaa"
+                    />
+                    <Button size="sm" className="gap-1" onClick={() => {
+                      cart.add({ productId: p.id, shopId: shop.id, shopName: shop.name, name: p.name, price: Number(p.price), qty: 1, image_url: p.image_url });
+                      toast.success("Imeongezwa kikapuni");
+                    }}>
+                      <Plus className="h-3.5 w-3.5" /> Ongeza
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
