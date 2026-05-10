@@ -59,7 +59,7 @@ function Addresses() {
   );
 }
 
-function AddressWizard({ userId, onDone }: { userId: string; onDone: () => void }) {
+export function AddressWizard({ userId, onDone, trigger }: { userId: string; onDone: () => void; trigger?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
   const steps = ["Label", "Location", "Notes"];
@@ -82,7 +82,7 @@ function AddressWizard({ userId, onDone }: { userId: string; onDone: () => void 
 
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
-      <DialogTrigger asChild><Button className="gap-1.5"><Plus className="h-4 w-4" /> Add address</Button></DialogTrigger>
+      <DialogTrigger asChild>{trigger ?? <Button className="gap-1.5"><Plus className="h-4 w-4" /> Add address</Button>}</DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader><DialogTitle>New saved address</DialogTitle></DialogHeader>
         <WizardStepper steps={steps} current={step} />

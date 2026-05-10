@@ -7,7 +7,9 @@ import { computeFare, distanceKm, etaMinutes, formatKES } from "@/lib/pricing";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
-import { MapPin, Plus } from "lucide-react";
+import { MapPin, Plus, Locate, Loader2 } from "lucide-react";
+import { AddressWizard } from "@/routes/account.addresses";
+
 
 export const Route = createFileRoute("/checkout")({ component: Checkout });
 
@@ -19,14 +21,37 @@ function Checkout() {
   const [addressId, setAddressId] = useState<string | null>(null);
   const [shop, setShop] = useState<any>(null);
   const [busy, setBusy] = useState(false);
+  const [locating, setLocating] = useState(false);
 
-  useEffect(() => {
+  const loadAddresses = () => {
     if (!user) return;
-    supabase.from("addresses").select("*").eq("user_id", user.id).then(({ data }) => {
+    supabase.from("addresses").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).then(({ data }) => {
       setAddresses(data ?? []);
-      if (data && data.length) setAddressId(data[0].id);
+      if (data && data.length && !addressId) setAddressId(data[0].id);
     });
-  }, [user]);
+  };
+
+  useEffect(() => { loadAddresses(); }, [user]);
+
+  const useCurrentLocation = () => {
+    if (!user) return;
+    if (!navigator.geolocation) return toast.error("Geolocation haitumiki");
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(async (p) => {
+      const { data, error } = await supabase.from("addresses").insert({
+        user_id: user.id,
+        label: "Eneo langu sasa",
+        lat: p.coords.latitude,
+        lng: p.coords.longitude,
+        street: `GPS ±${Math.round(p.coords.accuracy)}m`,
+      }).select("*").single();
+      setLocating(false);
+      if (error || !data) return toast.error(error?.message ?? "Imeshindikana");
+      toast.success("Eneo limeongezwa");
+      setAddresses((prev) => [data, ...prev]);
+      setAddressId(data.id);
+    }, (err) => { setLocating(false); toast.error(err.message); }, { enableHighAccuracy: true, timeout: 15000 });
+  };
 
   useEffect(() => {
     if (items[0]) supabase.from("shops").select("*").eq("id", items[0].shopId).maybeSingle().then(({ data }) => setShop(data));
@@ -75,9 +100,25 @@ function Checkout() {
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-4">
           <section className="rounded-2xl border bg-card p-4">
-            <h3 className="mb-2 font-semibold">Deliver to</h3>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="font-semibold">Deliver to</h3>
+              <span className="text-xs text-muted-foreground">{addresses.length} hifadhi</span>
+            </div>
+
+            <div className="mb-3 flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={useCurrentLocation} disabled={locating} className="gap-1.5">
+                {locating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Locate className="h-4 w-4" />}
+                Tumia eneo langu sasa
+              </Button>
+              <AddressWizard
+                userId={user.id}
+                onDone={loadAddresses}
+                trigger={<Button size="sm" className="gap-1.5"><Plus className="h-4 w-4" /> Ongeza eneo</Button>}
+              />
+            </div>
+
             {addresses.length === 0 ? (
-              <Button variant="outline" onClick={() => nav({ to: "/account/addresses" })}><Plus className="mr-1 h-4 w-4" /> Add address</Button>
+              <p className="text-sm text-muted-foreground">Bado huna eneo lolote lililohifadhiwa. Tumia GPS au ongeza moja.</p>
             ) : (
               <div className="space-y-2">
                 {addresses.map((a) => (
