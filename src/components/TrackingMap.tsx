@@ -53,11 +53,11 @@ export function TrackingMap({
     .filter(Boolean)
     .map((p) => [p!.lat, p!.lng] as [number, number]);
 
-  if (points.length === 0) {
+  if (points.length === 0 || !mounted) {
     return (
       <div className="grid place-items-center rounded-2xl border bg-secondary text-sm text-muted-foreground"
            style={{ height }}>
-        Hakuna eneo lililobainishwa
+        {points.length === 0 ? "Hakuna eneo lililobainishwa" : "Inapakia ramani…"}
       </div>
     );
   }
