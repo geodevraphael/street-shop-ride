@@ -21,7 +21,7 @@ type Shop = { id: string; name: string; category: string | null; street: string 
 function Index() {
   const [tab, setTab] = useState<"categories" | "shops">("categories");
 
-  const { data: shops = [] } = useQuery({
+  const { data: shops = [], isLoading: shopsLoading } = useQuery({
     queryKey: ["shops", "home"],
     queryFn: async () => {
       const { data } = await supabase.from("shops").select("id,name,category,street,cover_url,rating").limit(60);
@@ -29,7 +29,7 @@ function Index() {
     },
   });
 
-  const { data: counts = new Map<string, number>() } = useQuery({
+  const { data: counts = new Map<string, number>(), isLoading: countsLoading } = useQuery({
     queryKey: ["category-counts"],
     queryFn: async () => {
       const { data } = await supabase.rpc("category_counts");
