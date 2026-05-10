@@ -48,30 +48,6 @@ function Index() {
 
   return (
     <AppShell>
-      {/* Hero */}
-      <section className="rounded-3xl border bg-gradient-to-br from-primary/15 via-background to-accent p-6 md:p-10">
-        <div className="max-w-2xl">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1 text-xs font-medium text-muted-foreground shadow-sm">
-            <MapPin className="h-3 w-3 text-primary" /> Tanzania · soko la mtaa wako
-          </span>
-          <h1 className="mt-4 text-3xl font-bold tracking-tight md:text-5xl">
-            Nunua mtaani. <span className="text-primary">Letewa na boda.</span>
-          </h1>
-          <p className="mt-3 text-sm text-muted-foreground md:text-base">
-            Vinjari maduka, lipa kwa Lipa Number au QR, upate bidhaa nyumbani — kuanzia {formatKES(1500)}.
-          </p>
-          <div className="mt-5 flex flex-wrap gap-2">
-            <Link to="/products/search" className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90">
-              <Search className="h-4 w-4" /> Tafuta bidhaa
-            </Link>
-            <Link to="/shops" className="inline-flex items-center gap-2 rounded-xl border bg-card px-5 py-2.5 text-sm font-medium hover:bg-secondary">
-              <Store className="h-4 w-4" /> Maduka yote
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Switcher */}
       <div className="mt-8 inline-flex rounded-xl border bg-card p-1">
         <SwitchBtn active={tab === "categories"} onClick={() => setTab("categories")}>Aina · Categories</SwitchBtn>
         <SwitchBtn active={tab === "shops"} onClick={() => setTab("shops")}>Maduka · Shops</SwitchBtn>
