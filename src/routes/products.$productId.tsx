@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cart } from "@/lib/cart";
 import { formatKES } from "@/lib/pricing";
 import { getCategory } from "@/lib/categories";
-import { ChevronLeft, MapPin, Plus, Star } from "lucide-react";
+import { ChevronLeft, MapPin, Plus, ShoppingBag, Star } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/products/$productId")({
