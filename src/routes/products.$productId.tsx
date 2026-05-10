@@ -98,7 +98,7 @@ function ProductDetail() {
               <ShoppingBag className="h-4 w-4" /> {product.stock > 0 ? "Agiza sasa" : "Imeisha"}
             </Button>
             <Button size="lg" variant="outline" className="gap-1.5" onClick={addToCart} disabled={product.stock <= 0}>
-              <Plus className="h-4 w-4" /> Kikapuni</Button>
+              <Plus className="h-4 w-4" /> Kikapuni
             </Button>
             <ShareButton url={shareUrl} title={product.name} text={shareText} />
           </div>
