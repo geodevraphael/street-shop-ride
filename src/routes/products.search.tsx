@@ -12,9 +12,12 @@ import { CATEGORIES, getCategory } from "@/lib/categories";
 import { Plus, Search, Sparkles, X, Package } from "lucide-react";
 import { toast } from "sonner";
 
+const PAGE_SIZE = 24;
+
 const searchSchema = z.object({
   category: z.string().optional(),
   q: z.string().optional(),
+  page: z.number().int().min(1).optional(),
 });
 
 export const Route = createFileRoute("/products/search")({
