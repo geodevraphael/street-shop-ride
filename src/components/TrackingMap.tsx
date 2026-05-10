@@ -42,6 +42,9 @@ export function TrackingMap({
     [shop, rider, client, destination],
   );
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const center: [number, number] = points[0]
     ? [points[0].lat, points[0].lng]
     : [-6.7924, 39.2083]; // Dar es Salaam fallback
