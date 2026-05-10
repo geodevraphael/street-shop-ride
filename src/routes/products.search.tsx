@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cart } from "@/lib/cart";
 import { formatKES } from "@/lib/pricing";
 import { CATEGORIES, getCategory } from "@/lib/categories";
-import { Plus, Search, Sparkles, X, Package } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Search, Sparkles, X, Package } from "lucide-react";
 import { toast } from "sonner";
 
 const PAGE_SIZE = 24;
