@@ -42,9 +42,8 @@ function OrderDetail() {
     let list = data ?? [];
     if (shop?.lat) {
       list = [...list].sort((a, b) => {
-        // verified license boost (sort licensed first within similar distance)
-        const da = a.current_lat != null ? distanceKm({ lat: shop.lat, lng: shop.lng }, { lat: a.current_lat, lng: a.current_lng }) : 9999;
-        const db = b.current_lat != null ? distanceKm({ lat: shop.lat, lng: shop.lng }, { lat: b.current_lat, lng: b.current_lng }) : 9999;
+        const da = a.current_lat != null && a.current_lng != null ? distanceKm({ lat: shop.lat, lng: shop.lng }, { lat: a.current_lat, lng: a.current_lng }) : 9999;
+        const db = b.current_lat != null && b.current_lng != null ? distanceKm({ lat: shop.lat, lng: shop.lng }, { lat: b.current_lat, lng: b.current_lng }) : 9999;
         const va = a.license_verified ? -0.5 : 0;
         const vb = b.license_verified ? -0.5 : 0;
         return (da + va) - (db + vb);
@@ -62,7 +61,7 @@ function OrderDetail() {
     load();
   };
 
-  const updateStatus = async (status: string) => {
+  const updateStatus = async (status: "placed"|"accepted"|"rider_assigned"|"picked_up"|"delivered"|"completed"|"cancelled") => {
     const { error } = await supabase.from("orders").update({ status }).eq("id", orderId);
     if (error) return toast.error(error.message);
     toast.success("Updated");
