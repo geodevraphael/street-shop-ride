@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { uploadFile } from "@/lib/upload";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { formatKES } from "@/lib/pricing";
+import { formatTSh } from "@/lib/pricing";
 
 export const Route = createFileRoute("/seller/products")({ component: SellerProducts });
 

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { OrderStatusPill } from "@/components/OrderStatusPill";
-import { formatKES } from "@/lib/pricing";
+import { formatTSh } from "@/lib/pricing";
 
 export const Route = createFileRoute("/rider/history")({ component: RiderHistory });
 

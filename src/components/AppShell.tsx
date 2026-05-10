@@ -27,7 +27,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">
               <Store className="h-4 w-4" />
             </span>
-            <span className="hidden sm:inline">LocalMarket</span>
+            <span className="hidden sm:inline">Soko</span>
           </Link>
 
           <nav className="ml-4 hidden items-center gap-1 md:flex">
@@ -109,7 +109,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
 
       <footer className="mt-12 border-t py-6 text-center text-xs text-muted-foreground">
-        LocalMarket · Buy local, deliver fast
+        Soko · Buy local, deliver fast
       </footer>
     </div>
   );

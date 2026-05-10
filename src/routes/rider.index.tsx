@@ -70,9 +70,9 @@ function RiderHome() {
 
       <div className="rounded-2xl border bg-gradient-to-br from-primary/10 to-accent p-4">
         <h3 className="font-semibold">Subscription</h3>
-        {rider.subscription_active ? <p className="mt-1 text-sm">Active — KES 10,000/month.</p>
-          : remaining > 0 ? <p className="mt-1 text-sm text-muted-foreground">{remaining} more route{remaining === 1 ? "" : "s"} until KES 10,000/month begins.</p>
-          : <p className="mt-1 text-sm">Threshold reached. KES 10,000/month is now due.</p>}
+        {rider.subscription_active ? <p className="mt-1 text-sm">Active — TSh 10,000/month.</p>
+          : remaining > 0 ? <p className="mt-1 text-sm text-muted-foreground">{remaining} more route{remaining === 1 ? "" : "s"} until TSh 10,000/month begins.</p>
+          : <p className="mt-1 text-sm">Threshold reached. TSh 10,000/month is now due.</p>}
       </div>
 
       <div>
@@ -85,7 +85,7 @@ function RiderHome() {
               <Link to="/orders/$orderId" params={{ orderId: o.id }} key={o.id} className="flex items-center justify-between rounded-2xl border bg-card p-3 hover:border-primary">
                 <div>
                   <div className="font-medium">{o.shops?.name}</div>
-                  <div className="text-xs text-muted-foreground">{o.distance_km?.toFixed(1)} km · KES {Number(o.delivery_fee).toLocaleString()}</div>
+                  <div className="text-xs text-muted-foreground">{o.distance_km?.toFixed(1)} km · TSh {Number(o.delivery_fee).toLocaleString()}</div>
                 </div>
                 <OrderStatusPill status={o.status} />
               </Link>

@@ -8,7 +8,7 @@ import { distanceKm } from "@/lib/pricing";
 import { MapPin, Star, Search, Locate } from "lucide-react";
 
 export const Route = createFileRoute("/shops")({
-  head: () => ({ meta: [{ title: "Browse shops — LocalMarket" }, { name: "description", content: "Local shops near you, by street or search." }] }),
+  head: () => ({ meta: [{ title: "Browse shops — Soko" }, { name: "description", content: "Local shops near you, by street or search." }] }),
   component: Shops,
 });
 

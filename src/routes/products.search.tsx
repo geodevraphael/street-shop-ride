@@ -5,12 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cart } from "@/lib/cart";
-import { formatKES } from "@/lib/pricing";
+import { formatTSh } from "@/lib/pricing";
 import { Plus, Search, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/products/search")({
-  head: () => ({ meta: [{ title: "Search products — LocalMarket" }] }),
+  head: () => ({ meta: [{ title: "Search products — Soko" }] }),
   component: SearchPage,
 });
 

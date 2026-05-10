@@ -5,7 +5,7 @@ import { Store, ShoppingBag, Bike, Shield, MapPin, Search, ArrowRight } from "lu
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "LocalMarket — Buy local, deliver fast" },
+      { title: "Soko — Buy local, deliver fast" },
       { name: "description", content: "Order from local shops, pay with Lipa, get delivered by nearby boda boda." },
     ],
   }),
@@ -46,7 +46,7 @@ function Index() {
             Shop your street. <span className="text-primary">Delivered by boda.</span>
           </h1>
           <p className="mt-3 text-base text-muted-foreground md:text-lg">
-            Browse local shops, pay with Lipa or QR, and get it brought to your doorstep by a nearby rider — minimum KES 1,500.
+            Browse local shops, pay with Lipa or QR, and get it brought to your doorstep by a nearby rider — minimum TSh 1,500.
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
             <Link to="/shops" className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90">
@@ -72,7 +72,7 @@ function Index() {
       <section className="mt-12 grid gap-4 sm:grid-cols-3">
         {[
           { t: "Local first", d: "Find shops by street, ward, or right next to you." },
-          { t: "Bolt-like pricing", d: "Auto-priced delivery: 1500 base + KES 100/km + 20/min." },
+          { t: "Bolt-like pricing", d: "Auto-priced delivery: 1500 base + TSh 100/km + 20/min." },
           { t: "Verified riders", d: "Drivers with Driving Licence are flagged Verified." },
         ].map((f) => (
           <div key={f.t} className="rounded-2xl border bg-card p-5">

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { useCart, cart } from "@/lib/cart";
-import { computeFare, distanceKm, etaMinutes, formatKES } from "@/lib/pricing";
+import { computeFare, distanceKm, etaMinutes, formatTSh } from "@/lib/pricing";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
@@ -122,7 +122,7 @@ function Checkout() {
             <Row label="Total" v={formatKES(subtotal + fare.fee)} bold />
           </div>
           <Button className="mt-4 w-full" onClick={place} disabled={busy}>{busy ? "Placing…" : "Place order"}</Button>
-          <p className="mt-2 text-xs text-muted-foreground">Min delivery fee KES 1,500.</p>
+          <p className="mt-2 text-xs text-muted-foreground">Min delivery fee TSh 1,500.</p>
         </aside>
       </div>
     </AppShell>
