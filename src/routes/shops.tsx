@@ -30,7 +30,7 @@ function Shops() {
 
   const filtered = useMemo(() => {
     let list = shops;
-    if (q) list = list.filter((s) => (s.name + " " + (s.category ?? "")).toLowerCase().includes(q.toLowerCase()));
+    if (q) list = list.filter((s) => (s.name + " " + (s.category ?? "") + " " + (s.street ?? "")).toLowerCase().includes(q.toLowerCase()));
     if (street) list = list.filter((s) => (s.street ?? "").toLowerCase().includes(street.toLowerCase()));
     if (me) {
       list = [...list].sort((a, b) => {
@@ -47,22 +47,35 @@ function Shops() {
 
   return (
     <AppShell>
-      <h1 className="text-2xl font-bold">Shops</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Browse local shops by name, street, or nearby.</p>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-xl font-bold sm:text-2xl">Shops</h1>
+        <span className="text-xs text-muted-foreground">{filtered.length} duka</span>
+      </div>
 
-      <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
-        <div className="relative">
+      <div className="mt-3 flex items-center gap-2">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input className="pl-9" placeholder="Search shop or category" value={q} onChange={(e) => setQ(e.target.value)} />
+          <Input className="h-10 pl-9" placeholder="Tafuta duka au mtaa…" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
-        <div className="relative">
-          <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input className="pl-9" placeholder="Filter by street / area" value={street} onChange={(e) => setStreet(e.target.value)} />
-        </div>
-        <Button variant={me ? "default" : "outline"} onClick={useMyLocation} className="gap-2">
-          <Locate className="h-4 w-4" /> {me ? "Sorted nearby" : "Near me"}
+        <Button
+          variant={me ? "default" : "outline"}
+          size="icon"
+          onClick={useMyLocation}
+          aria-label={me ? "Sorted nearby" : "Near me"}
+          title={me ? "Sorted nearby" : "Near me"}
+          className="h-10 w-10 shrink-0"
+        >
+          <Locate className="h-4 w-4" />
         </Button>
       </div>
+      {street && (
+        <div className="mt-2 flex items-center gap-1.5 text-xs">
+          <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-1">
+            <MapPin className="h-3 w-3" /> {street}
+            <button onClick={() => setStreet("")} className="ml-1 text-muted-foreground hover:text-foreground" aria-label="Ondoa">×</button>
+          </span>
+        </div>
+      )}
 
       {filtered.length === 0 ? (
         <div className="mt-10 rounded-2xl border bg-card p-10 text-center text-sm text-muted-foreground">No shops yet. If you're a seller, register and add yours.</div>
