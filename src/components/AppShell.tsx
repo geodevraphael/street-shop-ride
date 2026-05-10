@@ -27,9 +27,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
           <Link to="/" className="flex items-center gap-2 font-semibold">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">
-              <Store className="h-4 w-4" />
-            </span>
+            <img src="/icon-512.png" alt="Soko" className="h-8 w-8 rounded-lg object-cover" />
             <span>Soko</span>
           </Link>
 
