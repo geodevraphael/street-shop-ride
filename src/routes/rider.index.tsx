@@ -51,6 +51,8 @@ function RiderHome() {
   if (loading) return <p className="text-muted-foreground">Loading…</p>;
   if (!rider) return <RiderWizard onDone={load} />;
 
+  const activeDelivery = openOrders.find((o) => o.status === "picked_up");
+
   const remaining = Math.max(0, 10 - rider.deliveries_count);
 
   return (
