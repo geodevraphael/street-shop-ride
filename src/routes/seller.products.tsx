@@ -159,7 +159,7 @@ function ProductWizard({ shopId, userId, onDone }: { shopId: string; userId: str
         <div className="mt-2 flex justify-between">
           <Button variant="outline" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0}>Back</Button>
           {step < steps.length - 1 ? (
-            <Button onClick={() => setStep((s) => s + 1)} disabled={step === 0 && !name}>Next</Button>
+            <Button onClick={() => setStep((s) => s + 1)} disabled={step === 0 && (!name || !category)}>Inayofuata · Next</Button>
           ) : (
             <Button onClick={save} disabled={busy || !price}>{busy ? "Saving…" : "Save"}</Button>
           )}
