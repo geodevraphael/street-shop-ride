@@ -1,11 +1,13 @@
 const map: Record<string, { label: string; cls: string }> = {
-  placed: { label: "Placed", cls: "bg-secondary text-secondary-foreground" },
-  accepted: { label: "Accepted", cls: "bg-accent text-accent-foreground" },
-  rider_assigned: { label: "Rider assigned", cls: "bg-warning text-warning-foreground" },
-  picked_up: { label: "Picked up", cls: "bg-warning text-warning-foreground" },
-  delivered: { label: "Delivered", cls: "bg-success text-success-foreground" },
-  completed: { label: "Completed", cls: "bg-success text-success-foreground" },
-  cancelled: { label: "Cancelled", cls: "bg-destructive text-destructive-foreground" },
+  placed: { label: "Imewekwa", cls: "bg-secondary text-secondary-foreground" },
+  accepted: { label: "Imekubaliwa", cls: "bg-accent text-accent-foreground" },
+  payment_submitted: { label: "Malipo yameletwa", cls: "bg-warning text-warning-foreground" },
+  payment_confirmed: { label: "Malipo yamethibitishwa", cls: "bg-success/80 text-success-foreground" },
+  rider_assigned: { label: "Boda imepatikana", cls: "bg-warning text-warning-foreground" },
+  picked_up: { label: "Inatumwa", cls: "bg-warning text-warning-foreground" },
+  delivered: { label: "Imefika", cls: "bg-success text-success-foreground" },
+  completed: { label: "Imekamilika", cls: "bg-success text-success-foreground" },
+  cancelled: { label: "Imeghairiwa", cls: "bg-destructive text-destructive-foreground" },
 };
 
 export function OrderStatusPill({ status }: { status: string }) {
