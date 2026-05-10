@@ -27,6 +27,8 @@ export function etaMinutes(km: number): number {
   return Math.max(5, Math.round((km / 25) * 60));
 }
 
+// Tanzanian Shilling formatter (kept name for backwards-compat).
 export function formatKES(amount: number): string {
-  return `KES ${amount.toLocaleString()}`;
+  return `TSh ${amount.toLocaleString()}`;
 }
+export const formatTSH = formatKES;

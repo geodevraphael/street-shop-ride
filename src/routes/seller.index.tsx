@@ -44,7 +44,7 @@ function SellerHome() {
       <div className="grid gap-3 sm:grid-cols-3">
         <Stat icon={Store} label="Sales count" value={shop.sales_count} />
         <Stat icon={ClipboardList} label="Orders" value={stats.orders} />
-        <Stat icon={TrendingUp} label="Revenue" value={`KES ${stats.sales.toLocaleString()}`} />
+        <Stat icon={TrendingUp} label="Revenue" value={`TSh ${stats.sales.toLocaleString()}`} />
       </div>
 
       <div className="rounded-2xl border bg-card p-4">
@@ -56,11 +56,11 @@ function SellerHome() {
       <div className="rounded-2xl border bg-gradient-to-br from-primary/10 to-accent p-4">
         <div className="flex items-center gap-2"><Receipt className="h-4 w-4 text-primary" /><h3 className="font-semibold">Subscription status</h3></div>
         {shop.subscription_active ? (
-          <p className="mt-1 text-sm">Active — KES 20,000/month.</p>
+          <p className="mt-1 text-sm">Active — TSh 20,000/month.</p>
         ) : remaining > 0 ? (
-          <p className="mt-1 text-sm text-muted-foreground">{remaining} more sale{remaining === 1 ? "" : "s"} until your KES 20,000/month plan kicks in.</p>
+          <p className="mt-1 text-sm text-muted-foreground">{remaining} more sale{remaining === 1 ? "" : "s"} until your TSh 20,000/month plan kicks in.</p>
         ) : (
-          <p className="mt-1 text-sm text-warning-foreground">You've crossed 10 sales — KES 20,000/month is now due.</p>
+          <p className="mt-1 text-sm text-warning-foreground">You've crossed 10 sales — TSh 20,000/month is now due.</p>
         )}
       </div>
     </div>

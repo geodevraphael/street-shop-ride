@@ -10,7 +10,7 @@ import { Plus, Search, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/products/search")({
-  head: () => ({ meta: [{ title: "Search products — LocalMarket" }] }),
+  head: () => ({ meta: [{ title: "Search products — Soko" }] }),
   component: SearchPage,
 });
 

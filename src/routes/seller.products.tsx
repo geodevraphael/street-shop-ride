@@ -118,7 +118,7 @@ function ProductWizard({ shopId, userId, onDone }: { shopId: string; userId: str
         )}
         {step === 1 && (
           <div className="space-y-3">
-            <div><Label>Price (KES)</Label><Input type="number" value={price} onChange={(e) => setPrice(e.target.value)} /></div>
+            <div><Label>Price (TSh)</Label><Input type="number" value={price} onChange={(e) => setPrice(e.target.value)} /></div>
             <div><Label>Stock</Label><Input type="number" value={stock} onChange={(e) => setStock(e.target.value)} /></div>
           </div>
         )}

@@ -73,10 +73,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "LocalMarket — Buy local, deliver fast" },
+      { title: "Soko — Buy local, deliver fast" },
       { name: "description", content: "Order from local shops, pay with Lipa, get it delivered by nearby boda boda riders." },
-      { name: "author", content: "LocalMarket" },
-      { property: "og:title", content: "LocalMarket — Buy local, deliver fast" },
+      { name: "author", content: "Soko" },
+      { property: "og:title", content: "Soko — Buy local, deliver fast" },
       { property: "og:description", content: "Order from local shops, pay with Lipa, get it delivered by nearby boda boda riders." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
