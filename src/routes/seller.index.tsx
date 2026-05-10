@@ -12,6 +12,7 @@ import { GeoAverager } from "@/components/GeoAverager";
 import { uploadFile } from "@/lib/upload";
 import { toast } from "sonner";
 import { Store, Receipt, ClipboardList, TrendingUp } from "lucide-react";
+import { BUSINESS_CATEGORIES, BUSINESS_CATEGORY_GROUPS } from "@/lib/business-categories";
 
 export const Route = createFileRoute("/seller/")({ component: SellerHome });
 
@@ -127,7 +128,34 @@ function SellerWizard({ onDone }: { onDone: () => void }) {
         {step === 0 && (
           <div className="space-y-3">
             <div><Label>Business name</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
-            <div><Label>Category</Label><Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Grocery, Food, Electronics…" /></div>
+            <div>
+              <Label>Business category</Label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger><SelectValue placeholder="Chagua aina ya biashara · Choose business type" /></SelectTrigger>
+                <SelectContent className="max-h-80">
+                  {BUSINESS_CATEGORY_GROUPS.map((g) => {
+                    const items = BUSINESS_CATEGORIES.filter((c) => c.group === g);
+                    if (items.length === 0) return null;
+                    return (
+                      <div key={g}>
+                        <div className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{g}</div>
+                        {items.map((c) => {
+                          const Icon = c.icon;
+                          return (
+                            <SelectItem key={c.key} value={c.key}>
+                              <span className="flex items-center gap-2">
+                                <Icon className="h-4 w-4 text-primary" />
+                                <span>{c.sw} <span className="text-muted-foreground">· {c.en}</span></span>
+                              </span>
+                            </SelectItem>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
             <div><Label>Street / area</Label><Input value={street} onChange={(e) => setStreet(e.target.value)} /></div>
             <div><Label>Description</Label><Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} /></div>
           </div>
