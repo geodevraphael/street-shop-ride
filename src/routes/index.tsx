@@ -127,8 +127,10 @@ function Index() {
 function SwitchBtn({ active, onClick, icon: Icon, children }: { active: boolean; onClick: () => void; icon?: any; children: React.ReactNode }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${active ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}
+      aria-pressed={active}
+      className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition active:scale-[0.98] ${active ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
     >
       {Icon ? <Icon className="h-4 w-4" /> : null}
       {children}
