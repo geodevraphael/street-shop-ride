@@ -11,7 +11,8 @@ import { WizardStepper } from "@/components/WizardStepper";
 import { GeoAverager } from "@/components/GeoAverager";
 import { uploadFile } from "@/lib/upload";
 import { OrderStatusPill } from "@/components/OrderStatusPill";
-import { ShieldCheck, Locate } from "lucide-react";
+import { ShieldCheck, Locate, Radio } from "lucide-react";
+import { useBroadcastPosition } from "@/lib/tracking";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/rider/")({ component: RiderHome });
