@@ -144,7 +144,7 @@ function SwitchBtn({ active, onClick, icon: Icon, children }: { active: boolean;
 
 function CategoryChip({
   to, label, sub, count, icon: Icon,
-}: { to: any; label: string; sub: string; count: number; icon: any }) {
+}: { to: any; label: string; sub: string; count?: number; icon: any }) {
   return (
     <Link
       {...to}
@@ -154,8 +154,27 @@ function CategoryChip({
         <Icon className="h-5 w-5" />
       </span>
       <span className="truncate text-xs font-medium leading-tight">{label}</span>
-      <span className="truncate text-[10px] text-muted-foreground leading-tight">{sub}{count ? ` · ${count}` : ""}</span>
+      <span className="truncate text-[10px] text-muted-foreground leading-tight">
+        {sub}
+        {count === undefined ? (
+          <span className="ml-1 inline-block h-2 w-6 animate-pulse rounded bg-muted align-middle" />
+        ) : count ? (
+          ` · ${count}`
+        ) : ""}
+      </span>
     </Link>
+  );
+}
+
+function ShopSkeleton() {
+  return (
+    <div className="overflow-hidden rounded-2xl border bg-card">
+      <div className="aspect-[5/3] animate-pulse bg-secondary" />
+      <div className="space-y-2 p-3">
+        <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
+        <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
+      </div>
+    </div>
   );
 }
 
