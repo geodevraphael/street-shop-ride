@@ -11,7 +11,7 @@ import { WizardStepper } from "@/components/WizardStepper";
 import { GeoAverager } from "@/components/GeoAverager";
 import { uploadFile } from "@/lib/upload";
 import { toast } from "sonner";
-import { Store, Receipt, ClipboardList, TrendingUp } from "lucide-react";
+import { Store, Receipt, ClipboardList, TrendingUp, Camera, Loader2 } from "lucide-react";
 import { BUSINESS_CATEGORIES, BUSINESS_CATEGORY_GROUPS } from "@/lib/business-categories";
 
 export const Route = createFileRoute("/seller/")({ component: SellerHome });
@@ -42,6 +42,8 @@ function SellerHome() {
 
   return (
     <div className="space-y-4">
+      <ShopCoverCard shop={shop} onUpdated={load} />
+
       <div className="grid gap-3 sm:grid-cols-3">
         <Stat icon={Store} label="Sales count" value={shop.sales_count} />
         <Stat icon={ClipboardList} label="Orders" value={stats.orders} />
@@ -63,6 +65,44 @@ function SellerHome() {
         ) : (
           <p className="mt-1 text-sm text-warning-foreground">You've crossed 10 sales — TSh 20,000/month is now due.</p>
         )}
+      </div>
+    </div>
+  );
+}
+
+function ShopCoverCard({ shop, onUpdated }: { shop: any; onUpdated: () => void }) {
+  const { user } = useAuth();
+  const [busy, setBusy] = useState(false);
+
+  const onPick = async (file: File | null) => {
+    if (!file || !user) return;
+    setBusy(true);
+    const url = await uploadFile("shop-covers", user.id, file, "cover");
+    if (url) {
+      const { error } = await supabase.from("shops").update({ cover_url: url }).eq("id", shop.id);
+      if (error) toast.error(error.message); else { toast.success("Cover photo updated"); onUpdated(); }
+    } else toast.error("Upload failed");
+    setBusy(false);
+  };
+
+  return (
+    <div className="overflow-hidden rounded-2xl border bg-card">
+      <div className="relative aspect-[5/2] bg-secondary">
+        {shop.cover_url ? (
+          <img src={shop.cover_url} alt={shop.name} className="h-full w-full object-cover" />
+        ) : (
+          <div className="grid h-full place-items-center text-muted-foreground">
+            <div className="text-center">
+              <Camera className="mx-auto h-8 w-8" />
+              <p className="mt-1 text-xs">Ongeza picha kuu ya duka</p>
+            </div>
+          </div>
+        )}
+        <label className="absolute bottom-3 right-3 inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-background/90 px-3 py-1.5 text-xs font-semibold shadow-md backdrop-blur transition hover:bg-background">
+          {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+          {shop.cover_url ? "Badilisha cover" : "Pakia cover"}
+          <input type="file" accept="image/*" className="hidden" onChange={(e) => onPick(e.target.files?.[0] ?? null)} disabled={busy} />
+        </label>
       </div>
     </div>
   );
@@ -91,6 +131,7 @@ function SellerWizard({ onDone }: { onDone: () => void }) {
   const [coord, setCoord] = useState<{ lat: number; lng: number } | null>(null);
   const [lipa, setLipa] = useState("");
   const [qrFile, setQrFile] = useState<File | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
 
   const finish = async () => {
@@ -99,10 +140,11 @@ function SellerWizard({ onDone }: { onDone: () => void }) {
     setBusy(true);
 
     const qrUrl = qrFile ? await uploadFile("qr-codes", user.id, qrFile, "qr") : null;
+    const coverUrl = coverFile ? await uploadFile("shop-covers", user.id, coverFile, "cover") : null;
     const { data: shop, error } = await supabase.from("shops").insert({
       owner_id: user.id, name, category, description, street,
       lat: coord.lat, lng: coord.lng,
-      lipa_number: lipa, qr_code_url: qrUrl,
+      lipa_number: lipa, qr_code_url: qrUrl, cover_url: coverUrl,
     }).select("*").single();
 
     if (error || !shop) { setBusy(false); return toast.error(error?.message ?? "Failed"); }
@@ -158,6 +200,11 @@ function SellerWizard({ onDone }: { onDone: () => void }) {
             </div>
             <div><Label>Street / area</Label><Input value={street} onChange={(e) => setStreet(e.target.value)} /></div>
             <div><Label>Description</Label><Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} /></div>
+            <div>
+              <Label>Picha kuu ya duka (cover) <span className="text-xs text-muted-foreground">— hiari</span></Label>
+              <Input type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] ?? null)} />
+              {coverFile && <p className="mt-1 text-xs text-muted-foreground">Imechaguliwa: {coverFile.name}</p>}
+            </div>
           </div>
         )}
         {step === 1 && (

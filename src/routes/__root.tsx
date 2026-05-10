@@ -10,6 +10,7 @@ import {
 import { Toaster } from "sonner";
 
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { SplashScreen } from "@/components/SplashScreen";
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
@@ -131,6 +132,7 @@ function RootComponent() {
       <Outlet />
       <Toaster richColors position="top-center" />
       <InstallPrompt />
+      <SplashScreen />
     </QueryClientProvider>
   );
 }

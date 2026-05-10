@@ -238,7 +238,7 @@ function Grid({ items, emptyText = "Hakuna bidhaa." }: { items: any[]; emptyText
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
       {items.map((p) => (
         <div key={p.id} className="overflow-hidden rounded-2xl border bg-card transition hover:border-primary hover:shadow-md">
-          <Link to="/shops/$shopId" params={{ shopId: p.shop_id }} className="block aspect-square bg-secondary">
+          <Link to="/products/$productId" params={{ productId: p.id }} className="block aspect-square bg-secondary">
             {p.image_url ? (
               <img src={p.image_url} className="h-full w-full object-cover" alt={p.name} loading="lazy" />
             ) : (
@@ -248,8 +248,10 @@ function Grid({ items, emptyText = "Hakuna bidhaa." }: { items: any[]; emptyText
             )}
           </Link>
           <div className="p-2.5">
-            <h3 className="truncate text-sm font-semibold">{p.name}</h3>
-            <p className="truncate text-xs text-muted-foreground">{p.shops?.name ?? "Duka"}</p>
+            <Link to="/products/$productId" params={{ productId: p.id }} className="block">
+              <h3 className="truncate text-sm font-semibold hover:text-primary">{p.name}</h3>
+              <p className="truncate text-xs text-muted-foreground">{p.shops?.name ?? "Duka"}</p>
+            </Link>
             <div className="mt-1.5 flex items-center justify-between">
               <span className="text-sm font-semibold text-primary">{formatKES(Number(p.price))}</span>
               <Button
