@@ -53,9 +53,13 @@ function Index() {
       </Link>
 
       {/* Switcher */}
-      <div className="mt-5 inline-flex rounded-xl border bg-card p-1">
-        <SwitchBtn active={tab === "categories"} onClick={() => setTab("categories")}>Aina · Categories</SwitchBtn>
-        <SwitchBtn active={tab === "shops"} onClick={() => setTab("shops")}>Maduka · Shops</SwitchBtn>
+      <div className="mt-5 grid w-full grid-cols-2 rounded-2xl border bg-card p-1 shadow-sm">
+        <SwitchBtn active={tab === "categories"} onClick={() => setTab("categories")} icon={Package}>
+          Aina <span className="hidden sm:inline opacity-70">· Categories</span>
+        </SwitchBtn>
+        <SwitchBtn active={tab === "shops"} onClick={() => setTab("shops")} icon={ShoppingBag}>
+          Maduka <span className="hidden sm:inline opacity-70">· Shops</span>
+        </SwitchBtn>
       </div>
 
       {tab === "categories" ? (
