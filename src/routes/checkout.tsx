@@ -21,14 +21,37 @@ function Checkout() {
   const [addressId, setAddressId] = useState<string | null>(null);
   const [shop, setShop] = useState<any>(null);
   const [busy, setBusy] = useState(false);
+  const [locating, setLocating] = useState(false);
 
-  useEffect(() => {
+  const loadAddresses = () => {
     if (!user) return;
-    supabase.from("addresses").select("*").eq("user_id", user.id).then(({ data }) => {
+    supabase.from("addresses").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).then(({ data }) => {
       setAddresses(data ?? []);
-      if (data && data.length) setAddressId(data[0].id);
+      if (data && data.length && !addressId) setAddressId(data[0].id);
     });
-  }, [user]);
+  };
+
+  useEffect(() => { loadAddresses(); }, [user]);
+
+  const useCurrentLocation = () => {
+    if (!user) return;
+    if (!navigator.geolocation) return toast.error("Geolocation haitumiki");
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(async (p) => {
+      const { data, error } = await supabase.from("addresses").insert({
+        user_id: user.id,
+        label: "Eneo langu sasa",
+        lat: p.coords.latitude,
+        lng: p.coords.longitude,
+        street: `GPS ±${Math.round(p.coords.accuracy)}m`,
+      }).select("*").single();
+      setLocating(false);
+      if (error || !data) return toast.error(error?.message ?? "Imeshindikana");
+      toast.success("Eneo limeongezwa");
+      setAddresses((prev) => [data, ...prev]);
+      setAddressId(data.id);
+    }, (err) => { setLocating(false); toast.error(err.message); }, { enableHighAccuracy: true, timeout: 15000 });
+  };
 
   useEffect(() => {
     if (items[0]) supabase.from("shops").select("*").eq("id", items[0].shopId).maybeSingle().then(({ data }) => setShop(data));
