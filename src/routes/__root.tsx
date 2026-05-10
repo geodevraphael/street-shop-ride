@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { Toaster } from "sonner";
 
+import { InstallPrompt } from "@/components/InstallPrompt";
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
@@ -129,6 +130,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <Outlet />
       <Toaster richColors position="top-center" />
+      <InstallPrompt />
     </QueryClientProvider>
   );
 }
