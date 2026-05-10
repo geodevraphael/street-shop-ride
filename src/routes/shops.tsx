@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,14 +16,17 @@ export const Route = createFileRoute("/shops")({
 type Shop = { id: string; name: string; category: string | null; street: string | null; lat: number | null; lng: number | null; cover_url: string | null; rating: number | null; verified: boolean };
 
 function Shops() {
-  const [shops, setShops] = useState<Shop[]>([]);
   const [q, setQ] = useState("");
   const [street, setStreet] = useState("");
   const [me, setMe] = useState<{ lat: number; lng: number } | null>(null);
 
-  useEffect(() => {
-    supabase.from("shops").select("id,name,category,street,lat,lng,cover_url,rating,verified").then(({ data }) => setShops((data ?? []) as Shop[]));
-  }, []);
+  const { data: shops = [] } = useQuery({
+    queryKey: ["shops", "all"],
+    queryFn: async () => {
+      const { data } = await supabase.from("shops").select("id,name,category,street,lat,lng,cover_url,rating,verified");
+      return (data ?? []) as Shop[];
+    },
+  });
 
   const filtered = useMemo(() => {
     let list = shops;

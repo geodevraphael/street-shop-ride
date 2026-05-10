@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { CATEGORIES } from "@/lib/categories";
@@ -19,23 +20,24 @@ type Shop = { id: string; name: string; category: string | null; street: string 
 
 function Index() {
   const [tab, setTab] = useState<"categories" | "shops">("categories");
-  const [shops, setShops] = useState<Shop[]>([]);
-  const [counts, setCounts] = useState<Map<string, number>>(new Map());
 
-  useEffect(() => {
-    supabase.from("shops").select("id,name,category,street,cover_url,rating").limit(60)
-      .then(({ data }) => setShops((data ?? []) as Shop[]));
-    // counts only — no product list rendered here
-    supabase.from("products").select("category").eq("active", true).limit(1000)
-      .then(({ data }) => {
-        const m = new Map<string, number>();
-        (data ?? []).forEach((p: any) => {
-          const k = (p.category as string)?.trim() || "Other";
-          m.set(k, (m.get(k) ?? 0) + 1);
-        });
-        setCounts(m);
-      });
-  }, []);
+  const { data: shops = [] } = useQuery({
+    queryKey: ["shops", "home"],
+    queryFn: async () => {
+      const { data } = await supabase.from("shops").select("id,name,category,street,cover_url,rating").limit(60);
+      return (data ?? []) as Shop[];
+    },
+  });
+
+  const { data: counts = new Map<string, number>() } = useQuery({
+    queryKey: ["category-counts"],
+    queryFn: async () => {
+      const { data } = await supabase.rpc("category_counts");
+      const m = new Map<string, number>();
+      (data ?? []).forEach((r: any) => m.set(r.category, Number(r.count)));
+      return m;
+    },
+  });
 
   const total = useMemo(() => [...counts.values()].reduce((a, b) => a + b, 0), [counts]);
 
