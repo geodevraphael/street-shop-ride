@@ -12,6 +12,7 @@ import { GeoAverager } from "@/components/GeoAverager";
 import { uploadFile } from "@/lib/upload";
 import { toast } from "sonner";
 import { Store, Receipt, ClipboardList, TrendingUp } from "lucide-react";
+import { BUSINESS_CATEGORIES, BUSINESS_CATEGORY_GROUPS } from "@/lib/business-categories";
 
 export const Route = createFileRoute("/seller/")({ component: SellerHome });
 
