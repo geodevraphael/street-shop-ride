@@ -53,9 +53,13 @@ function Index() {
       </Link>
 
       {/* Switcher */}
-      <div className="mt-5 inline-flex rounded-xl border bg-card p-1">
-        <SwitchBtn active={tab === "categories"} onClick={() => setTab("categories")}>Aina · Categories</SwitchBtn>
-        <SwitchBtn active={tab === "shops"} onClick={() => setTab("shops")}>Maduka · Shops</SwitchBtn>
+      <div className="mt-5 grid w-full grid-cols-2 rounded-2xl border bg-card p-1 shadow-sm">
+        <SwitchBtn active={tab === "categories"} onClick={() => setTab("categories")} icon={Package}>
+          Aina <span className="hidden sm:inline opacity-70">· Categories</span>
+        </SwitchBtn>
+        <SwitchBtn active={tab === "shops"} onClick={() => setTab("shops")} icon={ShoppingBag}>
+          Maduka <span className="hidden sm:inline opacity-70">· Shops</span>
+        </SwitchBtn>
       </div>
 
       {tab === "categories" ? (
@@ -120,12 +124,13 @@ function Index() {
   );
 }
 
-function SwitchBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function SwitchBtn({ active, onClick, icon: Icon, children }: { active: boolean; onClick: () => void; icon?: any; children: React.ReactNode }) {
   return (
     <button
       onClick={onClick}
-      className={`rounded-lg px-4 py-1.5 text-sm font-medium transition ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+      className={`flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${active ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}
     >
+      {Icon ? <Icon className="h-4 w-4" /> : null}
       {children}
     </button>
   );
