@@ -73,8 +73,8 @@ function OrderDetail() {
     let list = data ?? [];
     if (shop?.lat) {
       list = [...list].sort((a, b) => {
-        const da = a.current_lat != null ? distanceKm({ lat: shop.lat, lng: shop.lng }, { lat: a.current_lat, lng: a.current_lng }) : 9999;
-        const db = b.current_lat != null ? distanceKm({ lat: shop.lat, lng: shop.lng }, { lat: b.current_lat, lng: b.current_lng }) : 9999;
+        const da = a.current_lat != null && a.current_lng != null ? distanceKm({ lat: shop.lat, lng: shop.lng }, { lat: a.current_lat, lng: a.current_lng }) : 9999;
+        const db = b.current_lat != null && b.current_lng != null ? distanceKm({ lat: shop.lat, lng: shop.lng }, { lat: b.current_lat, lng: b.current_lng }) : 9999;
         return da - db;
       });
     }
