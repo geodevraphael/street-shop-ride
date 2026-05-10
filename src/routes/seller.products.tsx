@@ -109,11 +109,38 @@ function ProductWizard({ shopId, userId, onDone }: { shopId: string; userId: str
         <WizardStepper steps={steps} current={step} />
         {step === 0 && (
           <div className="space-y-3">
-            <div><Label>Name</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
-            <div><Label>Description</Label><Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} /></div>
-            <div><Label>Category</Label><Input value={category} onChange={(e) => setCategory(e.target.value)} /></div>
+            <div><Label>Jina la bidhaa · Name</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Mchele wa Mbeya 5kg" /></div>
+            <div><Label>Maelezo · Description</Label><Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} /></div>
+            <div>
+              <Label>Aina · Category *</Label>
+              <Select
+                value={category}
+                onValueChange={(v) => {
+                  setCategory(v);
+                  const c = getCategory(v);
+                  if (c.isFood) setIsFood(true);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Chagua aina ya bidhaa" />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {CATEGORIES.map((c) => {
+                    const Icon = c.icon;
+                    return (
+                      <SelectItem key={c.key} value={c.key}>
+                        <span className="flex items-center gap-2">
+                          <Icon className="h-4 w-4 text-primary" />
+                          <span>{c.sw} <span className="text-muted-foreground">· {c.en}</span></span>
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="flex items-center justify-between rounded-md border p-3">
-              <Label>Food / cooked item</Label>
+              <Label>Chakula · Food / cooked item</Label>
               <Switch checked={isFood} onCheckedChange={setIsFood} />
             </div>
           </div>
