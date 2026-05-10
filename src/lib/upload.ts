@@ -5,7 +5,7 @@ export async function uploadFile(bucket: string, userId: string, file: File, pre
   const path = `${userId}/${prefix}${prefix ? "_" : ""}${Date.now()}.${ext}`;
   const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: true, contentType: file.type });
   if (error) { console.error(error); return null; }
-  const isPublic = ["qr-codes", "products", "vehicles"].includes(bucket);
+  const isPublic = ["qr-codes", "products", "vehicles", "shop-covers"].includes(bucket);
   if (isPublic) {
     const { data } = supabase.storage.from(bucket).getPublicUrl(path);
     return data.publicUrl;
