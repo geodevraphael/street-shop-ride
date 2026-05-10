@@ -13,6 +13,8 @@ import { uploadFile } from "@/lib/upload";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatKES } from "@/lib/pricing";
+import { CATEGORIES, getCategory } from "@/lib/categories";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/seller/products")({ component: SellerProducts });
 
