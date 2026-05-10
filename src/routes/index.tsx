@@ -2,8 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { formatKES } from "@/lib/pricing";
-import { CATEGORIES, getCategory } from "@/lib/categories";
+import { CATEGORIES } from "@/lib/categories";
 import { Store, ShoppingBag, MapPin, Search, ArrowRight, Star, Package } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -16,95 +15,66 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-type Product = { id: string; name: string; price: number; image_url: string | null; category: string | null; shop_id: string };
 type Shop = { id: string; name: string; category: string | null; street: string | null; cover_url: string | null; rating: number | null };
 
 function Index() {
   const [tab, setTab] = useState<"categories" | "shops">("categories");
-  const [products, setProducts] = useState<Product[]>([]);
   const [shops, setShops] = useState<Shop[]>([]);
-  const [activeCat, setActiveCat] = useState<string | null>(null);
+  const [counts, setCounts] = useState<Map<string, number>>(new Map());
 
   useEffect(() => {
-    supabase.from("products").select("id,name,price,image_url,category,shop_id").eq("active", true).limit(200)
-      .then(({ data }) => setProducts((data ?? []) as Product[]));
     supabase.from("shops").select("id,name,category,street,cover_url,rating").limit(60)
       .then(({ data }) => setShops((data ?? []) as Shop[]));
+    // counts only — no product list rendered here
+    supabase.from("products").select("category").eq("active", true).limit(1000)
+      .then(({ data }) => {
+        const m = new Map<string, number>();
+        (data ?? []).forEach((p: any) => {
+          const k = (p.category as string)?.trim() || "Other";
+          m.set(k, (m.get(k) ?? 0) + 1);
+        });
+        setCounts(m);
+      });
   }, []);
 
-  const counts = useMemo(() => {
-    const m = new Map<string, number>();
-    products.forEach((p) => {
-      const k = p.category?.trim() || "Other";
-      m.set(k, (m.get(k) ?? 0) + 1);
-    });
-    return m;
-  }, [products]);
-
-  const filteredProducts = useMemo(
-    () => (activeCat ? products.filter((p) => (p.category ?? "Other") === activeCat) : products).slice(0, 12),
-    [products, activeCat],
-  );
+  const total = useMemo(() => [...counts.values()].reduce((a, b) => a + b, 0), [counts]);
 
   return (
     <AppShell>
-      <div className="mt-8 inline-flex rounded-xl border bg-card p-1">
+      {/* Quick search shortcut */}
+      <Link
+        to="/products/search"
+        className="flex items-center gap-2 rounded-2xl border bg-card px-4 py-3 text-sm text-muted-foreground transition hover:border-primary hover:text-foreground"
+      >
+        <Search className="h-4 w-4" />
+        Tafuta bidhaa kutoka maduka ya karibu nawe…
+      </Link>
+
+      {/* Switcher */}
+      <div className="mt-5 inline-flex rounded-xl border bg-card p-1">
         <SwitchBtn active={tab === "categories"} onClick={() => setTab("categories")}>Aina · Categories</SwitchBtn>
         <SwitchBtn active={tab === "shops"} onClick={() => setTab("shops")}>Maduka · Shops</SwitchBtn>
       </div>
 
       {tab === "categories" ? (
         <section className="mt-4">
-          {/* Predefined category grid (always visible) */}
+          <h2 className="mb-2 text-sm font-semibold text-muted-foreground">Chagua aina · Pick a category</h2>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
             <CategoryChip
-              label="Zote"
-              sub="All"
-              count={products.length}
-              active={!activeCat}
-              onClick={() => setActiveCat(null)}
+              to={{ to: "/products/search" } as any}
+              label="Zote" sub="All" count={total}
               icon={Package}
             />
             {CATEGORIES.map((c) => (
               <CategoryChip
                 key={c.key}
-                label={c.sw}
-                sub={c.en}
+                to={{ to: "/products/search", search: { category: c.key } } as any}
+                label={c.sw} sub={c.en}
                 count={counts.get(c.key) ?? 0}
-                active={activeCat === c.key}
-                onClick={() => setActiveCat(c.key)}
                 icon={c.icon}
               />
             ))}
           </div>
-
-          <h2 className="mt-6 text-sm font-semibold text-muted-foreground">
-            {activeCat ? `${getCategory(activeCat).sw} · ${getCategory(activeCat).en}` : "Bidhaa zilizopendekezwa"}
-          </h2>
-
-          {filteredProducts.length === 0 ? (
-            <EmptyState text={activeCat ? "Hakuna bidhaa katika aina hii bado." : "Hakuna bidhaa bado. Wauzaji wanaweza kuongeza kutoka dashibodi yao."} />
-          ) : (
-            <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {filteredProducts.map((p) => (
-                <Link key={p.id} to="/shops/$shopId" params={{ shopId: p.shop_id }} className="group overflow-hidden rounded-2xl border bg-card transition hover:border-primary hover:shadow-md">
-                  <div className="aspect-square overflow-hidden bg-secondary">
-                    {p.image_url ? (
-                      <img src={p.image_url} alt={p.name} className="h-full w-full object-cover transition group-hover:scale-105" loading="lazy" />
-                    ) : (
-                      <div className="grid h-full place-items-center text-muted-foreground">
-                        {(() => { const I = getCategory(p.category ?? "Other").icon; return <I className="h-6 w-6" />; })()}
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-2.5">
-                    <p className="truncate text-sm font-medium">{p.name}</p>
-                    <p className="mt-0.5 text-sm font-semibold text-primary">{formatKES(Number(p.price))}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
         </section>
       ) : (
         <section className="mt-4">
@@ -139,6 +109,11 @@ function Index() {
           </div>
         </section>
       )}
+
+      {/* Pickup hint */}
+      <p className="mt-8 inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1 text-xs text-muted-foreground">
+        <MapPin className="h-3 w-3 text-primary" /> Tanzania · soko la mtaa wako
+      </p>
     </AppShell>
   );
 }
@@ -155,24 +130,25 @@ function SwitchBtn({ active, onClick, children }: { active: boolean; onClick: ()
 }
 
 function CategoryChip({
-  label, sub, count, active, onClick, icon: Icon,
-}: { label: string; sub: string; count: number; active: boolean; onClick: () => void; icon: any }) {
+  to, label, sub, count, icon: Icon,
+}: { to: any; label: string; sub: string; count: number; icon: any }) {
   return (
-    <button
-      onClick={onClick}
-      className={`flex flex-col items-center gap-1.5 rounded-2xl border p-3 text-center transition ${
-        active ? "border-primary bg-primary/10" : "bg-card hover:border-primary/40"
-      }`}
+    <Link
+      {...to}
+      className="flex flex-col items-center gap-1.5 rounded-2xl border bg-card p-3 text-center transition hover:border-primary hover:bg-primary/5"
     >
-      <span className={`grid h-10 w-10 place-items-center rounded-xl ${active ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"}`}>
+      <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary">
         <Icon className="h-5 w-5" />
       </span>
       <span className="truncate text-xs font-medium leading-tight">{label}</span>
       <span className="truncate text-[10px] text-muted-foreground leading-tight">{sub}{count ? ` · ${count}` : ""}</span>
-    </button>
+    </Link>
   );
 }
 
 function EmptyState({ text }: { text: string }) {
-  return <div className="mt-3 rounded-2xl border bg-card p-10 text-center text-sm text-muted-foreground">{text}</div>;
+  return <div className="rounded-2xl border bg-card p-10 text-center text-sm text-muted-foreground">{text}</div>;
 }
+
+// Decorative imports kept to avoid TS unused warnings if we re-add later
+void Store;
