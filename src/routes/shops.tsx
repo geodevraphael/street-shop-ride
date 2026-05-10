@@ -30,7 +30,7 @@ function Shops() {
 
   const filtered = useMemo(() => {
     let list = shops;
-    if (q) list = list.filter((s) => (s.name + " " + (s.category ?? "")).toLowerCase().includes(q.toLowerCase()));
+    if (q) list = list.filter((s) => (s.name + " " + (s.category ?? "") + " " + (s.street ?? "")).toLowerCase().includes(q.toLowerCase()));
     if (street) list = list.filter((s) => (s.street ?? "").toLowerCase().includes(street.toLowerCase()));
     if (me) {
       list = [...list].sort((a, b) => {
