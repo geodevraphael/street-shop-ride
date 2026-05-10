@@ -31,15 +31,21 @@ function SearchPage() {
   const { category, q: q0 } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
   const [q, setQ] = useState(q0 ?? "");
-  const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let query = supabase.from("products").select("*, shops(name, street)").eq("active", true).limit(120);
-    if (category) query = query.eq("category", category);
-    setLoading(true);
-    query.then(({ data }) => { setProducts(data ?? []); setLoading(false); });
-  }, [category]);
+  const { data: products = [], isLoading: loading } = useQuery({
+    queryKey: ["products", "search", category ?? "all"],
+    queryFn: async () => {
+      let query = supabase
+        .from("products")
+        .select("id,name,description,price,image_url,category,shop_id,shops(name,street)")
+        .eq("active", true)
+        .order("created_at", { ascending: false })
+        .limit(120);
+      if (category) query = query.eq("category", category);
+      const { data } = await query;
+      return data ?? [];
+    },
+  });
 
   // Sync q to URL (debounced lightly)
   useEffect(() => {
