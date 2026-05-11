@@ -155,6 +155,23 @@ function OrderDetail() {
   const orderTag = `Oda #${order.id.slice(0, 8)}`;
   const mapUrl = buildMapsUrl({ shop: shopPos, destination: destinationPos, rider: riderPos });
 
+  // Quick-contact: the most relevant other party for the current user, right now
+  const quickContact = (() => {
+    if (isClient) {
+      if (rider && riderPhone) return { phone: riderPhone, label: "boda", title: `Boda · ${rider.full_name ?? ""} ${rider.plate ? `(${rider.plate})` : ""}` };
+      if (sellerProfile?.phone) return { phone: sellerProfile.phone, label: "muuzaji", title: `Muuzaji · ${shop?.name ?? ""}` };
+    }
+    if (isSeller) {
+      if (rider && riderPhone) return { phone: riderPhone, label: "boda", title: `Boda · ${rider.full_name ?? ""}` };
+      if (clientProfile?.phone) return { phone: clientProfile.phone, label: "mteja", title: `Mteja · ${clientProfile.full_name ?? ""}` };
+    }
+    if (isRider) {
+      if (clientProfile?.phone) return { phone: clientProfile.phone, label: "mteja", title: `Mteja · ${clientProfile.full_name ?? ""}` };
+      if (sellerProfile?.phone) return { phone: sellerProfile.phone, label: "muuzaji", title: `Muuzaji · ${shop?.name ?? ""}` };
+    }
+    return null;
+  })();
+
   return (
     <AppShell>
       <div className="flex items-center justify-between gap-3">
@@ -167,6 +184,16 @@ function OrderDetail() {
           <OrderStatusPill status={order.status} />
         </div>
       </div>
+
+      {quickContact && (
+        <div className="mt-4 rounded-2xl border bg-primary/5 p-3">
+          <p className="text-xs text-muted-foreground">Mawasiliano ya haraka</p>
+          <p className="text-sm font-semibold">{quickContact.title}</p>
+          <div className="mt-2">
+            <ContactActions phone={quickContact.phone} label={quickContact.label} message={orderTag} />
+          </div>
+        </div>
+      )}
 
       <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_340px]">
         <div className="space-y-3">
