@@ -4,9 +4,11 @@ import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { OrderStatusPill } from "@/components/OrderStatusPill";
+import { OrderTimeline } from "@/components/OrderTimeline";
+import { ContactActions } from "@/components/ContactActions";
 import { Button } from "@/components/ui/button";
 import { formatKES, distanceKm } from "@/lib/pricing";
-import { Bike, Star, ShieldCheck, MapPin } from "lucide-react";
+import { Bike, Star, ShieldCheck, MapPin, Copy, XCircle, RefreshCcw } from "lucide-react";
 import { ReportDialog } from "@/components/ReportDialog";
 import { PaymentProofDialog } from "@/components/PaymentProofDialog";
 import { TrackingMap } from "@/components/TrackingMap";
@@ -23,32 +25,51 @@ function OrderDetail() {
   const [shop, setShop] = useState<any>(null);
   const [address, setAddress] = useState<any>(null);
   const [rider, setRider] = useState<any>(null);
+  const [clientProfile, setClientProfile] = useState<any>(null);
+  const [sellerProfile, setSellerProfile] = useState<any>(null);
   const [riders, setRiders] = useState<any[]>([]);
   const [searchingRiders, setSearchingRiders] = useState(false);
   const [clientPos, setClientPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  const isClient = user && order && order.client_id === user.id;
-  const isSeller = user && shop && shop.owner_id === user.id;
+  const isClient = !!(user && order && order.client_id === user.id);
+  const isSeller = !!(user && shop && shop.owner_id === user.id);
+  const isRider = !!(user && rider && rider.user_id === user.id);
 
   const trackingActive = order && ["payment_confirmed", "rider_assigned", "picked_up", "delivered"].includes(order.status);
   const liveRider = useTrackOrder(trackingActive ? orderId : null);
+  const canCancel = order && (order.status === "placed" || order.status === "accepted");
 
   const load = async () => {
     const { data: o } = await supabase.from("orders").select("*").eq("id", orderId).maybeSingle();
     setOrder(o);
-    if (o) {
-      const [i, s, a, r] = await Promise.all([
-        supabase.from("order_items").select("*, products(name)").eq("order_id", orderId),
-        supabase.from("shops").select("*").eq("id", o.shop_id).maybeSingle(),
-        o.address_id ? supabase.from("addresses").select("*").eq("id", o.address_id).maybeSingle() : Promise.resolve({ data: null }),
-        o.rider_id ? supabase.from("riders").select("*").eq("id", o.rider_id).maybeSingle() : Promise.resolve({ data: null }),
-      ]);
-      setItems(i.data ?? []); setShop(s.data); setAddress(a.data); setRider(r.data);
+    if (!o) return;
+    const [i, s, a, r, cp] = await Promise.all([
+      supabase.from("order_items").select("*, products(name)").eq("order_id", orderId),
+      supabase.from("shops").select("*").eq("id", o.shop_id).maybeSingle(),
+      o.address_id ? supabase.from("addresses").select("*").eq("id", o.address_id).maybeSingle() : Promise.resolve({ data: null } as any),
+      o.rider_id ? supabase.from("riders").select("*").eq("id", o.rider_id).maybeSingle() : Promise.resolve({ data: null } as any),
+      supabase.from("profiles").select("full_name, phone").eq("id", o.client_id).maybeSingle(),
+    ]);
+    setItems(i.data ?? []); setShop(s.data); setAddress(a.data); setRider(r.data); setClientProfile(cp.data);
+    if (s.data?.owner_id) {
+      const { data: sp } = await supabase.from("profiles").select("full_name, phone").eq("id", s.data.owner_id).maybeSingle();
+      setSellerProfile(sp);
     }
   };
-  useEffect(() => { load(); }, [orderId]);
 
-  // Client live position when tracking
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [orderId]);
+
+  // Realtime: refresh on any update to this order
+  useEffect(() => {
+    const ch = supabase
+      .channel(`order-${orderId}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${orderId}` }, () => load())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+    // eslint-disable-next-line
+  }, [orderId]);
+
   useEffect(() => {
     if (!trackingActive || !isClient || !navigator.geolocation) return;
     const id = navigator.geolocation.watchPosition(
@@ -59,12 +80,19 @@ function OrderDetail() {
     return () => navigator.geolocation.clearWatch(id);
   }, [trackingActive, isClient]);
 
-  const updateStatus = async (status: string) => {
-    const patch: any = { status };
+  const updateStatus = async (status: string, extra: Record<string, any> = {}) => {
+    setBusy(true);
+    const patch: any = { status, ...extra };
     if (status === "payment_confirmed") patch.payment_confirmed_at = new Date().toISOString();
     const { error } = await supabase.from("orders").update(patch).eq("id", orderId);
+    setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Imehifadhiwa"); load();
+  };
+
+  const cancelOrder = async () => {
+    if (!confirm("Una uhakika unataka kughairi oda hii?")) return;
+    await updateStatus("cancelled");
   };
 
   const findRiders = async () => {
@@ -91,34 +119,48 @@ function OrderDetail() {
   if (!order) return <AppShell><p>Inapakia…</p></AppShell>;
 
   const riderPos = liveRider ?? (rider?.current_lat ? { lat: rider.current_lat, lng: rider.current_lng } : null);
+  const orderTag = `Oda #${order.id.slice(0, 8)}`;
 
   return (
     <AppShell>
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold">Oda</h1>
-          <p className="text-xs text-muted-foreground">#{order.id.slice(0, 8)}</p>
+          <p className="text-xs text-muted-foreground">#{order.id.slice(0, 8)} · {new Date(order.created_at).toLocaleString()}</p>
         </div>
-        <OrderStatusPill status={order.status} />
+        <div className="flex items-center gap-2">
+          <Button size="icon" variant="ghost" onClick={load} title="Onyesha mpya"><RefreshCcw className="h-4 w-4" /></Button>
+          <OrderStatusPill status={order.status} />
+        </div>
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_320px]">
+      <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_340px]">
         <div className="space-y-3">
-          {/* Status-driven action panel */}
+          {/* Next-action panel */}
           <section className="rounded-2xl border bg-card p-4">
-            <h3 className="font-semibold">Hatua inayofuata</h3>
+            <h3 className="mb-3 font-semibold">Hatua inayofuata</h3>
+
+            {order.status === "cancelled" && (
+              <p className="text-sm text-destructive">Oda hii imeghairiwa.</p>
+            )}
 
             {/* CLIENT actions */}
             {isClient && order.status === "placed" && (
-              <p className="mt-2 text-sm text-muted-foreground">Subiri muuzaji akubali oda yako.</p>
+              <p className="text-sm text-muted-foreground">Tunamsubiri muuzaji akubali oda yako. Utapata taarifa hapa moja kwa moja.</p>
             )}
             {isClient && order.status === "accepted" && (
-              <div className="mt-3 space-y-3">
-                <p className="text-sm">Muuzaji amekubali. Lipa kwa M-Pesa kisha thibitisha:</p>
+              <div className="space-y-3">
+                <p className="text-sm">Muuzaji amekubali. Tafadhali lipa kwa M-Pesa kisha tuma uthibitisho:</p>
                 {shop?.lipa_number && (
                   <div className="rounded-xl border bg-primary/5 p-3">
                     <p className="text-xs text-muted-foreground">Lipa Number</p>
-                    <p className="text-2xl font-bold">{shop.lipa_number}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-2xl font-bold">{shop.lipa_number}</p>
+                      <Button size="icon" variant="ghost" onClick={() => { navigator.clipboard.writeText(shop.lipa_number); toast.success("Imenakiliwa"); }}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <p className="mt-2 text-xs text-muted-foreground">Lipa: <b>{formatKES(Number(order.subtotal))}</b></p>
                     {shop.qr_code_url && <img src={shop.qr_code_url} alt="QR" className="mt-2 h-32 w-32 object-contain" />}
                   </div>
                 )}
@@ -126,40 +168,57 @@ function OrderDetail() {
               </div>
             )}
             {isClient && order.status === "payment_submitted" && (
-              <p className="mt-2 text-sm text-muted-foreground">Asante. Tunasubiri muuzaji athibitishe malipo.</p>
+              <p className="text-sm text-muted-foreground">Asante! Muuzaji anathibitisha malipo yako sasa.</p>
             )}
             {isClient && order.status === "payment_confirmed" && (
-              <p className="mt-2 text-sm">Malipo yamethibitishwa. Muuzaji anatafuta boda boda…</p>
+              <p className="text-sm">✅ Malipo yamethibitishwa. Muuzaji anatafuta boda…</p>
             )}
             {isClient && order.status === "rider_assigned" && (
-              <p className="mt-2 text-sm">Boda imepatikana. Inasubiri kuokota bidhaa.</p>
+              <p className="text-sm">Boda imepatikana — {rider?.full_name ?? "rider"}. Inasubiri kuokota bidhaa dukani.</p>
+            )}
+            {isClient && order.status === "picked_up" && (
+              <p className="text-sm">📦 Bidhaa iko njiani. Fuatilia kwenye ramani hapo chini.</p>
             )}
             {isClient && order.status === "delivered" && (
-              <Button className="mt-3" onClick={() => updateStatus("completed")}>Nimepokea bidhaa</Button>
+              <Button size="lg" disabled={busy} onClick={() => updateStatus("completed")}>Nimepokea bidhaa — kamilisha</Button>
+            )}
+            {isClient && order.status === "completed" && (
+              <p className="text-sm text-success">Asante! Oda imekamilika.</p>
             )}
 
             {/* SELLER actions */}
             {isSeller && order.status === "placed" && (
-              <Button className="mt-3" onClick={() => updateStatus("accepted")}>Kubali oda</Button>
+              <div className="space-y-2">
+                <Button size="lg" disabled={busy} onClick={() => updateStatus("accepted")}>Kubali oda</Button>
+                <Button variant="outline" disabled={busy} onClick={cancelOrder}>Kataa oda</Button>
+              </div>
             )}
             {isSeller && order.status === "accepted" && (
-              <p className="mt-2 text-sm text-muted-foreground">Subiri mteja alipe na atume uthibitisho.</p>
+              <p className="text-sm text-muted-foreground">Tunamsubiri mteja alipe na atume uthibitisho wa malipo.</p>
             )}
             {isSeller && order.status === "payment_submitted" && (
-              <div className="mt-3 space-y-2">
-                <p className="text-sm font-medium">Mteja amesema amelipa:</p>
-                {order.payment_ref && <p className="text-sm">Namba ya muamala: <b>{order.payment_ref}</b></p>}
+              <div className="space-y-3">
+                <p className="text-sm font-medium">Mteja amesema amelipa. Hakiki:</p>
+                {order.payment_ref && (
+                  <div className="rounded-lg border bg-secondary/40 p-2 text-sm">
+                    Namba ya muamala: <b>{order.payment_ref}</b>
+                  </div>
+                )}
                 {order.payment_proof_url && (
                   <a href={order.payment_proof_url} target="_blank" rel="noreferrer">
                     <img src={order.payment_proof_url} alt="proof" className="max-h-60 rounded-lg border" />
                   </a>
                 )}
-                <Button onClick={() => updateStatus("payment_confirmed")}>Thibitisha malipo</Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button disabled={busy} onClick={() => updateStatus("payment_confirmed")}>✓ Thibitisha malipo</Button>
+                  <Button variant="outline" disabled={busy} onClick={() => updateStatus("accepted")}>Kataa — rudisha</Button>
+                </div>
               </div>
             )}
             {isSeller && order.status === "payment_confirmed" && (
-              <div className="mt-3 space-y-3">
-                <Button onClick={findRiders} className="gap-1.5"><Bike className="h-4 w-4" /> Tafuta boda karibu</Button>
+              <div className="space-y-3">
+                <p className="text-sm">Malipo yamethibitishwa. Sasa tafuta boda boda kumkabidhi bidhaa.</p>
+                <Button onClick={findRiders} className="gap-1.5"><Bike className="h-4 w-4" /> Tafuta boda karibu nawe</Button>
                 {searchingRiders && <p className="text-sm text-muted-foreground">Inatafuta…</p>}
                 {riders.length > 0 && (
                   <div className="space-y-2">
@@ -167,7 +226,7 @@ function OrderDetail() {
                       <div key={r.id} className="flex items-center justify-between rounded-xl border p-3">
                         <div>
                           <div className="flex items-center gap-2 font-medium">{r.full_name ?? "Rider"} {r.license_verified && <ShieldCheck className="h-4 w-4 text-success" />}</div>
-                          <div className="text-xs text-muted-foreground flex items-center gap-2">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <Star className="h-3 w-3 fill-warning text-warning" />{(r.rating ?? 5).toFixed(1)} · {r.plate ?? "—"}
                             {shop?.lat && r.current_lat && <span>· {distanceKm({ lat: shop.lat, lng: shop.lng }, { lat: r.current_lat, lng: r.current_lng }).toFixed(1)} km</span>}
                           </div>
@@ -180,16 +239,34 @@ function OrderDetail() {
               </div>
             )}
             {isSeller && order.status === "rider_assigned" && (
-              <Button className="mt-3" onClick={() => updateStatus("picked_up")}>Mkabidhi boda — anza usafirishaji</Button>
+              <Button size="lg" disabled={busy} onClick={() => updateStatus("picked_up")}>Nimemkabidhi boda — anza usafirishaji</Button>
             )}
             {isSeller && order.status === "picked_up" && (
-              <p className="mt-2 text-sm text-muted-foreground">Bidhaa iko njiani. Mteja anaweza kufuatilia kwenye ramani.</p>
+              <p className="text-sm text-muted-foreground">Bidhaa iko njiani. Mteja anafuatilia kwenye ramani.</p>
+            )}
+            {isSeller && order.status === "delivered" && (
+              <p className="text-sm text-muted-foreground">Bidhaa imefika. Tunamsubiri mteja athibitishe upokeaji.</p>
             )}
 
             {/* RIDER actions */}
-            {rider && user && rider.user_id === user.id && order.status === "picked_up" && (
-              <Button className="mt-3" onClick={() => updateStatus("delivered")}>Nimemfikishia mteja</Button>
+            {isRider && order.status === "rider_assigned" && (
+              <Button size="lg" disabled={busy} onClick={() => updateStatus("picked_up")}>Nimeokota bidhaa — anza safari</Button>
             )}
+            {isRider && order.status === "picked_up" && (
+              <Button size="lg" disabled={busy} onClick={() => updateStatus("delivered")}>Nimemfikishia mteja</Button>
+            )}
+
+            {canCancel && (isClient || isSeller) && order.status !== "cancelled" && (
+              <button onClick={cancelOrder} className="mt-4 flex items-center gap-1 text-xs text-destructive hover:underline">
+                <XCircle className="h-3.5 w-3.5" /> Ghairi oda
+              </button>
+            )}
+          </section>
+
+          {/* Timeline */}
+          <section className="rounded-2xl border bg-card p-4">
+            <h3 className="mb-3 font-semibold">Hatua za oda</h3>
+            <OrderTimeline status={order.status} />
           </section>
 
           {/* Live tracking map */}
@@ -230,10 +307,39 @@ function OrderDetail() {
             <div className="my-2 border-t" />
             <Row label="Jumla" v={formatKES(Number(order.subtotal) + Number(order.delivery_fee))} bold />
           </div>
+
           <div className="rounded-2xl border bg-card p-4 text-sm">
             <p className="text-muted-foreground">Kutoka <b className="text-foreground">{shop?.name}</b></p>
             <p className="mt-1 text-muted-foreground">Hadi <b className="text-foreground">{address?.label ?? "—"}</b></p>
             {order.distance_km && <p className="mt-1 text-xs text-muted-foreground">{Number(order.distance_km).toFixed(1)} km · {order.eta_min} min</p>}
+          </div>
+
+          {/* Contacts: show the OTHER parties to the current user */}
+          <div className="rounded-2xl border bg-card p-4">
+            <h3 className="mb-2 text-sm font-semibold">Mawasiliano</h3>
+            <div className="space-y-3 text-sm">
+              {!isClient && clientProfile?.phone && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Mteja · {clientProfile.full_name ?? ""}</p>
+                  <ContactActions phone={clientProfile.phone} label="mteja" message={orderTag} />
+                </div>
+              )}
+              {!isSeller && sellerProfile?.phone && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Muuzaji · {shop?.name}</p>
+                  <ContactActions phone={sellerProfile.phone} label="muuzaji" message={orderTag} />
+                </div>
+              )}
+              {rider && !isRider && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Boda · {rider.full_name ?? ""} {rider.plate ? `(${rider.plate})` : ""}</p>
+                  <ContactActions phone={rider.phone} label="boda" message={orderTag} />
+                </div>
+              )}
+              {(isClient && !sellerProfile?.phone && !rider) || (isSeller && !clientProfile?.phone) ? (
+                <p className="text-xs text-muted-foreground">Hakuna mawasiliano yaliyowekwa bado.</p>
+              ) : null}
+            </div>
           </div>
         </aside>
       </div>
