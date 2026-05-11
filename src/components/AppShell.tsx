@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
-  Store, Home, ShoppingBag, User, Bike, Shield, LogOut, MapPin, Search,
+  Store, Home, ShoppingBag, User, Bike, Shield, LogOut, MapPin, Search, Gift,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/lib/cart";
