@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ShopsRouteImport } from './routes/shops'
 import { Route as SellerRouteImport } from './routes/seller'
 import { Route as RiderRouteImport } from './routes/rider'
+import { Route as ReferralsRouteImport } from './routes/referrals'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
@@ -51,6 +52,11 @@ const SellerRoute = SellerRouteImport.update({
 const RiderRoute = RiderRouteImport.update({
   id: '/rider',
   path: '/rider',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReferralsRoute = ReferralsRouteImport.update({
+  id: '/referrals',
+  path: '/referrals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrdersRoute = OrdersRouteImport.update({
@@ -185,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/orders': typeof OrdersRouteWithChildren
+  '/referrals': typeof ReferralsRoute
   '/rider': typeof RiderRouteWithChildren
   '/seller': typeof SellerRouteWithChildren
   '/shops': typeof ShopsRouteWithChildren
@@ -214,6 +221,7 @@ export interface FileRoutesByTo {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/orders': typeof OrdersRouteWithChildren
+  '/referrals': typeof ReferralsRoute
   '/shops': typeof ShopsRouteWithChildren
   '/account/addresses': typeof AccountAddressesRoute
   '/account/profile': typeof AccountProfileRoute
@@ -243,6 +251,7 @@ export interface FileRoutesById {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/orders': typeof OrdersRouteWithChildren
+  '/referrals': typeof ReferralsRoute
   '/rider': typeof RiderRouteWithChildren
   '/seller': typeof SellerRouteWithChildren
   '/shops': typeof ShopsRouteWithChildren
@@ -275,6 +284,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/orders'
+    | '/referrals'
     | '/rider'
     | '/seller'
     | '/shops'
@@ -304,6 +314,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/orders'
+    | '/referrals'
     | '/shops'
     | '/account/addresses'
     | '/account/profile'
@@ -332,6 +343,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/orders'
+    | '/referrals'
     | '/rider'
     | '/seller'
     | '/shops'
@@ -363,6 +375,7 @@ export interface RootRouteChildren {
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
   OrdersRoute: typeof OrdersRouteWithChildren
+  ReferralsRoute: typeof ReferralsRoute
   RiderRoute: typeof RiderRouteWithChildren
   SellerRoute: typeof SellerRouteWithChildren
   ShopsRoute: typeof ShopsRouteWithChildren
@@ -395,6 +408,13 @@ declare module '@tanstack/react-router' {
       path: '/rider'
       fullPath: '/rider'
       preLoaderRoute: typeof RiderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/referrals': {
+      id: '/referrals'
+      path: '/referrals'
+      fullPath: '/referrals'
+      preLoaderRoute: typeof ReferralsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/orders': {
@@ -651,6 +671,7 @@ const rootRouteChildren: RootRouteChildren = {
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
   OrdersRoute: OrdersRouteWithChildren,
+  ReferralsRoute: ReferralsRoute,
   RiderRoute: RiderRouteWithChildren,
   SellerRoute: SellerRouteWithChildren,
   ShopsRoute: ShopsRouteWithChildren,
