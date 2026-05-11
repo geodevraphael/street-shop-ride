@@ -1,62 +1,107 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { OrderStatusPill } from "@/components/OrderStatusPill";
 import { Button } from "@/components/ui/button";
 import { formatKES } from "@/lib/pricing";
-import { toast } from "sonner";
+import { Bell } from "lucide-react";
 
 export const Route = createFileRoute("/seller/orders")({ component: SellerOrders });
+
+const ACTIVE = new Set(["placed", "accepted", "payment_submitted", "payment_confirmed", "rider_assigned", "picked_up", "delivered"]);
+
+const NEXT_LABEL: Record<string, string> = {
+  placed: "Kubali oda",
+  accepted: "Subiri malipo",
+  payment_submitted: "Thibitisha malipo",
+  payment_confirmed: "Tafuta boda",
+  rider_assigned: "Mkabidhi boda",
+  picked_up: "Inasafirishwa",
+  delivered: "Subiri uthibitisho",
+};
 
 function SellerOrders() {
   const { user } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
+  const [shopId, setShopId] = useState<string | null>(null);
 
-  const load = async () => {
-    if (!user) return;
-    const { data: shop } = await supabase.from("shops").select("id").eq("owner_id", user.id).maybeSingle();
-    if (!shop) return;
-    const { data } = await supabase.from("orders").select("*").eq("shop_id", shop.id).order("created_at", { ascending: false });
+  const load = async (sid?: string) => {
+    const id = sid ?? shopId;
+    if (!id) return;
+    const { data } = await supabase.from("orders").select("*").eq("shop_id", id).order("created_at", { ascending: false });
     setOrders(data ?? []);
   };
-  useEffect(() => { load(); }, [user]);
 
-  const update = async (id: string, status: any) => {
-    await supabase.from("orders").update({ status }).eq("id", id);
-    if (status === "completed") {
-      const o = orders.find((x) => x.id === id);
-      if (o) {
-        // increment shop sales_count
-        const { data: shop } = await supabase.from("shops").select("sales_count").eq("id", o.shop_id).maybeSingle();
-        if (shop) await supabase.from("shops").update({ sales_count: (shop.sales_count ?? 0) + 1 }).eq("id", o.shop_id);
-      }
-    }
-    toast.success("Updated"); load();
-  };
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("shops").select("id").eq("owner_id", user.id).maybeSingle().then(({ data }) => {
+      if (!data) return;
+      setShopId(data.id);
+      load(data.id);
+    });
+  }, [user]);
 
-  if (orders.length === 0) return <p className="text-muted-foreground">No orders yet.</p>;
+  // Realtime
+  useEffect(() => {
+    if (!shopId) return;
+    const ch = supabase
+      .channel(`seller-orders-${shopId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `shop_id=eq.${shopId}` }, () => load(shopId))
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+    // eslint-disable-next-line
+  }, [shopId]);
+
+  const active = useMemo(() => orders.filter((o) => ACTIVE.has(o.status)), [orders]);
+  const past = useMemo(() => orders.filter((o) => !ACTIVE.has(o.status)), [orders]);
+  const needsAction = useMemo(() => orders.filter((o) => o.status === "placed" || o.status === "payment_submitted").length, [orders]);
+
+  if (orders.length === 0) return <p className="text-muted-foreground">Bado hakuna oda.</p>;
 
   return (
-    <div className="space-y-2">
-      {orders.map((o) => (
-        <div key={o.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4">
-          <div>
-            <Link to="/orders/$orderId" params={{ orderId: o.id }} className="font-semibold hover:underline">#{o.id.slice(0, 8)}</Link>
-            <div className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString()}</div>
-            <div className="mt-1 text-sm">{formatKES(Number(o.subtotal))}</div>
-          </div>
-          <OrderStatusPill status={o.status} />
-          <div className="flex flex-wrap gap-1">
-            {o.status === "placed" && <Button size="sm" onClick={() => update(o.id, "accepted")}>Kubali</Button>}
-            {o.status === "payment_submitted" && <Link to="/orders/$orderId" params={{ orderId: o.id }}><Button size="sm">Thibitisha malipo</Button></Link>}
-            {o.status === "payment_confirmed" && <Link to="/orders/$orderId" params={{ orderId: o.id }}><Button size="sm">Tafuta boda</Button></Link>}
-            {o.status === "rider_assigned" && <Button size="sm" variant="outline" onClick={() => update(o.id, "picked_up")}>Mkabidhi boda</Button>}
-            {o.status === "delivered" && <Button size="sm" onClick={() => update(o.id, "completed")}>Kamilisha</Button>}
-            <Link to="/orders/$orderId" params={{ orderId: o.id }}><Button size="sm" variant="ghost">Fungua</Button></Link>
-          </div>
+    <div className="space-y-4">
+      {needsAction > 0 && (
+        <div className="flex items-center gap-2 rounded-xl border bg-warning/10 p-3 text-sm">
+          <Bell className="h-4 w-4 text-warning" />
+          <span><b>{needsAction}</b> oda zinahitaji hatua yako sasa hivi.</span>
         </div>
-      ))}
+      )}
+
+      {active.length > 0 && (
+        <section>
+          <h2 className="mb-2 text-sm font-semibold text-muted-foreground">Inaendelea ({active.length})</h2>
+          <div className="space-y-2">{active.map((o) => <Row key={o.id} o={o} />)}</div>
+        </section>
+      )}
+
+      {past.length > 0 && (
+        <section>
+          <h2 className="mb-2 text-sm font-semibold text-muted-foreground">Historia ({past.length})</h2>
+          <div className="space-y-2">{past.map((o) => <Row key={o.id} o={o} />)}</div>
+        </section>
+      )}
     </div>
+  );
+}
+
+function Row({ o }: { o: any }) {
+  const urgent = o.status === "placed" || o.status === "payment_submitted";
+  return (
+    <Link
+      to="/orders/$orderId"
+      params={{ orderId: o.id }}
+      className={`flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 transition hover:border-primary ${urgent ? "ring-1 ring-warning" : ""}`}
+    >
+      <div className="min-w-0">
+        <div className="font-semibold">#{o.id.slice(0, 8)}</div>
+        <div className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString()}</div>
+        <div className="mt-1 text-sm">{formatKES(Number(o.subtotal))}</div>
+      </div>
+      <OrderStatusPill status={o.status} />
+      {ACTIVE.has(o.status) && (
+        <Button size="sm" variant={urgent ? "default" : "outline"}>{NEXT_LABEL[o.status] ?? "Fungua"}</Button>
+      )}
+    </Link>
   );
 }
