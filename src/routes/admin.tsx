@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, Link, useRouterState, redirect } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { Shield, Users, Receipt, Flag, Map } from "lucide-react";
+import { Shield, Users, Receipt, Flag, Map, Gift } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin")({
@@ -17,6 +17,7 @@ const tabs = [
   { to: "/admin/subscriptions", label: "Subscriptions", icon: Receipt },
   { to: "/admin/reports", label: "Reports", icon: Flag },
   { to: "/admin/regions", label: "Regions", icon: Map },
+  { to: "/admin/referrals", label: "Referrals", icon: Gift },
 ];
 
 function AdminLayout() {
