@@ -11,7 +11,7 @@ import { WizardStepper } from "@/components/WizardStepper";
 import { GeoAverager } from "@/components/GeoAverager";
 import { uploadFile } from "@/lib/upload";
 import { toast } from "sonner";
-import { Store, Receipt, ClipboardList, TrendingUp, Camera, Loader2 } from "lucide-react";
+import { Store, Receipt, ClipboardList, TrendingUp, Camera, Loader2, Gift } from "lucide-react";
 import { BUSINESS_CATEGORIES, BUSINESS_CATEGORY_GROUPS } from "@/lib/business-categories";
 
 export const Route = createFileRoute("/seller/")({ component: SellerHome });
