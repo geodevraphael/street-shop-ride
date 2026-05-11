@@ -6,7 +6,7 @@ import { ShareButton } from "@/components/ShareButton";
 import { supabase } from "@/integrations/supabase/client";
 import { cart } from "@/lib/cart";
 import { formatKES } from "@/lib/pricing";
-import { MapPin, Plus, Star } from "lucide-react";
+import { MapPin, Plus, Star, MessageCircle } from "lucide-react";
 import { ReportDialog } from "@/components/ReportDialog";
 import { toast } from "sonner";
 
@@ -42,6 +42,15 @@ function ShopDetail() {
               </div>
             </div>
             <div className="flex items-center gap-1">
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(`${shop.name} — ${shop.category ?? "Duka"} kwenye Soko\n${typeof window !== "undefined" ? window.location.origin : ""}/shops/${shop.id}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#25D366] px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+                aria-label="Shiriki duka kwenye WhatsApp"
+              >
+                <MessageCircle className="h-4 w-4" /> WhatsApp
+              </a>
               <ShareButton url={`/shops/${shop.id}`} title={shop.name} text={`${shop.name} — ${shop.category ?? "Duka"} on Soko`} />
               <ReportDialog targetType="seller" targetId={shop.id} />
             </div>
