@@ -13,7 +13,7 @@ import { Copy, Share2, Gift, Users, Bike, Store, Wallet, Check } from "lucide-re
 export const Route = createFileRoute("/referrals")({ component: ReferralsPage });
 
 function ReferralsPage() {
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [referrals, setReferrals] = useState<any[]>([]);
   const [rewards, setRewards] = useState<any[]>([]);
