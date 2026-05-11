@@ -36,6 +36,7 @@ import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminRegionsRouteImport } from './routes/admin.regions'
+import { Route as AdminReferralsRouteImport } from './routes/admin.referrals'
 import { Route as AccountProfileRouteImport } from './routes/account.profile'
 import { Route as AccountAddressesRouteImport } from './routes/account.addresses'
 
@@ -174,6 +175,11 @@ const AdminRegionsRoute = AdminRegionsRouteImport.update({
   path: '/regions',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminReferralsRoute = AdminReferralsRouteImport.update({
+  id: '/referrals',
+  path: '/referrals',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AccountProfileRoute = AccountProfileRouteImport.update({
   id: '/account/profile',
   path: '/account/profile',
@@ -197,6 +203,7 @@ export interface FileRoutesByFullPath {
   '/shops': typeof ShopsRouteWithChildren
   '/account/addresses': typeof AccountAddressesRoute
   '/account/profile': typeof AccountProfileRoute
+  '/admin/referrals': typeof AdminReferralsRoute
   '/admin/regions': typeof AdminRegionsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
@@ -225,6 +232,7 @@ export interface FileRoutesByTo {
   '/shops': typeof ShopsRouteWithChildren
   '/account/addresses': typeof AccountAddressesRoute
   '/account/profile': typeof AccountProfileRoute
+  '/admin/referrals': typeof AdminReferralsRoute
   '/admin/regions': typeof AdminRegionsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
@@ -257,6 +265,7 @@ export interface FileRoutesById {
   '/shops': typeof ShopsRouteWithChildren
   '/account/addresses': typeof AccountAddressesRoute
   '/account/profile': typeof AccountProfileRoute
+  '/admin/referrals': typeof AdminReferralsRoute
   '/admin/regions': typeof AdminRegionsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
@@ -290,6 +299,7 @@ export interface FileRouteTypes {
     | '/shops'
     | '/account/addresses'
     | '/account/profile'
+    | '/admin/referrals'
     | '/admin/regions'
     | '/admin/reports'
     | '/admin/subscriptions'
@@ -318,6 +328,7 @@ export interface FileRouteTypes {
     | '/shops'
     | '/account/addresses'
     | '/account/profile'
+    | '/admin/referrals'
     | '/admin/regions'
     | '/admin/reports'
     | '/admin/subscriptions'
@@ -349,6 +360,7 @@ export interface FileRouteTypes {
     | '/shops'
     | '/account/addresses'
     | '/account/profile'
+    | '/admin/referrals'
     | '/admin/regions'
     | '/admin/reports'
     | '/admin/subscriptions'
@@ -578,6 +590,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRegionsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/referrals': {
+      id: '/admin/referrals'
+      path: '/referrals'
+      fullPath: '/admin/referrals'
+      preLoaderRoute: typeof AdminReferralsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/account/profile': {
       id: '/account/profile'
       path: '/account/profile'
@@ -596,6 +615,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminReferralsRoute: typeof AdminReferralsRoute
   AdminRegionsRoute: typeof AdminRegionsRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
@@ -604,6 +624,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminReferralsRoute: AdminReferralsRoute,
   AdminRegionsRoute: AdminRegionsRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminSubscriptionsRoute: AdminSubscriptionsRoute,

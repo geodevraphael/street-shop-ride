@@ -19,9 +19,14 @@ function ReferralsPage() {
   const [rewards, setRewards] = useState<any[]>([]);
   const [phone, setPhone] = useState("");
   const [savingPhone, setSavingPhone] = useState(false);
+  const [enabled, setEnabled] = useState(true);
 
   const load = async () => {
     if (!user) return;
+    const { data: setting } = await supabase
+      .from("app_settings").select("value").eq("key", "referrals_enabled").maybeSingle();
+    setEnabled(setting?.value === true || setting?.value === "true");
+
     const { data: p } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
     setProfile(p);
     setPhone(p?.payout_phone ?? p?.phone ?? "");
@@ -86,6 +91,9 @@ function ReferralsPage() {
     .filter((r) => r.reward_type === "boda_discount")
     .reduce((s, r) => s + Number(r.amount), 0);
 
+  const clientRefs = referrals.filter((r) => r.referred_role === "client");
+  const qualifiedClients = clientRefs.filter((r) => r.qualified).length;
+
   return (
     <AppShell>
       <div className="mx-auto max-w-3xl space-y-5">
@@ -93,6 +101,12 @@ function ReferralsPage() {
           <h1 className="text-2xl font-bold">Referral Program</h1>
           <p className="text-sm text-muted-foreground">Alika watu — pata zawadi za pesa na punguzo.</p>
         </div>
+
+        {!enabled && (
+          <div className="rounded-2xl border border-amber-500/40 bg-amber-50 p-4 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+            Referral program imezimwa kwa sasa na admin. Bado unaweza kuona historia yako, lakini hakuna zawadi mpya zitatolewa.
+          </div>
+        )}
 
         {/* Code + share */}
         <div className="rounded-2xl border bg-gradient-to-br from-primary/10 to-accent p-5">
@@ -109,10 +123,11 @@ function ReferralsPage() {
         </div>
 
         {/* Reward rules */}
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <RuleCard icon={Wallet} title="Sellers 10 = TSh 10,000" desc="Alika sellers 10 wanaolist bidhaa, pata TSh 10,000 kwa simu yako." progress={`${qualifiedSellers}/10`} />
           <RuleCard icon={Store} title="Sellers 5 = 50% off" desc="Alika sellers 5; pata punguzo 50% kwa miezi 2 ya ada ya mwezi." progress={`${qualifiedSellers}/5`} />
           <RuleCard icon={Bike} title="Boda 2 = 2% off" desc="Kila boda 2 wanaojisajili kupitia kwako, pata 2% punguzo kwenye ada." progress={`${qualifiedBodas}/2`} />
+          <RuleCard icon={Users} title="Clients 100 + 30% = TSh 100,000" desc="Alika wateja 100 na angalau 30% wanunue mara ya kwanza, pata TSh 100,000." progress={`${clientRefs.length}/100 · ${qualifiedClients}/30`} />
         </div>
 
         {/* Earnings summary */}
