@@ -66,49 +66,103 @@ function AdminRegions() {
     if (!fVillage) return toast.error("Map at least the Village name field");
     setBusy(true);
 
-    // Cache: level → name|parentId → row id
+    // Cache: level|name|parent -> id
     const cache: Record<string, string> = {};
-    const key = (level: LevelKey, name: string, parent: string | null) => `${level}|${(name || "").toLowerCase()}|${parent ?? ""}`;
+    const key = (level: LevelKey, name: string, parent: string | null) => `${level}|${(name || "").trim().toLowerCase()}|${parent ?? ""}`;
 
-    // Pre-load existing rows into cache to avoid duplicates across re-imports
+    // Pre-load existing rows
     const { data: existing } = await supabase.from("regions").select("id,name,level,parent_id");
     (existing ?? []).forEach((r: any) => { cache[key(r.level, r.name, r.parent_id)] = r.id; });
 
-    const ensure = async (level: LevelKey, name: string, parent: string | null, geojson?: any): Promise<string | null> => {
-      const n = (name || "").trim();
-      if (!n) return null;
-      const k = key(level, n, parent);
-      if (cache[k]) return cache[k];
-      const { data, error } = await supabase
-        .from("regions")
-        .insert({ name: n, level, parent_id: parent, geojson: geojson ?? null })
-        .select("id")
-        .single();
-      if (error) throw error;
-      cache[k] = data.id;
-      return data.id;
+    // Bulk insert helper: inserts unique rows for a level in chunks, updates cache
+    const bulkInsert = async (
+      level: LevelKey,
+      rows: Array<{ name: string; parent_id: string | null; geojson?: any }>,
+    ) => {
+      // dedupe within batch + skip ones already cached
+      const seen = new Set<string>();
+      const fresh: typeof rows = [];
+      for (const r of rows) {
+        const k = key(level, r.name, r.parent_id);
+        if (cache[k] || seen.has(k)) continue;
+        seen.add(k);
+        fresh.push({ ...r, name: r.name.trim() });
+      }
+      const CHUNK = 500;
+      for (let i = 0; i < fresh.length; i += CHUNK) {
+        const slice = fresh.slice(i, i + CHUNK).map((r) => ({
+          name: r.name, level, parent_id: r.parent_id, geojson: r.geojson ?? null,
+        }));
+        const { data, error } = await supabase.from("regions").insert(slice).select("id,name,parent_id");
+        if (error) throw error;
+        (data ?? []).forEach((row: any) => { cache[key(level, row.name, row.parent_id)] = row.id; });
+        setProgress(`${level}: ${Math.min(i + CHUNK, fresh.length)}/${fresh.length}`);
+      }
     };
 
     let created = 0, skipped = 0;
     try {
-      for (let i = 0; i < features.length; i++) {
-        const f = features[i];
-        const p = f?.properties ?? {};
-        const regionName = fRegion ? String(p[fRegion] ?? "").trim() : "";
-        const districtName = fDistrict ? String(p[fDistrict] ?? "").trim() : "";
-        const wardName = fWard ? String(p[fWard] ?? "").trim() : "";
-        const villageName = String(p[fVillage] ?? "").trim();
-
-        if (!villageName) { skipped++; continue; }
-
-        const regionId = regionName ? await ensure("region", regionName, null) : null;
-        const districtId = districtName ? await ensure("district", districtName, regionId) : null;
-        const wardId = wardName ? await ensure("ward", wardName, districtId) : null;
-        await ensure("village", villageName, wardId, { type: "Feature", geometry: f.geometry, properties: p });
-        created++;
-
-        if (i % 25 === 0) setProgress(`${i + 1} / ${features.length}`);
+      // Pass 1: regions
+      const regionNames = new Set<string>();
+      for (const f of features) {
+        const v = String(f?.properties?.[fVillage] ?? "").trim();
+        if (!v) continue;
+        if (fRegion) {
+          const n = String(f.properties[fRegion] ?? "").trim();
+          if (n) regionNames.add(n);
+        }
       }
+      await bulkInsert("region", [...regionNames].map((name) => ({ name, parent_id: null })));
+
+      // Pass 2: districts
+      const districtRows: Array<{ name: string; parent_id: string | null }> = [];
+      for (const f of features) {
+        const p = f?.properties ?? {};
+        if (!String(p[fVillage] ?? "").trim()) continue;
+        const dName = fDistrict ? String(p[fDistrict] ?? "").trim() : "";
+        if (!dName) continue;
+        const rName = fRegion ? String(p[fRegion] ?? "").trim() : "";
+        const parent = rName ? cache[key("region", rName, null)] ?? null : null;
+        districtRows.push({ name: dName, parent_id: parent });
+      }
+      await bulkInsert("district", districtRows);
+
+      // Pass 3: wards
+      const wardRows: Array<{ name: string; parent_id: string | null }> = [];
+      for (const f of features) {
+        const p = f?.properties ?? {};
+        if (!String(p[fVillage] ?? "").trim()) continue;
+        const wName = fWard ? String(p[fWard] ?? "").trim() : "";
+        if (!wName) continue;
+        const dName = fDistrict ? String(p[fDistrict] ?? "").trim() : "";
+        const rName = fRegion ? String(p[fRegion] ?? "").trim() : "";
+        const rId = rName ? cache[key("region", rName, null)] ?? null : null;
+        const dId = dName ? cache[key("district", dName, rId)] ?? null : null;
+        wardRows.push({ name: wName, parent_id: dId });
+      }
+      await bulkInsert("ward", wardRows);
+
+      // Pass 4: villages (with geojson)
+      const villageRows: Array<{ name: string; parent_id: string | null; geojson: any }> = [];
+      for (const f of features) {
+        const p = f?.properties ?? {};
+        const vName = String(p[fVillage] ?? "").trim();
+        if (!vName) { skipped++; continue; }
+        const wName = fWard ? String(p[fWard] ?? "").trim() : "";
+        const dName = fDistrict ? String(p[fDistrict] ?? "").trim() : "";
+        const rName = fRegion ? String(p[fRegion] ?? "").trim() : "";
+        const rId = rName ? cache[key("region", rName, null)] ?? null : null;
+        const dId = dName ? cache[key("district", dName, rId)] ?? null : null;
+        const wId = wName ? cache[key("ward", wName, dId)] ?? null : null;
+        villageRows.push({
+          name: vName,
+          parent_id: wId,
+          geojson: { type: "Feature", geometry: f.geometry, properties: p },
+        });
+        created++;
+      }
+      await bulkInsert("village", villageRows);
+
       setProgress("");
       toast.success(`Imported ${created} villages (skipped ${skipped})`);
       setPreview(null);

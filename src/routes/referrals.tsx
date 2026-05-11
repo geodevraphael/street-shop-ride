@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ import { Copy, Share2, Gift, Users, Bike, Store, Wallet, Check } from "lucide-re
 export const Route = createFileRoute("/referrals")({ component: ReferralsPage });
 
 function ReferralsPage() {
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [referrals, setReferrals] = useState<any[]>([]);
   const [rewards, setRewards] = useState<any[]>([]);
@@ -122,13 +122,20 @@ function ReferralsPage() {
           <p className="mt-2 break-all text-xs text-muted-foreground">{link}</p>
         </div>
 
-        {/* Reward rules */}
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <RuleCard icon={Wallet} title="Sellers 10 = TSh 10,000" desc="Alika sellers 10 wanaolist bidhaa, pata TSh 10,000 kwa simu yako." progress={`${qualifiedSellers}/10`} />
-          <RuleCard icon={Store} title="Sellers 5 = 50% off" desc="Alika sellers 5; pata punguzo 50% kwa miezi 2 ya ada ya mwezi." progress={`${qualifiedSellers}/5`} />
-          <RuleCard icon={Bike} title="Boda 2 = 2% off" desc="Kila boda 2 wanaojisajili kupitia kwako, pata 2% punguzo kwenye ada." progress={`${qualifiedBodas}/2`} />
-          <RuleCard icon={Users} title="Clients 100 + 30% = TSh 100,000" desc="Alika wateja 100 na angalau 30% wanunue mara ya kwanza, pata TSh 100,000." progress={`${clientRefs.length}/100 · ${qualifiedClients}/30`} />
-        </div>
+        {/* Reward rules — show only those applicable to this user */}
+        {(() => {
+          const isSeller = roles.includes("seller");
+          const isRider = roles.includes("rider");
+          const cards: React.ReactNode[] = [];
+          // Cash payouts: anyone can earn by inviting sellers / clients
+          cards.push(<RuleCard key="s10" icon={Wallet} title="Sellers 10 = TSh 10,000" desc="Alika sellers 10 wanaolist bidhaa, pata TSh 10,000 kwa simu yako." progress={`${qualifiedSellers}/10`} />);
+          cards.push(<RuleCard key="c100" icon={Users} title="Clients 100 + 30% = TSh 100,000" desc="Alika wateja 100 na angalau 30% wanunue mara ya kwanza, pata TSh 100,000." progress={`${clientRefs.length}/100 · ${qualifiedClients}/30`} />);
+          // Subscription discount: only sellers (they pay monthly fee)
+          if (isSeller) cards.push(<RuleCard key="s5" icon={Store} title="Sellers 5 = 50% off" desc="Alika sellers 5; pata punguzo 50% kwa miezi 2 ya ada ya mwezi." progress={`${qualifiedSellers}/5`} />);
+          // Boda discount: only riders (applied to their boda fees)
+          if (isRider) cards.push(<RuleCard key="b2" icon={Bike} title="Boda 2 = 2% off" desc="Kila boda 2 wanaojisajili kupitia kwako, pata 2% punguzo kwenye ada." progress={`${qualifiedBodas}/2`} />);
+          return <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{cards}</div>;
+        })()}
 
         {/* Earnings summary */}
         <div className="grid gap-3 sm:grid-cols-3">
