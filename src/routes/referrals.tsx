@@ -126,7 +126,7 @@ function ReferralsPage() {
         {(() => {
           const isSeller = roles.includes("seller");
           const isRider = roles.includes("rider");
-          const cards: JSX.Element[] = [];
+          const cards: React.ReactNode[] = [];
           // Cash payouts: anyone can earn by inviting sellers / clients
           cards.push(<RuleCard key="s10" icon={Wallet} title="Sellers 10 = TSh 10,000" desc="Alika sellers 10 wanaolist bidhaa, pata TSh 10,000 kwa simu yako." progress={`${qualifiedSellers}/10`} />);
           cards.push(<RuleCard key="c100" icon={Users} title="Clients 100 + 30% = TSh 100,000" desc="Alika wateja 100 na angalau 30% wanunue mara ya kwanza, pata TSh 100,000." progress={`${clientRefs.length}/100 · ${qualifiedClients}/30`} />);
