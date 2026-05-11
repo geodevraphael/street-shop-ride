@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -6,19 +6,22 @@ import { OrderStatusPill } from "@/components/OrderStatusPill";
 import { Button } from "@/components/ui/button";
 import { formatKES } from "@/lib/pricing";
 import { Bell } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/seller/orders")({ component: SellerOrders });
 
 const ACTIVE = new Set(["placed", "accepted", "payment_submitted", "payment_confirmed", "rider_assigned", "picked_up", "delivered"]);
 
-const NEXT_LABEL: Record<string, string> = {
-  placed: "Kubali oda",
-  accepted: "Subiri malipo",
-  payment_submitted: "Thibitisha malipo",
-  payment_confirmed: "Tafuta boda",
-  rider_assigned: "Mkabidhi boda",
-  picked_up: "Inasafirishwa",
-  delivered: "Subiri uthibitisho",
+// Inline action: { label, nextStatus } — no nextStatus means "open the order page"
+type Action = { label: string; nextStatus?: string; variant?: "default" | "outline" };
+const ACTION: Record<string, Action> = {
+  placed: { label: "Kubali oda", nextStatus: "accepted", variant: "default" },
+  accepted: { label: "Subiri malipo", variant: "outline" },
+  payment_submitted: { label: "Hakiki malipo", variant: "default" }, // needs proof view → open page
+  payment_confirmed: { label: "Tafuta boda", variant: "default" }, // needs rider picker → open page
+  rider_assigned: { label: "Mkabidhi boda", nextStatus: "picked_up", variant: "default" },
+  picked_up: { label: "Inasafirishwa", variant: "outline" },
+  delivered: { label: "Subiri uthibitisho", variant: "outline" },
 };
 
 function SellerOrders() {
@@ -42,7 +45,6 @@ function SellerOrders() {
     });
   }, [user]);
 
-  // Realtime
   useEffect(() => {
     if (!shopId) return;
     const ch = supabase
@@ -71,37 +73,62 @@ function SellerOrders() {
       {active.length > 0 && (
         <section>
           <h2 className="mb-2 text-sm font-semibold text-muted-foreground">Inaendelea ({active.length})</h2>
-          <div className="space-y-2">{active.map((o) => <Row key={o.id} o={o} />)}</div>
+          <div className="space-y-2">{active.map((o) => <Row key={o.id} o={o} onChanged={() => load()} />)}</div>
         </section>
       )}
 
       {past.length > 0 && (
         <section>
           <h2 className="mb-2 text-sm font-semibold text-muted-foreground">Historia ({past.length})</h2>
-          <div className="space-y-2">{past.map((o) => <Row key={o.id} o={o} />)}</div>
+          <div className="space-y-2">{past.map((o) => <Row key={o.id} o={o} onChanged={() => load()} />)}</div>
         </section>
       )}
     </div>
   );
 }
 
-function Row({ o }: { o: any }) {
+function Row({ o, onChanged }: { o: any; onChanged: () => void }) {
   const urgent = o.status === "placed" || o.status === "payment_submitted";
+  const nav = useNavigate();
+  const [busy, setBusy] = useState(false);
+  const action = ACTION[o.status];
+
+  const handleAction = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!action) return;
+    // No inline transition → open the order page so seller can complete the step there
+    if (!action.nextStatus) {
+      nav({ to: "/orders/$orderId", params: { orderId: o.id } });
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase.from("orders").update({ status: action.nextStatus as any }).eq("id", o.id);
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Imehifadhiwa");
+    onChanged();
+  };
+
   return (
-    <Link
-      to="/orders/$orderId"
-      params={{ orderId: o.id }}
+    <div
       className={`flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 transition hover:border-primary ${urgent ? "ring-1 ring-warning" : ""}`}
     >
-      <div className="min-w-0">
+      <Link
+        to="/orders/$orderId"
+        params={{ orderId: o.id }}
+        className="min-w-0 flex-1"
+      >
         <div className="font-semibold">#{o.id.slice(0, 8)}</div>
         <div className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString()}</div>
         <div className="mt-1 text-sm">{formatKES(Number(o.subtotal))}</div>
-      </div>
+      </Link>
       <OrderStatusPill status={o.status} />
-      {ACTIVE.has(o.status) && (
-        <Button size="sm" variant={urgent ? "default" : "outline"}>{NEXT_LABEL[o.status] ?? "Fungua"}</Button>
+      {action && (
+        <Button size="sm" variant={action.variant ?? "outline"} disabled={busy} onClick={handleAction}>
+          {busy ? "Inahifadhi…" : action.label}
+        </Button>
       )}
-    </Link>
+    </div>
   );
 }
