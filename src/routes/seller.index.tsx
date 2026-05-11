@@ -66,6 +66,17 @@ function SellerHome() {
           <p className="mt-1 text-sm text-warning-foreground">You've crossed 10 sales — TSh 20,000/month is now due.</p>
         )}
       </div>
+
+      <Link to="/referrals" className="flex items-center justify-between rounded-2xl border bg-gradient-to-br from-primary/10 to-accent p-4 transition hover:shadow-md">
+        <div className="flex items-center gap-3">
+          <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary"><Gift className="h-5 w-5" /></div>
+          <div>
+            <p className="font-semibold">Alika sellers / boda — pata zawadi</p>
+            <p className="text-xs text-muted-foreground">5 sellers = 50% off ada · 10 sellers = TSh 10,000 · 2 boda = 2% off</p>
+          </div>
+        </div>
+        <span className="text-sm text-primary">→</span>
+      </Link>
     </div>
   );
 }
