@@ -68,6 +68,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             )}
             {user ? (
               <>
+                <Link to="/referrals" className="hidden md:inline">
+                  <Button variant="ghost" size="sm" className="gap-1.5"><Gift className="h-4 w-4" /> Alika</Button>
+                </Link>
                 <Link to="/account/profile" className="hidden md:inline">
                   <Button variant="ghost" size="icon" aria-label="Akaunti"><User className="h-4 w-4" /></Button>
                 </Link>
