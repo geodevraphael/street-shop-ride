@@ -8,7 +8,7 @@ import { OrderTimeline } from "@/components/OrderTimeline";
 import { ContactActions } from "@/components/ContactActions";
 import { Button } from "@/components/ui/button";
 import { formatKES, distanceKm } from "@/lib/pricing";
-import { Bike, Star, ShieldCheck, MapPin, Copy, XCircle, RefreshCcw } from "lucide-react";
+import { Bike, Star, ShieldCheck, MapPin, Copy, XCircle, RefreshCcw, ExternalLink } from "lucide-react";
 import { ReportDialog } from "@/components/ReportDialog";
 import { PaymentProofDialog } from "@/components/PaymentProofDialog";
 import { TrackingMap } from "@/components/TrackingMap";
@@ -16,6 +16,30 @@ import { useTrackOrder } from "@/lib/tracking";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/orders/$orderId")({ component: OrderDetail });
+
+function buildMapsUrl({
+  shop,
+  destination,
+  rider,
+}: {
+  shop?: { lat: number; lng: number } | null;
+  destination?: { lat: number; lng: number } | null;
+  rider?: { lat: number; lng: number } | null;
+}) {
+  if (shop && destination) {
+    return `https://www.google.com/maps/dir/?api=1&origin=${shop.lat},${shop.lng}&destination=${destination.lat},${destination.lng}&travelmode=driving`;
+  }
+  if (rider) {
+    return `https://www.google.com/maps/search/?api=1&query=${rider.lat},${rider.lng}`;
+  }
+  if (destination) {
+    return `https://www.google.com/maps/search/?api=1&query=${destination.lat},${destination.lng}`;
+  }
+  if (shop) {
+    return `https://www.google.com/maps/search/?api=1&query=${shop.lat},${shop.lng}`;
+  }
+  return null;
+}
 
 function OrderDetail() {
   const { orderId } = Route.useParams();
@@ -126,7 +150,10 @@ function OrderDetail() {
   if (!order) return <AppShell><p>Inapakia…</p></AppShell>;
 
   const riderPos = liveRider ?? (rider?.current_lat ? { lat: rider.current_lat, lng: rider.current_lng } : null);
+  const shopPos = shop?.lat != null && shop?.lng != null ? { lat: shop.lat, lng: shop.lng } : null;
+  const destinationPos = address?.lat != null && address?.lng != null ? { lat: address.lat, lng: address.lng } : null;
   const orderTag = `Oda #${order.id.slice(0, 8)}`;
+  const mapUrl = buildMapsUrl({ shop: shopPos, destination: destinationPos, rider: riderPos });
 
   return (
     <AppShell>
@@ -279,10 +306,20 @@ function OrderDetail() {
           {/* Live tracking map */}
           {trackingActive && (
             <section className="rounded-2xl border bg-card p-4">
-              <h3 className="mb-3 flex items-center gap-2 font-semibold"><MapPin className="h-4 w-4 text-primary" /> Fuatilia kwenye ramani</h3>
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <h3 className="flex items-center gap-2 font-semibold"><MapPin className="h-4 w-4 text-primary" /> Fuatilia kwenye ramani</h3>
+                {mapUrl && (
+                  <Button asChild size="sm" variant="outline">
+                    <a href={mapUrl} target="_blank" rel="noreferrer" className="gap-1.5">
+                      Fungua ramani
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  </Button>
+                )}
+              </div>
               <TrackingMap
-                shop={shop?.lat ? { lat: shop.lat, lng: shop.lng } : null}
-                destination={address?.lat ? { lat: address.lat, lng: address.lng } : null}
+                shop={shopPos}
+                destination={destinationPos}
                 client={clientPos}
                 rider={riderPos}
                 height={340}
