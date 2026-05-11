@@ -262,23 +262,132 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          payout_phone: string | null
           phone: string | null
+          referral_code: string | null
+          referred_by: string | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
           full_name?: string | null
           id: string
+          payout_phone?: string | null
           phone?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
+          payout_phone?: string | null
           phone?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_referred_by_fkey"
+            columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_rewards: {
+        Row: {
+          amount: number
+          created_at: string
+          details: Json | null
+          id: string
+          notes: string | null
+          paid_at: string | null
+          paid_phone: string | null
+          reward_type: Database["public"]["Enums"]["reward_type"]
+          status: Database["public"]["Enums"]["reward_status"]
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          details?: Json | null
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          paid_phone?: string | null
+          reward_type: Database["public"]["Enums"]["reward_type"]
+          status?: Database["public"]["Enums"]["reward_status"]
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          details?: Json | null
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          paid_phone?: string | null
+          reward_type?: Database["public"]["Enums"]["reward_type"]
+          status?: Database["public"]["Enums"]["reward_status"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_rewards_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          qualified: boolean
+          qualified_at: string | null
+          referred_role: Database["public"]["Enums"]["app_role"]
+          referred_user_id: string
+          referrer_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          qualified?: boolean
+          qualified_at?: string | null
+          referred_role: Database["public"]["Enums"]["app_role"]
+          referred_user_id: string
+          referrer_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          qualified?: boolean
+          qualified_at?: string | null
+          referred_role?: Database["public"]["Enums"]["app_role"]
+          referred_user_id?: string
+          referrer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referred_user_id_fkey"
+            columns: ["referred_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       regions: {
         Row: {
@@ -571,6 +680,7 @@ export type Database = {
           count: number
         }[]
       }
+      generate_referral_code: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -605,6 +715,8 @@ export type Database = {
         | "district"
         | "street"
       report_target: "seller" | "rider"
+      reward_status: "pending" | "approved" | "paid" | "applied"
+      reward_type: "cash_payout" | "subscription_discount" | "boda_discount"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -760,6 +872,8 @@ export const Constants = {
         "street",
       ],
       report_target: ["seller", "rider"],
+      reward_status: ["pending", "approved", "paid", "applied"],
+      reward_type: ["cash_payout", "subscription_discount", "boda_discount"],
     },
   },
 } as const
