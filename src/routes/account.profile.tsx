@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Gift } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,6 +43,17 @@ function Profile() {
         <div><Label>Full name</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
         <div><Label>Phone</Label><Input value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
         <Button onClick={save} disabled={busy}>{busy ? "Saving…" : "Save"}</Button>
+
+        <Link to="/referrals" className="mt-4 flex items-center justify-between rounded-2xl border bg-gradient-to-br from-primary/10 to-accent p-4 transition hover:shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary"><Gift className="h-5 w-5" /></div>
+            <div>
+              <p className="font-semibold">Referral Program</p>
+              <p className="text-xs text-muted-foreground">Alika sellers/boda — pata pesa na punguzo</p>
+            </div>
+          </div>
+          <span className="text-sm text-primary">→</span>
+        </Link>
       </div>
     </AppShell>
   );
