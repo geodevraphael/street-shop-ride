@@ -47,6 +47,27 @@ export type Database = {
         }
         Relationships: []
       }
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount: number
@@ -688,6 +709,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      referrals_enabled: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "client" | "seller" | "rider" | "admin" | "support"
