@@ -19,9 +19,14 @@ function ReferralsPage() {
   const [rewards, setRewards] = useState<any[]>([]);
   const [phone, setPhone] = useState("");
   const [savingPhone, setSavingPhone] = useState(false);
+  const [enabled, setEnabled] = useState(true);
 
   const load = async () => {
     if (!user) return;
+    const { data: setting } = await supabase
+      .from("app_settings").select("value").eq("key", "referrals_enabled").maybeSingle();
+    setEnabled(setting?.value === true || setting?.value === "true");
+
     const { data: p } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
     setProfile(p);
     setPhone(p?.payout_phone ?? p?.phone ?? "");
