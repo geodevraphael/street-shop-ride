@@ -371,7 +371,7 @@ function OrderDetail() {
           {order.rider_id && <ReportDialog targetType="rider" targetId={order.rider_id} />}
         </div>
 
-        <aside className="space-y-3">
+        <aside className="space-y-3 lg:sticky lg:top-20 lg:self-start">
           <div className="rounded-2xl border bg-card p-4 text-sm">
             <Row label="Jumla ndogo" v={formatKES(Number(order.subtotal))} />
             <Row label="Usafirishaji" v={formatKES(Number(order.delivery_fee))} />
