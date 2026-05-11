@@ -25,6 +25,7 @@ function OrderDetail() {
   const [shop, setShop] = useState<any>(null);
   const [address, setAddress] = useState<any>(null);
   const [rider, setRider] = useState<any>(null);
+  const [riderPhone, setRiderPhone] = useState<string | null>(null);
   const [clientProfile, setClientProfile] = useState<any>(null);
   const [sellerProfile, setSellerProfile] = useState<any>(null);
   const [riders, setRiders] = useState<any[]>([]);
@@ -55,6 +56,12 @@ function OrderDetail() {
     if (s.data?.owner_id) {
       const { data: sp } = await supabase.from("profiles").select("full_name, phone").eq("id", s.data.owner_id).maybeSingle();
       setSellerProfile(sp);
+    }
+    if (r.data?.user_id) {
+      const { data: rp } = await supabase.from("profiles").select("phone").eq("id", r.data.user_id).maybeSingle();
+      setRiderPhone(rp?.phone ?? null);
+    } else {
+      setRiderPhone(null);
     }
   };
 
@@ -333,7 +340,7 @@ function OrderDetail() {
               {rider && !isRider && (
                 <div>
                   <p className="text-xs text-muted-foreground">Boda · {rider.full_name ?? ""} {rider.plate ? `(${rider.plate})` : ""}</p>
-                  <ContactActions phone={rider.phone} label="boda" message={orderTag} />
+                  <ContactActions phone={riderPhone} label="boda" message={orderTag} />
                 </div>
               )}
               {(isClient && !sellerProfile?.phone && !rider) || (isSeller && !clientProfile?.phone) ? (
