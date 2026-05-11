@@ -103,7 +103,7 @@ function Row({ o, onChanged }: { o: any; onChanged: () => void }) {
       return;
     }
     setBusy(true);
-    const { error } = await supabase.from("orders").update({ status: action.nextStatus }).eq("id", o.id);
+    const { error } = await supabase.from("orders").update({ status: action.nextStatus as any }).eq("id", o.id);
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Imehifadhiwa");
