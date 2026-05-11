@@ -112,7 +112,7 @@ function OrderCard({ o, live }: { o: any; live?: boolean }) {
             ) : (
               <>
                 <MapPin className="h-3.5 w-3.5" />
-                Fungua kufuatilia kwenye ramani
+                Fungua oda na ramani
               </>
             )}
           </span>
