@@ -4,8 +4,9 @@ import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { OrderStatusPill } from "@/components/OrderStatusPill";
+import { OrderProgressMini } from "@/components/OrderProgressMini";
 import { formatKES } from "@/lib/pricing";
-import { MapPin, Truck, Radio } from "lucide-react";
+import { Truck } from "lucide-react";
 
 export const Route = createFileRoute("/orders")({ component: Orders });
 
