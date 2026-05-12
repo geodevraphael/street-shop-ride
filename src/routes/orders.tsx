@@ -115,18 +115,12 @@ function OrderCard({ o, live }: { o: any; live?: boolean }) {
         <div className="mt-3 flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2 text-xs">
           <span className="flex items-center gap-1.5 font-medium text-primary">
             {live ? (
-              <>
-                <Radio className="h-3.5 w-3.5 animate-pulse" />
-                Boda inaonekana moja kwa moja
-              </>
+              <><Radio className="h-3.5 w-3.5 animate-pulse" /> {NEXT_HINT[o.status] ?? "Fuatilia kwenye ramani"}</>
             ) : (
-              <>
-                <MapPin className="h-3.5 w-3.5" />
-                Fungua oda na ramani
-              </>
+              <><MapPin className="h-3.5 w-3.5" /> {NEXT_HINT[o.status] ?? "Endelea na hatua inayofuata"}</>
             )}
           </span>
-          <span className="font-semibold text-primary">Fuatilia →</span>
+          <span className="font-semibold text-primary">Endelea →</span>
         </div>
       )}
     </Link>
