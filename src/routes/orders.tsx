@@ -10,7 +10,17 @@ import { MapPin, Truck, Radio } from "lucide-react";
 export const Route = createFileRoute("/orders")({ component: Orders });
 
 const TRACKING_STATUSES = new Set(["placed", "accepted", "payment_submitted", "payment_confirmed", "rider_assigned", "picked_up", "delivered"]);
-const LIVE_STATUSES = new Set(["picked_up"]);
+const LIVE_STATUSES = new Set(["payment_confirmed", "rider_assigned", "picked_up"]);
+
+const NEXT_HINT: Record<string, string> = {
+  placed: "Subiri muuzaji akubali",
+  accepted: "Lipa & tuma uthibitisho",
+  payment_submitted: "Subiri muuzaji athibitishe malipo",
+  payment_confirmed: "Muuzaji anatafuta boda",
+  rider_assigned: "Boda inaokota bidhaa",
+  picked_up: "Bidhaa iko njiani",
+  delivered: "Thibitisha umepokea",
+};
 
 function Orders() {
   const { user } = useAuth();
@@ -105,18 +115,12 @@ function OrderCard({ o, live }: { o: any; live?: boolean }) {
         <div className="mt-3 flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2 text-xs">
           <span className="flex items-center gap-1.5 font-medium text-primary">
             {live ? (
-              <>
-                <Radio className="h-3.5 w-3.5 animate-pulse" />
-                Boda inaonekana moja kwa moja
-              </>
+              <><Radio className="h-3.5 w-3.5 animate-pulse" /> {NEXT_HINT[o.status] ?? "Fuatilia kwenye ramani"}</>
             ) : (
-              <>
-                <MapPin className="h-3.5 w-3.5" />
-                Fungua oda na ramani
-              </>
+              <><MapPin className="h-3.5 w-3.5" /> {NEXT_HINT[o.status] ?? "Endelea na hatua inayofuata"}</>
             )}
           </span>
-          <span className="font-semibold text-primary">Fuatilia →</span>
+          <span className="font-semibold text-primary">Endelea →</span>
         </div>
       )}
     </Link>

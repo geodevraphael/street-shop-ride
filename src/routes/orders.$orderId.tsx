@@ -211,10 +211,10 @@ function OrderDetail() {
             )}
             {isClient && order.status === "accepted" && (
               <div className="space-y-3">
-                <p className="text-sm">Muuzaji amekubali. Tafadhali lipa kwa M-Pesa kisha tuma uthibitisho:</p>
-                {shop?.lipa_number && (
+                <p className="text-sm">Muuzaji amekubali. Tafadhali lipa kisha tuma uthibitisho — au piga muuzaji ulipie pale pale.</p>
+                {shop?.lipa_number ? (
                   <div className="rounded-xl border bg-primary/5 p-3">
-                    <p className="text-xs text-muted-foreground">Lipa Number</p>
+                    <p className="text-xs text-muted-foreground">Lipa Number (M-Pesa)</p>
                     <div className="flex items-center gap-2">
                       <p className="text-2xl font-bold">{shop.lipa_number}</p>
                       <Button size="icon" variant="ghost" onClick={() => { navigator.clipboard.writeText(shop.lipa_number); toast.success("Imenakiliwa"); }}>
@@ -224,8 +224,17 @@ function OrderDetail() {
                     <p className="mt-2 text-xs text-muted-foreground">Lipa: <b>{formatKES(Number(order.subtotal))}</b></p>
                     {shop.qr_code_url && <img src={shop.qr_code_url} alt="QR" className="mt-2 h-32 w-32 object-contain" />}
                   </div>
+                ) : (
+                  <p className="rounded-xl border bg-warning/10 p-3 text-xs text-muted-foreground">
+                    Duka halijaweka namba ya Lipa. Wasiliana na muuzaji moja kwa moja kupanga malipo.
+                  </p>
                 )}
-                <PaymentProofDialog orderId={orderId} onSubmitted={load} />
+                <div className="flex flex-wrap gap-2">
+                  <PaymentProofDialog orderId={orderId} onSubmitted={load} />
+                  <Button variant="outline" disabled={busy} onClick={() => updateStatus("payment_submitted", { payment_ref: "CASH/OFFLINE" })}>
+                    Nitalipa nikifika (cash)
+                  </Button>
+                </div>
               </div>
             )}
             {isClient && order.status === "payment_submitted" && (
@@ -255,7 +264,12 @@ function OrderDetail() {
               </div>
             )}
             {isSeller && order.status === "accepted" && (
-              <p className="text-sm text-muted-foreground">Tunamsubiri mteja alipe na atume uthibitisho wa malipo.</p>
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">Tunamsubiri mteja alipe. Ukishapokea malipo (M-Pesa, cash, au benki) endelea moja kwa moja:</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button disabled={busy} onClick={() => updateStatus("payment_confirmed")}>✓ Nimepokea malipo — endelea</Button>
+                </div>
+              </div>
             )}
             {isSeller && order.status === "payment_submitted" && (
               <div className="space-y-3">
