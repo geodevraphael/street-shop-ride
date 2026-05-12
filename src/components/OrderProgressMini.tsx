@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2, Clock, MapPin, Radio } from "lucide-react";
 
 const STEPS = [
@@ -30,23 +30,50 @@ const BUYER_NEXT: Record<string, { cta: string; waiting?: boolean }> = {
 const LIVE_STATUSES = new Set(["payment_confirmed", "rider_assigned", "picked_up"]);
 
 export function OrderProgressMini({ orderId, status }: { orderId: string; status: string }) {
+  const navigate = useNavigate();
   const idx = ORDER_INDEX[status] ?? 0;
   const next = BUYER_NEXT[status] ?? { cta: "Fungua oda" };
   const live = LIVE_STATUSES.has(status);
   const done = status === "completed";
   const cancelled = status === "cancelled";
 
+  const handleFuatilia = (e: React.MouseEvent) => {
+    // Prevent the parent card's link from also firing if there is one
+    e.stopPropagation();
+    e.preventDefault();
+    navigate({ to: "/orders/$orderId", params: { orderId } });
+  };
+
+  // Choose icon based on status
+  const Icon = cancelled ? null
+    : done ? CheckCircle2
+    : status === "picked_up" ? Radio   // live delivery — show pulsing radio
+    : live ? Radio
+    : next.waiting ? Clock
+    : status === "accepted" ? MapPin   // payment action
+    : MapPin;
+
+  const ctaClass = cancelled
+    ? "bg-destructive/10 text-destructive border-destructive/20"
+    : done
+    ? "bg-success/10 text-success border-success/20"
+    : status === "picked_up"
+    ? "bg-warning/15 text-warning-foreground border-warning/30 ring-1 ring-warning/40"  // most important: live tracking
+    : !next.waiting
+    ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90"            // action needed
+    : "bg-secondary text-foreground border-border hover:bg-secondary/80";                // waiting
+
   return (
     <div className="mt-3 space-y-2">
-      {/* Step bar */}
-      <div className="flex items-center gap-1">
+      {/* Step progress bar */}
+      <div className="flex items-center gap-1" role="progressbar" aria-label={`Hatua: ${status}`}>
         {STEPS.map((s, i) => {
           const isDone = i < idx;
           const isActive = i === idx && !done && !cancelled;
           return (
             <div
               key={s.key}
-              className={`h-1.5 flex-1 rounded-full ${
+              className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${
                 cancelled
                   ? "bg-destructive/30"
                   : isDone || done
@@ -61,38 +88,35 @@ export function OrderProgressMini({ orderId, status }: { orderId: string; status
         })}
       </div>
 
-      {/* CTA row */}
-      <Link
-        to="/orders/$orderId"
-        params={{ orderId }}
-        className={`flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-xs font-semibold transition ${
-          cancelled
-            ? "bg-destructive/10 text-destructive"
-            : done
-            ? "bg-success/10 text-success"
-            : next.waiting
-            ? "bg-secondary text-foreground hover:bg-secondary/80"
-            : "bg-primary text-primary-foreground hover:bg-primary/90"
+      {/*
+        CTA button — this is a <button> (not a nested <Link>) so it works correctly
+        even when placed inside a parent <Link> card. It navigates programmatically.
+      */}
+      <button
+        id={`fuatilia-${orderId}`}
+        onClick={handleFuatilia}
+        className={`flex w-full items-center justify-between gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-all duration-200 ${
+          ctaClass
         }`}
+        aria-label={`${next.cta} — Fungua oda ${orderId.slice(0, 6)}`}
+        type="button"
       >
         <span className="flex items-center gap-1.5">
-          {cancelled ? null : done ? (
-            <CheckCircle2 className="h-4 w-4" />
-          ) : live ? (
-            <Radio className="h-4 w-4 animate-pulse" />
-          ) : next.waiting ? (
-            <Clock className="h-4 w-4" />
-          ) : (
-            <MapPin className="h-4 w-4" />
+          {Icon && (
+            <Icon
+              className={`h-4 w-4 ${
+                status === "picked_up" || (live && !next.waiting) ? "animate-pulse" : ""
+              }`}
+            />
           )}
           {next.cta}
         </span>
         {!done && !cancelled && (
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1 opacity-80">
             Fuatilia <ArrowRight className="h-3.5 w-3.5" />
           </span>
         )}
-      </Link>
+      </button>
     </div>
   );
 }

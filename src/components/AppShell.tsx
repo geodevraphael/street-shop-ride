@@ -1,22 +1,37 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
-  Store, Home, ShoppingBag, User, Bike, Shield, LogOut, MapPin, Search, Gift,
+  Store, Home, ShoppingBag, User, Bike, Shield, LogOut, MapPin, Search, Gift, Package,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/lib/cart";
 import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, roles, signOut } = useAuth();
   const items = useCart();
   const path = useRouterState({ select: (r) => r.location.pathname });
   const nav = useNavigate();
+  const [activeOrderCount, setActiveOrderCount] = useState(0);
+
+  // Track active orders for the badge indicator
+  useEffect(() => {
+    if (!user) { setActiveOrderCount(0); return; }
+    const ACTIVE = ["placed", "accepted", "payment_submitted", "payment_confirmed", "rider_assigned", "picked_up", "delivered"];
+    supabase.from("orders")
+      .select("id", { count: "exact" })
+      .eq("client_id", user.id)
+      .in("status", ACTIVE)
+      .then(({ count }) => setActiveOrderCount(count ?? 0));
+  }, [user]);
 
   const desktopNav = [
     { to: "/", label: "Nyumbani", icon: Home },
     { to: "/shops", label: "Maduka", icon: Store },
     { to: "/products/search", label: "Tafuta", icon: Search },
     { to: "/cart", label: "Kikapu", icon: ShoppingBag, badge: items.length || undefined },
+    { to: "/orders", label: "Oda", icon: Package, badge: activeOrderCount || undefined },
   ];
 
   const isActive = (to: string) =>
@@ -93,14 +108,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </footer>
 
       {/* Mobile bottom navigation */}
-      <MobileBottomNav path={path} cartCount={items.length} hasRole={roles} />
+      <MobileBottomNav path={path} cartCount={items.length} hasRole={roles} activeOrders={activeOrderCount} />
     </div>
   );
 }
 
 function MobileBottomNav({
-  path, cartCount, hasRole,
-}: { path: string; cartCount: number; hasRole: string[] }) {
+  path, cartCount, hasRole, activeOrders,
+}: { path: string; cartCount: number; hasRole: string[]; activeOrders: number }) {
   const accountTo = hasRole.includes("seller")
     ? "/seller"
     : hasRole.includes("rider")
@@ -124,7 +139,7 @@ function MobileBottomNav({
     { to: "/", label: "Nyumbani", icon: Home, exact: true },
     { to: "/shops", label: "Maduka", icon: MapPin, exact: false },
     { to: "/products/search", label: "Tafuta", icon: Search, exact: false },
-    { to: "/cart", label: "Kikapu", icon: ShoppingBag, exact: false, badge: cartCount || undefined },
+    { to: "/orders", label: "Oda", icon: Package, exact: false, badge: activeOrders || undefined },
     { to: accountTo, label: accountLabel, icon: AccountIcon, exact: false },
   ] as const;
 

@@ -6,7 +6,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { OrderStatusPill } from "@/components/OrderStatusPill";
 import { OrderProgressMini } from "@/components/OrderProgressMini";
 import { formatKES } from "@/lib/pricing";
-import { Truck } from "lucide-react";
+import { Truck, RefreshCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/orders")({ component: Orders });
 
@@ -28,7 +29,7 @@ function Orders() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const load = () => {
     if (!user) return;
     setLoading(true);
     supabase.from("orders")
@@ -36,6 +37,19 @@ function Orders() {
       .eq("client_id", user.id)
       .order("created_at", { ascending: false })
       .then(({ data }) => { setOrders(data ?? []); setLoading(false); });
+  };
+
+  useEffect(() => { load(); }, [user]);
+
+  // Realtime: auto-refresh list when any of our orders change
+  useEffect(() => {
+    if (!user) return;
+    const ch = supabase
+      .channel(`orders-list-${user.id}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders", filter: `client_id=eq.${user.id}` }, () => load())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders", filter: `client_id=eq.${user.id}` }, () => load())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
   }, [user]);
 
   const active = useMemo(() => orders.filter((o) => TRACKING_STATUSES.has(o.status)), [orders]);
@@ -45,11 +59,14 @@ function Orders() {
 
   return (
     <AppShell>
-      <div className="flex items-end justify-between">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Oda zangu</h1>
           <p className="text-xs text-muted-foreground">Fuatilia hatua ya oda na eneo la boda kwenye ramani</p>
         </div>
+        <Button variant="ghost" size="icon" onClick={load} title="Onyesha mpya" aria-label="Refresh">
+          <RefreshCcw className="h-4 w-4" />
+        </Button>
       </div>
 
       {loading ? (
@@ -92,11 +109,18 @@ function Orders() {
 
 function OrderCard({ o }: { o: any; live?: boolean }) {
   return (
-    <div className="block rounded-2xl border bg-card p-4 transition hover:border-primary/40">
+    <div className="rounded-2xl border bg-card p-4 transition hover:border-primary/40">
+      {/*
+        FIX: Previously the entire card was wrapped in a <Link>, and OrderProgressMini
+        also rendered a <Link> inside — nested <a> tags are invalid HTML and break
+        the inner "Fuatilia" button. Now the header is its own link, separate from
+        the progress mini which has its own independent link.
+      */}
       <Link
         to="/orders/$orderId"
         params={{ orderId: o.id }}
         className="flex items-center justify-between gap-3"
+        aria-label={`Fungua oda ya ${o.shops?.name ?? "Duka"}`}
       >
         <div className="min-w-0">
           <div className="truncate font-semibold">{o.shops?.name ?? "Duka"}</div>
@@ -111,6 +135,7 @@ function OrderCard({ o }: { o: any; live?: boolean }) {
           </div>
         </div>
       </Link>
+      {/* OrderProgressMini contains its own independent <Link> — must NOT be nested inside another <Link> */}
       <OrderProgressMini orderId={o.id} status={o.status} />
     </div>
   );

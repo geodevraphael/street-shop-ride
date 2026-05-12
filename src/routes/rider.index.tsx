@@ -11,7 +11,7 @@ import { WizardStepper } from "@/components/WizardStepper";
 import { GeoAverager } from "@/components/GeoAverager";
 import { uploadFile } from "@/lib/upload";
 import { OrderStatusPill } from "@/components/OrderStatusPill";
-import { ShieldCheck, Locate, Radio } from "lucide-react";
+import { ShieldCheck, Locate, Radio, Package, CheckCircle2, Bike, AlertCircle } from "lucide-react";
 import { useBroadcastPosition } from "@/lib/tracking";
 import { toast } from "sonner";
 
@@ -23,6 +23,7 @@ function RiderHome() {
   const [loading, setLoading] = useState(true);
   const [available, setAvailable] = useState(true);
   const [openOrders, setOpenOrders] = useState<any[]>([]);
+  const [busy, setBusy] = useState(false);
 
   const load = async () => {
     if (!user) return;
@@ -30,74 +31,188 @@ function RiderHome() {
     setRider(data); setLoading(false);
     if (data) setAvailable(data.available);
     if (data) {
-      const { data: o } = await supabase.from("orders").select("*, shops(name)").eq("rider_id", data.id).order("created_at", { ascending: false }).limit(20);
+      const { data: o } = await supabase
+        .from("orders")
+        .select("*, shops(name, lat, lng)")
+        .eq("rider_id", data.id)
+        .not("status", "in", "(completed,cancelled)")
+        .order("created_at", { ascending: false });
       setOpenOrders(o ?? []);
     }
   };
+
   useEffect(() => { load(); }, [user]);
 
+  // Realtime: refresh when any assigned order changes
+  useEffect(() => {
+    if (!rider) return;
+    const ch = supabase
+      .channel(`rider-orders-${rider.id}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders", filter: `rider_id=eq.${rider.id}` }, () => load())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [rider?.id]);
+
+  const updateOrderStatus = async (orderId: string, status: string) => {
+    setBusy(true);
+    const { error } = await supabase.from("orders").update({ status }).eq("id", orderId);
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success(status === "picked_up" ? "✅ Imeokotwa — safari imeanza!" : "🎉 Imefika — kazi nzuri!");
+    load();
+  };
+
   const updateLocation = () => {
+    if (!navigator.geolocation) return toast.error("GPS haitumiki kwenye kifaa hiki");
     navigator.geolocation.getCurrentPosition(async (p) => {
       await supabase.from("riders").update({ current_lat: p.coords.latitude, current_lng: p.coords.longitude }).eq("id", rider.id);
-      toast.success("Location updated"); load();
-    });
+      toast.success("Eneo limesasishwa"); load();
+    }, (err) => toast.error(err.message));
   };
 
   const toggleAvail = async (v: boolean) => {
     setAvailable(v);
     await supabase.from("riders").update({ available: v }).eq("id", rider.id);
+    toast.success(v ? "Uko tayari kupokea oda" : "Umejificha — hutaonekana");
   };
 
-  if (loading) return <p className="text-muted-foreground">Loading…</p>;
+  if (loading) return <p className="text-muted-foreground p-4">Inapakia…</p>;
   if (!rider) return <RiderWizard onDone={load} />;
 
   const activeDelivery = openOrders.find((o) => o.status === "picked_up");
-
+  const pendingPickup = openOrders.find((o) => o.status === "rider_assigned");
   const remaining = Math.max(0, 10 - rider.deliveries_count);
 
   return (
     <div className="space-y-4">
+      {/* Rider profile card */}
       <div className="rounded-2xl border bg-card p-4">
         <div className="flex items-center justify-between">
           <div>
-            <div className="flex items-center gap-2 font-semibold">{rider.full_name} {rider.license_verified && <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-xs text-success"><ShieldCheck className="h-3 w-3" /> Verified</span>}</div>
-            <div className="text-xs text-muted-foreground">Plate {rider.plate} · {rider.deliveries_count} deliveries</div>
+            <div className="flex items-center gap-2 font-semibold text-lg">
+              {rider.full_name}
+              {rider.license_verified && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-xs text-success">
+                  <ShieldCheck className="h-3 w-3" /> Verified
+                </span>
+              )}
+            </div>
+            <div className="text-xs text-muted-foreground mt-0.5">Plate {rider.plate} · {rider.deliveries_count} usafirishaji</div>
           </div>
-          <div className="flex items-center gap-2">
-            <Label className="text-xs">Available</Label>
+          <div className="flex flex-col items-end gap-1.5">
+            <Label className="text-xs text-muted-foreground">Niko tayari</Label>
             <Switch checked={available} onCheckedChange={toggleAvail} />
           </div>
         </div>
-        <Button variant="outline" size="sm" className="mt-3 gap-1.5" onClick={updateLocation}><Locate className="h-3.5 w-3.5" /> Update my location</Button>
+        <Button variant="outline" size="sm" className="mt-3 gap-1.5" onClick={updateLocation} id="update-location-btn">
+          <Locate className="h-3.5 w-3.5" /> Sasisha eneo langu
+        </Button>
       </div>
 
-      {activeDelivery && <LiveBroadcastCard orderId={activeDelivery.id} riderId={rider.id} />}
+      {/* LIVE BROADCAST — active delivery in progress */}
+      {activeDelivery && (
+        <div className="space-y-3">
+          <LiveBroadcastCard orderId={activeDelivery.id} riderId={rider.id} />
+          <div className="rounded-2xl border-2 border-warning bg-warning/10 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Bike className="h-5 w-5 text-warning" />
+              <h3 className="font-bold text-base">Unasafirisha sasa hivi</h3>
+            </div>
+            <p className="text-sm text-muted-foreground mb-1">
+              <span className="font-medium text-foreground">{activeDelivery.shops?.name}</span>
+              {" → Mteja"}
+            </p>
+            <p className="text-xs text-muted-foreground mb-3">Oda #{activeDelivery.id.slice(0, 8)}</p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                id={`delivered-btn-${activeDelivery.id}`}
+                size="lg"
+                disabled={busy}
+                onClick={() => updateOrderStatus(activeDelivery.id, "delivered")}
+                className="gap-2"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                Nimemfikishia mteja
+              </Button>
+              <Link to="/orders/$orderId" params={{ orderId: activeDelivery.id }}>
+                <Button variant="outline" size="lg">Maelezo zaidi</Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
+      {/* PENDING PICKUP — assigned but not yet picked up */}
+      {pendingPickup && !activeDelivery && (
+        <div className="rounded-2xl border-2 border-primary bg-primary/5 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <AlertCircle className="h-5 w-5 text-primary animate-pulse" />
+            <h3 className="font-bold text-base">Oda inakusubiri!</h3>
+          </div>
+          <p className="text-sm text-muted-foreground mb-1">
+            Nenda <span className="font-medium text-foreground">{pendingPickup.shops?.name}</span> uokote bidhaa
+          </p>
+          <p className="text-xs text-muted-foreground mb-3">Oda #{pendingPickup.id.slice(0, 8)}</p>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              id={`pickup-btn-${pendingPickup.id}`}
+              size="lg"
+              disabled={busy}
+              onClick={() => updateOrderStatus(pendingPickup.id, "picked_up")}
+              className="gap-2"
+            >
+              <Package className="h-4 w-4" />
+              Nimeokota — anza safari
+            </Button>
+            <Link to="/orders/$orderId" params={{ orderId: pendingPickup.id }}>
+              <Button variant="outline" size="lg">Maelezo zaidi</Button>
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Subscription status */}
       <div className="rounded-2xl border bg-gradient-to-br from-primary/10 to-accent p-4">
-        <h3 className="font-semibold">Subscription</h3>
-        {rider.subscription_active ? <p className="mt-1 text-sm">Active — TSh 10,000/month.</p>
-          : remaining > 0 ? <p className="mt-1 text-sm text-muted-foreground">{remaining} more route{remaining === 1 ? "" : "s"} until TSh 10,000/month begins.</p>
-          : <p className="mt-1 text-sm">Threshold reached. TSh 10,000/month is now due.</p>}
+        <h3 className="font-semibold">Usajili</h3>
+        {rider.subscription_active
+          ? <p className="mt-1 text-sm">Amili — TSh 10,000/mwezi.</p>
+          : remaining > 0
+          ? <p className="mt-1 text-sm text-muted-foreground">{remaining} safari zaidi hadi TSh 10,000/mwezi.</p>
+          : <p className="mt-1 text-sm">Kiwango kimefikiwa. TSh 10,000/mwezi sasa inadaiwi.</p>
+        }
       </div>
 
-      <div>
-        <h3 className="font-semibold">My deliveries</h3>
-        {openOrders.length === 0 ? (
-          <p className="mt-2 text-sm text-muted-foreground">Sellers and clients can find you when they need a rider near them.</p>
-        ) : (
-          <div className="mt-2 space-y-2">
+      {/* All active orders list */}
+      {openOrders.length > 0 && (
+        <div>
+          <h3 className="font-semibold mb-2">Oda zangu za sasa</h3>
+          <div className="space-y-2">
             {openOrders.map((o) => (
-              <Link to="/orders/$orderId" params={{ orderId: o.id }} key={o.id} className="flex items-center justify-between rounded-2xl border bg-card p-3 hover:border-primary">
+              <Link
+                key={o.id}
+                to="/orders/$orderId"
+                params={{ orderId: o.id }}
+                className="flex items-center justify-between rounded-2xl border bg-card p-3 hover:border-primary transition"
+              >
                 <div>
                   <div className="font-medium">{o.shops?.name}</div>
-                  <div className="text-xs text-muted-foreground">{o.distance_km?.toFixed(1)} km · TSh {Number(o.delivery_fee).toLocaleString()}</div>
+                  <div className="text-xs text-muted-foreground">
+                    #{o.id.slice(0, 8)} · TSh {Number(o.delivery_fee).toLocaleString()}
+                  </div>
                 </div>
                 <OrderStatusPill status={o.status} />
               </Link>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {openOrders.length === 0 && !activeDelivery && !pendingPickup && (
+        <div className="rounded-2xl border bg-card p-6 text-center text-sm text-muted-foreground">
+          <Bike className="mx-auto mb-2 h-8 w-8 opacity-30" />
+          Hakuna oda kwa sasa. Weka "Niko tayari" ili muuzaji akupate.
+        </div>
+      )}
     </div>
   );
 }

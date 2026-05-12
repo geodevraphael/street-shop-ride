@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+﻿import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +8,7 @@ import { OrderTimeline } from "@/components/OrderTimeline";
 import { ContactActions } from "@/components/ContactActions";
 import { Button } from "@/components/ui/button";
 import { formatKES, distanceKm } from "@/lib/pricing";
-import { Bike, Star, ShieldCheck, MapPin, Copy, XCircle, RefreshCcw, ExternalLink } from "lucide-react";
+import { Bike, Star, ShieldCheck, MapPin, Copy, XCircle, RefreshCcw, ExternalLink, PackageCheck, Truck, CheckCircle2, CreditCard, Wallet, Search, Check, AlertCircle } from "lucide-react";
 import { ReportDialog } from "@/components/ReportDialog";
 import { PaymentProofDialog } from "@/components/PaymentProofDialog";
 import { TrackingMap } from "@/components/TrackingMap";
@@ -59,7 +59,7 @@ function OrderDetail() {
   const [loadingOrder, setLoadingOrder] = useState(true);
 
   // Role precedence on this order: client > seller > rider.
-  // If you placed the order, you're the buyer here — even if you also own the
+  // If you placed the order, you're the buyer here â€” even if you also own the
   // shop or ride. Seller/rider actions for self-orders happen on their own
   // dashboards (/seller/orders, /rider). This prevents the buyer view from
   // disappearing when a seller buys from their own shop.
@@ -176,7 +176,7 @@ function OrderDetail() {
     toast.success("Boda imekabidhiwa"); setRiders([]); load();
   };
 
-  if (authLoading || loadingOrder) return <AppShell><p>Inapakia…</p></AppShell>;
+  if (authLoading || loadingOrder) return <AppShell><p>Inapakiaâ€¦</p></AppShell>;
   if (!user) return <AppShell><p>Ingia ili uone oda hii.</p></AppShell>;
   if (!order) return <AppShell><p>Oda hii haijapatikana au huna ruhusa ya kuiona.</p></AppShell>;
 
@@ -189,16 +189,16 @@ function OrderDetail() {
   // Quick-contact: the most relevant other party for the current user, right now
   const quickContact = (() => {
     if (isClient) {
-      if (rider && riderPhone) return { phone: riderPhone, label: "boda", title: `Boda · ${rider.full_name ?? ""} ${rider.plate ? `(${rider.plate})` : ""}` };
-      if (sellerProfile?.phone) return { phone: sellerProfile.phone, label: "muuzaji", title: `Muuzaji · ${shop?.name ?? ""}` };
+      if (rider && riderPhone) return { phone: riderPhone, label: "boda", title: `Boda Â· ${rider.full_name ?? ""} ${rider.plate ? `(${rider.plate})` : ""}` };
+      if (sellerProfile?.phone) return { phone: sellerProfile.phone, label: "muuzaji", title: `Muuzaji Â· ${shop?.name ?? ""}` };
     }
     if (isSeller) {
-      if (rider && riderPhone) return { phone: riderPhone, label: "boda", title: `Boda · ${rider.full_name ?? ""}` };
-      if (clientProfile?.phone) return { phone: clientProfile.phone, label: "mteja", title: `Mteja · ${clientProfile.full_name ?? ""}` };
+      if (rider && riderPhone) return { phone: riderPhone, label: "boda", title: `Boda Â· ${rider.full_name ?? ""}` };
+      if (clientProfile?.phone) return { phone: clientProfile.phone, label: "mteja", title: `Mteja Â· ${clientProfile.full_name ?? ""}` };
     }
     if (isRider) {
-      if (clientProfile?.phone) return { phone: clientProfile.phone, label: "mteja", title: `Mteja · ${clientProfile.full_name ?? ""}` };
-      if (sellerProfile?.phone) return { phone: sellerProfile.phone, label: "muuzaji", title: `Muuzaji · ${shop?.name ?? ""}` };
+      if (clientProfile?.phone) return { phone: clientProfile.phone, label: "mteja", title: `Mteja Â· ${clientProfile.full_name ?? ""}` };
+      if (sellerProfile?.phone) return { phone: sellerProfile.phone, label: "muuzaji", title: `Muuzaji Â· ${shop?.name ?? ""}` };
     }
     return null;
   })();
@@ -213,7 +213,7 @@ function OrderDetail() {
             {isClient && !isSeller && <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">Mteja</span>}
             {isRider && <span className="rounded-full bg-warning px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-warning-foreground">Boda</span>}
           </div>
-          <p className="text-xs text-muted-foreground">#{order.id.slice(0, 8)} · {new Date(order.created_at).toLocaleString()}</p>
+          <p className="text-xs text-muted-foreground">#{order.id.slice(0, 8)} Â· {new Date(order.created_at).toLocaleString()}</p>
           <p className="mt-1 text-xs text-muted-foreground">
             {isSeller && <>Unaona oda hii kama <b>muuzaji wa {shop?.name}</b>. Hatua zote hapa chini ni zako kama muuzaji.</>}
             {isClient && !isSeller && <>Unaona oda hii kama <b>mteja</b>. Fuata hatua zako hapa chini.</>}
@@ -248,7 +248,7 @@ function OrderDetail() {
               <p className="text-sm text-destructive">Oda hii imeghairiwa.</p>
             )}
 
-            {/* CLIENT actions — kila status ina kitufe au taarifa wazi */}
+            {/* CLIENT actions â€” kila status ina kitufe au taarifa wazi */}
             {isClient && (() => {
               const steps = ["placed","accepted","payment_submitted","payment_confirmed","rider_assigned","picked_up","delivered","completed"];
               const idx = steps.indexOf(order.status);
@@ -260,9 +260,9 @@ function OrderDetail() {
 
                   {order.status === "placed" && (
                     <div className="space-y-2">
-                      <p className="text-sm">⏳ Tunamsubiri muuzaji akubali oda yako.</p>
+                      <p className="text-sm">â³ Tunamsubiri muuzaji akubali oda yako.</p>
                       {sellerProfile?.phone && (
-                        <ContactActions phone={sellerProfile.phone} label="muuzaji" message={`${orderTag} — naomba ukubali oda yangu tafadhali`} />
+                        <ContactActions phone={sellerProfile.phone} label="muuzaji" message={`${orderTag} â€” naomba ukubali oda yangu tafadhali`} />
                       )}
                       <Button variant="outline" size="sm" disabled={busy} onClick={cancelOrder}>Ghairi oda</Button>
                     </div>
@@ -270,7 +270,7 @@ function OrderDetail() {
 
                   {order.status === "accepted" && (
                     <div className="space-y-3">
-                      <p className="text-sm">✅ Muuzaji amekubali. <b>Lipa sasa</b> kisha tuma uthibitisho — au chagua kulipa cash unapofika.</p>
+                      <p className="text-sm">âœ… Muuzaji amekubali. <b>Lipa sasa</b> kisha tuma uthibitisho â€” au chagua kulipa cash unapofika.</p>
                       {shop?.lipa_number ? (
                         <div className="rounded-xl border bg-primary/5 p-3">
                           <p className="text-xs text-muted-foreground">Lipa Number (M-Pesa)</p>
@@ -299,25 +299,25 @@ function OrderDetail() {
 
                   {order.status === "payment_submitted" && (
                     <div className="space-y-2">
-                      <p className="text-sm">📨 Uthibitisho umetumwa. Tunamsubiri muuzaji athibitishe malipo.</p>
+                      <p className="text-sm">ðŸ“¨ Uthibitisho umetumwa. Tunamsubiri muuzaji athibitishe malipo.</p>
                       {sellerProfile?.phone && (
-                        <ContactActions phone={sellerProfile.phone} label="muuzaji" message={`${orderTag} — nimelipa, tafadhali thibitisha`} />
+                        <ContactActions phone={sellerProfile.phone} label="muuzaji" message={`${orderTag} â€” nimelipa, tafadhali thibitisha`} />
                       )}
                     </div>
                   )}
 
                   {order.status === "payment_confirmed" && (
                     <div className="space-y-2">
-                      <p className="text-sm">💰 Malipo yamethibitishwa. Muuzaji anatafuta boda…</p>
+                      <p className="text-sm">ðŸ’° Malipo yamethibitishwa. Muuzaji anatafuta bodaâ€¦</p>
                       {sellerProfile?.phone && (
-                        <ContactActions phone={sellerProfile.phone} label="muuzaji" message={`${orderTag} — naomba upange boda`} />
+                        <ContactActions phone={sellerProfile.phone} label="muuzaji" message={`${orderTag} â€” naomba upange boda`} />
                       )}
                     </div>
                   )}
 
                   {order.status === "rider_assigned" && (
                     <div className="space-y-2">
-                      <p className="text-sm">🛵 Boda <b>{rider?.full_name ?? "rider"}</b> {rider?.plate ? `(${rider.plate})` : ""} amekabidhiwa. Inasubiri kuokota bidhaa dukani.</p>
+                      <p className="text-sm">ðŸ›µ Boda <b>{rider?.full_name ?? "rider"}</b> {rider?.plate ? `(${rider.plate})` : ""} amekabidhiwa. Inasubiri kuokota bidhaa dukani.</p>
                       <div className="flex flex-wrap gap-2">
                         <Button size="sm" variant="outline" onClick={scrollToMap}>Fuatilia kwenye ramani</Button>
                         {riderPhone && <ContactActions phone={riderPhone} label="boda" message={orderTag} />}
@@ -327,7 +327,7 @@ function OrderDetail() {
 
                   {order.status === "picked_up" && (
                     <div className="space-y-2">
-                      <p className="text-sm">📦 Bidhaa iko njiani kuja kwako!</p>
+                      <p className="text-sm">ðŸ“¦ Bidhaa iko njiani kuja kwako!</p>
                       <div className="flex flex-wrap gap-2">
                         <Button size="lg" onClick={scrollToMap}>Fuatilia boda kwenye ramani</Button>
                         {riderPhone && <ContactActions phone={riderPhone} label="boda" message={orderTag} />}
@@ -337,70 +337,107 @@ function OrderDetail() {
 
                   {order.status === "delivered" && (
                     <div className="space-y-2">
-                      <p className="text-sm">📬 Boda anasema amekufikishia. Thibitisha umepokea bidhaa.</p>
-                      <Button size="lg" disabled={busy} onClick={() => updateStatus("completed")}>✓ Nimepokea bidhaa — kamilisha</Button>
-                      {riderPhone && <ContactActions phone={riderPhone} label="boda" message={`${orderTag} — sijaipokea bado`} />}
+                      <p className="text-sm">ðŸ“¬ Boda anasema amekufikishia. Thibitisha umepokea bidhaa.</p>
+                      <Button size="lg" disabled={busy} onClick={() => updateStatus("completed")}>âœ“ Nimepokea bidhaa â€” kamilisha</Button>
+                      {riderPhone && <ContactActions phone={riderPhone} label="boda" message={`${orderTag} â€” sijaipokea bado`} />}
                     </div>
                   )}
 
                   {order.status === "completed" && (
-                    <p className="text-sm text-success">🎉 Asante! Oda imekamilika.</p>
+                    <p className="text-sm text-success">ðŸŽ‰ Asante! Oda imekamilika.</p>
                   )}
                 </div>
               );
             })()}
-
             {/* SELLER actions */}
             {isSeller && order.status === "placed" && (
-              <div className="space-y-2">
-                <Button size="lg" disabled={busy} onClick={() => updateStatus("accepted")}>Kubali oda</Button>
-                <Button variant="outline" disabled={busy} onClick={cancelOrder}>Kataa oda</Button>
+              <div className="grid grid-cols-2 gap-3">
+                <Button size="lg" className="h-12 gap-2" disabled={busy} onClick={() => updateStatus("accepted")}>
+                  <Check className="h-5 w-5" />
+                  Kubali oda
+                </Button>
+                <Button variant="outline" size="lg" className="h-12 gap-2 text-destructive" disabled={busy} onClick={cancelOrder}>
+                  <XCircle className="h-5 w-5" />
+                  Kataa oda
+                </Button>
               </div>
             )}
             {isSeller && order.status === "accepted" && (
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Tunamsubiri mteja alipe. Ukishapokea malipo (M-Pesa, cash, au benki) endelea moja kwa moja:</p>
-                <div className="flex flex-wrap gap-2">
-                  <Button disabled={busy} onClick={() => updateStatus("payment_confirmed")}>✓ Nimepokea malipo — endelea</Button>
-                </div>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground font-medium">Tunamsubiri mteja alipe. Ukishapokea malipo (M-Pesa, cash, au benki) endelea moja kwa moja:</p>
+                <Button size="lg" className="h-12 gap-2 w-full" disabled={busy} onClick={() => updateStatus("payment_confirmed")}>
+                  <CheckCircle2 className="h-5 w-5" />
+                  Nimepokea malipo â€” endelea
+                </Button>
               </div>
             )}
             {isSeller && order.status === "payment_submitted" && (
-              <div className="space-y-3">
-                <p className="text-sm font-medium">Mteja amesema amelipa. Hakiki:</p>
+              <div className="space-y-4">
+                <p className="text-sm font-bold text-primary flex items-center gap-1.5">
+                  <CreditCard className="h-5 w-5" />
+                  Mteja amesema amelipa. Hakiki:
+                </p>
                 {order.payment_ref && (
-                  <div className="rounded-lg border bg-secondary/40 p-2 text-sm">
-                    Namba ya muamala: <b>{order.payment_ref}</b>
+                  <div className="rounded-xl border-2 border-primary/10 bg-secondary/30 p-3 text-sm">
+                    <span className="text-xs text-muted-foreground block uppercase font-bold">Namba ya muamala</span>
+                    <b className="text-lg">{order.payment_ref}</b>
                   </div>
                 )}
                 {order.payment_proof_url && (
-                  <a href={order.payment_proof_url} target="_blank" rel="noreferrer">
-                    <img src={order.payment_proof_url} alt="proof" className="max-h-60 rounded-lg border" />
+                  <a href={order.payment_proof_url} target="_blank" rel="noreferrer" className="block group relative">
+                    <img src={order.payment_proof_url} alt="proof" className="max-h-60 rounded-xl border w-full object-cover transition-opacity group-hover:opacity-90" />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button variant="secondary" size="sm" className="gap-1"><ExternalLink className="h-4 w-4" /> Fungua</Button>
+                    </div>
                   </a>
                 )}
-                <div className="flex flex-wrap gap-2">
-                  <Button disabled={busy} onClick={() => updateStatus("payment_confirmed")}>✓ Thibitisha malipo</Button>
-                  <Button variant="outline" disabled={busy} onClick={() => updateStatus("accepted")}>Kataa — rudisha</Button>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button size="lg" className="h-12 gap-2" disabled={busy} onClick={() => updateStatus("payment_confirmed")}>
+                    <CheckCircle2 className="h-5 w-5" />
+                    Thibitisha
+                  </Button>
+                  <Button variant="outline" size="lg" className="h-12 gap-2" disabled={busy} onClick={() => updateStatus("accepted")}>
+                    <XCircle className="h-5 w-5" />
+                    Kataa
+                  </Button>
                 </div>
               </div>
             )}
             {isSeller && order.status === "payment_confirmed" && (
-              <div className="space-y-3">
-                <p className="text-sm">Malipo yamethibitishwa. Sasa tafuta boda boda kumkabidhi bidhaa.</p>
-                <Button onClick={findRiders} className="gap-1.5"><Bike className="h-4 w-4" /> Tafuta boda karibu nawe</Button>
-                {searchingRiders && <p className="text-sm text-muted-foreground">Inatafuta…</p>}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 rounded-xl bg-primary/10 p-4 text-sm text-primary font-medium">
+                  <Bike className="h-5 w-5" />
+                  <p>Malipo yamethibitishwa. Sasa tafuta boda boda kumkabidhi bidhaa.</p>
+                </div>
+                <Button size="lg" className="h-12 w-full gap-2 shadow-md shadow-primary/20" onClick={findRiders}>
+                  <Search className="h-5 w-5" />
+                  Tafuta boda karibu nawe
+                </Button>
+                {searchingRiders && (
+                  <div className="flex items-center justify-center py-4">
+                    <RefreshCcw className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                )}
                 {riders.length > 0 && (
-                  <div className="space-y-2">
+                  <div className="grid gap-2 mt-2">
                     {riders.map((r) => (
-                      <div key={r.id} className="flex items-center justify-between rounded-xl border p-3">
+                      <div key={r.id} className="flex items-center justify-between rounded-xl border bg-card p-4 transition hover:border-primary/50 hover:bg-primary/5 group">
                         <div>
-                          <div className="flex items-center gap-2 font-medium">{r.full_name ?? "Rider"} {r.license_verified && <ShieldCheck className="h-4 w-4 text-success" />}</div>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Star className="h-3 w-3 fill-warning text-warning" />{(r.rating ?? 5).toFixed(1)} · {r.plate ?? "—"}
-                            {shop?.lat && r.current_lat && <span>· {distanceKm({ lat: shop.lat, lng: shop.lng }, { lat: r.current_lat, lng: r.current_lng }).toFixed(1)} km</span>}
+                          <div className="flex items-center gap-2 font-bold group-hover:text-primary transition-colors">
+                            {r.full_name ?? "Rider"}
+                            {r.license_verified && <ShieldCheck className="h-4 w-4 text-success fill-success/10" />}
+                          </div>
+                          <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1"><Star className="h-3 w-3 fill-warning text-warning" />{(r.rating ?? 5).toFixed(1)}</span>
+                            <span>{r.plate ?? "â€”"}</span>
+                            {shop?.lat && r.current_lat && (
+                              <span className="font-medium text-primary">
+                                {distanceKm({ lat: shop.lat, lng: shop.lng }, { lat: r.current_lat, lng: r.current_lng }).toFixed(1)} km
+                              </span>
+                            )}
                           </div>
                         </div>
-                        <Button size="sm" onClick={() => assignRider(r.id)}>Chagua</Button>
+                        <Button size="sm" className="rounded-full h-10 px-6 font-bold" onClick={() => assignRider(r.id)}>Chagua</Button>
                       </div>
                     ))}
                   </div>
@@ -408,21 +445,36 @@ function OrderDetail() {
               </div>
             )}
             {isSeller && order.status === "rider_assigned" && (
-              <Button size="lg" disabled={busy} onClick={() => updateStatus("picked_up")}>Nimemkabidhi boda — anza usafirishaji</Button>
+              <Button size="lg" className="h-14 w-full gap-2 text-lg font-bold shadow-lg shadow-primary/20" disabled={busy} onClick={() => updateStatus("picked_up")}>
+                <PackageCheck className="h-6 w-6" />
+                Nimemkabidhi boda
+              </Button>
             )}
             {isSeller && order.status === "picked_up" && (
-              <p className="text-sm text-muted-foreground">Bidhaa iko njiani. Mteja anafuatilia kwenye ramani.</p>
+              <div className="flex items-center gap-3 rounded-xl bg-warning/10 p-4 text-sm text-warning-foreground font-medium">
+                <Truck className="h-6 w-6 animate-pulse" />
+                <p>Bidhaa iko njiani kuelekea kwa mteja.</p>
+              </div>
             )}
             {isSeller && order.status === "delivered" && (
-              <p className="text-sm text-muted-foreground">Bidhaa imefika. Tunamsubiri mteja athibitishe upokeaji.</p>
+              <div className="flex items-center gap-2 rounded-xl bg-secondary/50 p-4 text-sm text-muted-foreground">
+                <CheckCircle2 className="h-5 w-5 text-success" />
+                <p>Bidhaa imefika. Tunamsubiri mteja athibitishe upokeaji.</p>
+              </div>
             )}
 
             {/* RIDER actions */}
             {isRider && order.status === "rider_assigned" && (
-              <Button size="lg" disabled={busy} onClick={() => updateStatus("picked_up")}>Nimeokota bidhaa — anza safari</Button>
+              <Button size="lg" className="h-16 w-full gap-3 text-xl font-black shadow-xl shadow-primary/30" disabled={busy} onClick={() => updateStatus("picked_up")}>
+                <PackageCheck className="h-7 w-7" />
+                Nimeokota bidhaa â€” anza safari
+              </Button>
             )}
             {isRider && order.status === "picked_up" && (
-              <Button size="lg" disabled={busy} onClick={() => updateStatus("delivered")}>Nimemfikishia mteja</Button>
+              <Button size="lg" className="h-16 w-full gap-3 text-xl font-black bg-success hover:bg-success/90 shadow-xl shadow-success/30" disabled={busy} onClick={() => updateStatus("delivered")}>
+                <CheckCircle2 className="h-7 w-7" />
+                Nimemfikishia mteja
+              </Button>
             )}
 
             {canCancel && (isClient || isSeller) && order.status !== "cancelled" && (
@@ -459,7 +511,7 @@ function OrderDetail() {
                 rider={riderPos}
                 height={340}
               />
-              {!liveRider && <p className="mt-2 text-xs text-muted-foreground">Inasubiri ishara ya boda…</p>}
+              {!liveRider && <p className="mt-2 text-xs text-muted-foreground">Inasubiri ishara ya bodaâ€¦</p>}
               {liveRider && <p className="mt-2 text-xs text-success">Boda inaonekana moja kwa moja</p>}
             </section>
           )}
@@ -469,7 +521,7 @@ function OrderDetail() {
             <ul className="mt-2 space-y-1 text-sm">
               {items.map((i) => (
                 <li key={i.id} className="flex justify-between">
-                  <span>{i.qty}× {i.products?.name}</span>
+                  <span>{i.qty}Ã— {i.products?.name}</span>
                   <span>{formatKES(Number(i.price) * i.qty)}</span>
                 </li>
               ))}
@@ -489,8 +541,8 @@ function OrderDetail() {
 
           <div className="rounded-2xl border bg-card p-4 text-sm">
             <p className="text-muted-foreground">Kutoka <b className="text-foreground">{shop?.name}</b></p>
-            <p className="mt-1 text-muted-foreground">Hadi <b className="text-foreground">{address?.label ?? "—"}</b></p>
-            {order.distance_km && <p className="mt-1 text-xs text-muted-foreground">{Number(order.distance_km).toFixed(1)} km · {order.eta_min} min</p>}
+            <p className="mt-1 text-muted-foreground">Hadi <b className="text-foreground">{address?.label ?? "â€”"}</b></p>
+            {order.distance_km && <p className="mt-1 text-xs text-muted-foreground">{Number(order.distance_km).toFixed(1)} km Â· {order.eta_min} min</p>}
           </div>
 
           {/* Contacts: show the OTHER parties to the current user */}
@@ -499,19 +551,19 @@ function OrderDetail() {
             <div className="space-y-3 text-sm">
               {!isClient && clientProfile?.phone && (
                 <div>
-                  <p className="text-xs text-muted-foreground">Mteja · {clientProfile.full_name ?? ""}</p>
+                  <p className="text-xs text-muted-foreground">Mteja Â· {clientProfile.full_name ?? ""}</p>
                   <ContactActions phone={clientProfile.phone} label="mteja" message={orderTag} />
                 </div>
               )}
               {!isSeller && sellerProfile?.phone && (
                 <div>
-                  <p className="text-xs text-muted-foreground">Muuzaji · {shop?.name}</p>
+                  <p className="text-xs text-muted-foreground">Muuzaji Â· {shop?.name}</p>
                   <ContactActions phone={sellerProfile.phone} label="muuzaji" message={orderTag} />
                 </div>
               )}
               {rider && !isRider && (
                 <div>
-                  <p className="text-xs text-muted-foreground">Boda · {rider.full_name ?? ""} {rider.plate ? `(${rider.plate})` : ""}</p>
+                  <p className="text-xs text-muted-foreground">Boda Â· {rider.full_name ?? ""} {rider.plate ? `(${rider.plate})` : ""}</p>
                   <ContactActions phone={riderPhone} label="boda" message={orderTag} />
                 </div>
               )}
