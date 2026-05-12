@@ -57,9 +57,11 @@ function OrderDetail() {
   const [clientPos, setClientPos] = useState<{ lat: number; lng: number } | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const isClient = !!(user && order && order.client_id === user.id);
+  // Role precedence on this order: seller > rider > client (avoids showing
+  // mixed action panels when one user wears multiple hats on the same order).
   const isSeller = !!(user && shop && shop.owner_id === user.id);
-  const isRider = !!(user && rider && rider.user_id === user.id);
+  const isRider = !!(user && rider && rider.user_id === user.id) && !isSeller;
+  const isClient = !!(user && order && order.client_id === user.id) && !isSeller && !isRider;
 
   const trackingActive = order && ["payment_confirmed", "rider_assigned", "picked_up", "delivered"].includes(order.status);
   const liveRider = useTrackOrder(trackingActive ? orderId : null);
