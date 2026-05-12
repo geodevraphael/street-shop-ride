@@ -176,8 +176,18 @@ function OrderDetail() {
     <AppShell>
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold">Oda</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold">Oda</h1>
+            {isSeller && <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent-foreground">Muuzaji</span>}
+            {isClient && !isSeller && <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">Mteja</span>}
+            {isRider && <span className="rounded-full bg-warning px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-warning-foreground">Boda</span>}
+          </div>
           <p className="text-xs text-muted-foreground">#{order.id.slice(0, 8)} · {new Date(order.created_at).toLocaleString()}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {isSeller && <>Unaona oda hii kama <b>muuzaji wa {shop?.name}</b>. Hatua zote hapa chini ni zako kama muuzaji.</>}
+            {isClient && !isSeller && <>Unaona oda hii kama <b>mteja</b>. Fuata hatua zako hapa chini.</>}
+            {isRider && <>Unaona oda hii kama <b>boda</b>. Fuata hatua zako hapa chini.</>}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Button size="icon" variant="ghost" onClick={load} title="Onyesha mpya"><RefreshCcw className="h-4 w-4" /></Button>
@@ -187,7 +197,9 @@ function OrderDetail() {
 
       {quickContact && (
         <div className="mt-4 rounded-2xl border bg-primary/5 p-3">
-          <p className="text-xs text-muted-foreground">Mawasiliano ya haraka</p>
+          <p className="text-xs text-muted-foreground">
+            {isSeller ? "Wasiliana na" : isRider ? "Wasiliana na" : "Mawasiliano ya haraka"}
+          </p>
           <p className="text-sm font-semibold">{quickContact.title}</p>
           <div className="mt-2">
             <ContactActions phone={quickContact.phone} label={quickContact.label} message={orderTag} />
