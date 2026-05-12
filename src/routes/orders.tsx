@@ -10,7 +10,17 @@ import { MapPin, Truck, Radio } from "lucide-react";
 export const Route = createFileRoute("/orders")({ component: Orders });
 
 const TRACKING_STATUSES = new Set(["placed", "accepted", "payment_submitted", "payment_confirmed", "rider_assigned", "picked_up", "delivered"]);
-const LIVE_STATUSES = new Set(["picked_up"]);
+const LIVE_STATUSES = new Set(["payment_confirmed", "rider_assigned", "picked_up"]);
+
+const NEXT_HINT: Record<string, string> = {
+  placed: "Subiri muuzaji akubali",
+  accepted: "Lipa & tuma uthibitisho",
+  payment_submitted: "Subiri muuzaji athibitishe malipo",
+  payment_confirmed: "Muuzaji anatafuta boda",
+  rider_assigned: "Boda inaokota bidhaa",
+  picked_up: "Bidhaa iko njiani",
+  delivered: "Thibitisha umepokea",
+};
 
 function Orders() {
   const { user } = useAuth();
