@@ -264,7 +264,12 @@ function OrderDetail() {
               </div>
             )}
             {isSeller && order.status === "accepted" && (
-              <p className="text-sm text-muted-foreground">Tunamsubiri mteja alipe na atume uthibitisho wa malipo.</p>
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">Tunamsubiri mteja alipe. Ukishapokea malipo (M-Pesa, cash, au benki) endelea moja kwa moja:</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button disabled={busy} onClick={() => updateStatus("payment_confirmed")}>✓ Nimepokea malipo — endelea</Button>
+                </div>
+              </div>
             )}
             {isSeller && order.status === "payment_submitted" && (
               <div className="space-y-3">
