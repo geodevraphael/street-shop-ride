@@ -166,14 +166,14 @@ function CartView({ items }: { items: ReturnType<typeof useCart> }) {
   );
 }
 
-function OrderCard({ o, live }: { o: any; live?: boolean }) {
+function OrderCard({ o }: { o: any; live?: boolean }) {
   return (
-    <Link
-      to="/orders/$orderId"
-      params={{ orderId: o.id }}
-      className="block rounded-2xl border bg-card p-4 transition hover:border-primary"
-    >
-      <div className="flex items-center justify-between gap-3">
+    <div className="block rounded-2xl border bg-card p-4">
+      <Link
+        to="/orders/$orderId"
+        params={{ orderId: o.id }}
+        className="flex items-center justify-between gap-3"
+      >
         <div className="min-w-0">
           <div className="truncate font-semibold">{o.shops?.name ?? "Duka"}</div>
           <div className="text-xs text-muted-foreground">
@@ -186,15 +186,8 @@ function OrderCard({ o, live }: { o: any; live?: boolean }) {
             {formatKES(Number(o.subtotal) + Number(o.delivery_fee))}
           </div>
         </div>
-      </div>
-      {TRACKING_STATUSES.has(o.status) && (
-        <div className="mt-3 flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2 text-xs">
-          <span className="flex items-center gap-1.5 font-medium text-primary">
-            {live ? (<><Radio className="h-3.5 w-3.5 animate-pulse" /> Boda inaonekana moja kwa moja</>) : (<><MapPin className="h-3.5 w-3.5" /> Fungua oda na ramani</>)}
-          </span>
-          <span className="font-semibold text-primary">Fuatilia →</span>
-        </div>
-      )}
-    </Link>
+      </Link>
+      <OrderProgressMini orderId={o.id} status={o.status} />
+    </div>
   );
 }
