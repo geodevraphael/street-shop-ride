@@ -9,6 +9,7 @@ import { Minus, Plus, Trash2, ShoppingBag, MapPin, Truck, Radio, Package } from 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { OrderStatusPill } from "@/components/OrderStatusPill";
+import { OrderProgressMini } from "@/components/OrderProgressMini";
 
 export const Route = createFileRoute("/cart")({ component: Cart });
 
