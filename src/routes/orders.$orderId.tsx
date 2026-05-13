@@ -404,7 +404,7 @@ function OrderDetail() {
           </section>
 
           {/* Timeline */}
-          <section className="rounded-2xl border bg-card p-4">
+            <section id="track-map" className="rounded-2xl border bg-card p-4">
             <h3 className="mb-3 font-semibold">Hatua za oda</h3>
             <OrderTimeline status={order.status} />
           </section>
