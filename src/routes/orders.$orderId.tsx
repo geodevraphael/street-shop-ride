@@ -219,56 +219,107 @@ function OrderDetail() {
               <p className="text-sm text-destructive">Oda hii imeghairiwa.</p>
             )}
 
-            {/* CLIENT actions */}
-            {isClient && order.status === "placed" && (
-              <p className="text-sm text-muted-foreground">Tunamsubiri muuzaji akubali oda yako. Utapata taarifa hapa moja kwa moja.</p>
-            )}
-            {isClient && order.status === "accepted" && (
-              <div className="space-y-3">
-                <p className="text-sm">Muuzaji amekubali. Tafadhali lipa kisha tuma uthibitisho — au piga muuzaji ulipie pale pale.</p>
-                {shop?.lipa_number ? (
-                  <div className="rounded-xl border bg-primary/5 p-3">
-                    <p className="text-xs text-muted-foreground">Lipa Number (M-Pesa)</p>
-                    <div className="flex items-center gap-2">
-                      <p className="text-2xl font-bold">{shop.lipa_number}</p>
-                      <Button size="icon" variant="ghost" onClick={() => { navigator.clipboard.writeText(shop.lipa_number); toast.success("Imenakiliwa"); }}>
-                        <Copy className="h-4 w-4" />
-                      </Button>
+            {/* CLIENT actions — kila status ina kitufe au taarifa wazi */}
+            {isClient && (() => {
+              const steps = ["placed","accepted","payment_submitted","payment_confirmed","rider_assigned","picked_up","delivered","completed"];
+              const idx = steps.indexOf(order.status);
+              const stepLabel = idx >= 0 ? `Hatua ${idx + 1} ya ${steps.length}` : null;
+              const scrollToMap = () => document.getElementById("track-map")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              return (
+                <div className="space-y-3">
+                  {stepLabel && <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{stepLabel}</p>}
+
+                  {order.status === "placed" && (
+                    <div className="space-y-2">
+                      <p className="text-sm">⏳ Tunamsubiri muuzaji akubali oda yako.</p>
+                      {sellerProfile?.phone && (
+                        <ContactActions phone={sellerProfile.phone} label="muuzaji" message={`${orderTag} — naomba ukubali oda yangu tafadhali`} />
+                      )}
+                      <Button variant="outline" size="sm" disabled={busy} onClick={cancelOrder}>Ghairi oda</Button>
                     </div>
-                    <p className="mt-2 text-xs text-muted-foreground">Lipa: <b>{formatKES(Number(order.subtotal))}</b></p>
-                    {shop.qr_code_url && <img src={shop.qr_code_url} alt="QR" className="mt-2 h-32 w-32 object-contain" />}
-                  </div>
-                ) : (
-                  <p className="rounded-xl border bg-warning/10 p-3 text-xs text-muted-foreground">
-                    Duka halijaweka namba ya Lipa. Wasiliana na muuzaji moja kwa moja kupanga malipo.
-                  </p>
-                )}
-                <div className="flex flex-wrap gap-2">
-                  <PaymentProofDialog orderId={orderId} onSubmitted={load} />
-                  <Button variant="outline" disabled={busy} onClick={() => updateStatus("payment_submitted", { payment_ref: "CASH/OFFLINE" })}>
-                    Nitalipa nikifika (cash)
-                  </Button>
+                  )}
+
+                  {order.status === "accepted" && (
+                    <div className="space-y-3">
+                      <p className="text-sm">✅ Muuzaji amekubali. <b>Lipa sasa</b> kisha tuma uthibitisho — au chagua kulipa cash unapofika.</p>
+                      {shop?.lipa_number ? (
+                        <div className="rounded-xl border bg-primary/5 p-3">
+                          <p className="text-xs text-muted-foreground">Lipa Number (M-Pesa)</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-2xl font-bold">{shop.lipa_number}</p>
+                            <Button size="icon" variant="ghost" onClick={() => { navigator.clipboard.writeText(shop.lipa_number); toast.success("Imenakiliwa"); }}>
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <p className="mt-2 text-xs text-muted-foreground">Kiasi: <b>{formatKES(Number(order.subtotal))}</b></p>
+                          {shop.qr_code_url && <img src={shop.qr_code_url} alt="QR" className="mt-2 h-32 w-32 object-contain" />}
+                        </div>
+                      ) : (
+                        <p className="rounded-xl border bg-warning/10 p-3 text-xs text-muted-foreground">
+                          Duka halijaweka namba ya Lipa. Wasiliana na muuzaji moja kwa moja kupanga malipo.
+                        </p>
+                      )}
+                      <div className="flex flex-wrap gap-2">
+                        <PaymentProofDialog orderId={orderId} onSubmitted={load} />
+                        <Button variant="outline" disabled={busy} onClick={() => updateStatus("payment_submitted", { payment_ref: "CASH/OFFLINE" })}>
+                          Nitalipa nikifika (cash)
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {order.status === "payment_submitted" && (
+                    <div className="space-y-2">
+                      <p className="text-sm">📨 Uthibitisho umetumwa. Tunamsubiri muuzaji athibitishe malipo.</p>
+                      {sellerProfile?.phone && (
+                        <ContactActions phone={sellerProfile.phone} label="muuzaji" message={`${orderTag} — nimelipa, tafadhali thibitisha`} />
+                      )}
+                    </div>
+                  )}
+
+                  {order.status === "payment_confirmed" && (
+                    <div className="space-y-2">
+                      <p className="text-sm">💰 Malipo yamethibitishwa. Muuzaji anatafuta boda…</p>
+                      {sellerProfile?.phone && (
+                        <ContactActions phone={sellerProfile.phone} label="muuzaji" message={`${orderTag} — naomba upange boda`} />
+                      )}
+                    </div>
+                  )}
+
+                  {order.status === "rider_assigned" && (
+                    <div className="space-y-2">
+                      <p className="text-sm">🛵 Boda <b>{rider?.full_name ?? "rider"}</b> {rider?.plate ? `(${rider.plate})` : ""} amekabidhiwa. Inasubiri kuokota bidhaa dukani.</p>
+                      <div className="flex flex-wrap gap-2">
+                        <Button size="sm" variant="outline" onClick={scrollToMap}>Fuatilia kwenye ramani</Button>
+                        {riderPhone && <ContactActions phone={riderPhone} label="boda" message={orderTag} />}
+                      </div>
+                    </div>
+                  )}
+
+                  {order.status === "picked_up" && (
+                    <div className="space-y-2">
+                      <p className="text-sm">📦 Bidhaa iko njiani kuja kwako!</p>
+                      <div className="flex flex-wrap gap-2">
+                        <Button size="lg" onClick={scrollToMap}>Fuatilia boda kwenye ramani</Button>
+                        {riderPhone && <ContactActions phone={riderPhone} label="boda" message={orderTag} />}
+                      </div>
+                    </div>
+                  )}
+
+                  {order.status === "delivered" && (
+                    <div className="space-y-2">
+                      <p className="text-sm">📬 Boda anasema amekufikishia. Thibitisha umepokea bidhaa.</p>
+                      <Button size="lg" disabled={busy} onClick={() => updateStatus("completed")}>✓ Nimepokea bidhaa — kamilisha</Button>
+                      {riderPhone && <ContactActions phone={riderPhone} label="boda" message={`${orderTag} — sijaipokea bado`} />}
+                    </div>
+                  )}
+
+                  {order.status === "completed" && (
+                    <p className="text-sm text-success">🎉 Asante! Oda imekamilika.</p>
+                  )}
                 </div>
-              </div>
-            )}
-            {isClient && order.status === "payment_submitted" && (
-              <p className="text-sm text-muted-foreground">Asante! Muuzaji anathibitisha malipo yako sasa.</p>
-            )}
-            {isClient && order.status === "payment_confirmed" && (
-              <p className="text-sm">✅ Malipo yamethibitishwa. Muuzaji anatafuta boda…</p>
-            )}
-            {isClient && order.status === "rider_assigned" && (
-              <p className="text-sm">Boda imepatikana — {rider?.full_name ?? "rider"}. Inasubiri kuokota bidhaa dukani.</p>
-            )}
-            {isClient && order.status === "picked_up" && (
-              <p className="text-sm">📦 Bidhaa iko njiani. Fuatilia kwenye ramani hapo chini.</p>
-            )}
-            {isClient && order.status === "delivered" && (
-              <Button size="lg" disabled={busy} onClick={() => updateStatus("completed")}>Nimepokea bidhaa — kamilisha</Button>
-            )}
-            {isClient && order.status === "completed" && (
-              <p className="text-sm text-success">Asante! Oda imekamilika.</p>
-            )}
+              );
+            })()}
 
             {/* SELLER actions */}
             {isSeller && order.status === "placed" && (
