@@ -404,14 +404,14 @@ function OrderDetail() {
           </section>
 
           {/* Timeline */}
-            <section id="track-map" className="rounded-2xl border bg-card p-4">
+            <section className="rounded-2xl border bg-card p-4">
             <h3 className="mb-3 font-semibold">Hatua za oda</h3>
             <OrderTimeline status={order.status} />
           </section>
 
           {/* Live tracking map */}
           {trackingActive && (
-            <section className="rounded-2xl border bg-card p-4">
+            <section id="track-map" className="rounded-2xl border bg-card p-4">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <h3 className="flex items-center gap-2 font-semibold"><MapPin className="h-4 w-4 text-primary" /> Fuatilia kwenye ramani</h3>
                 {mapUrl && (
