@@ -43,7 +43,7 @@ function buildMapsUrl({
 
 function OrderDetail() {
   const { orderId } = Route.useParams();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [order, setOrder] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
   const [shop, setShop] = useState<any>(null);
@@ -56,6 +56,7 @@ function OrderDetail() {
   const [searchingRiders, setSearchingRiders] = useState(false);
   const [clientPos, setClientPos] = useState<{ lat: number; lng: number } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [loadingOrder, setLoadingOrder] = useState(true);
 
   // Role precedence on this order: client > seller > rider.
   // If you placed the order, you're the buyer here — even if you also own the
@@ -71,9 +72,26 @@ function OrderDetail() {
   const canCancel = order && (order.status === "placed" || order.status === "accepted");
 
   const load = async () => {
-    const { data: o } = await supabase.from("orders").select("*").eq("id", orderId).maybeSingle();
+    if (!user) {
+      setOrder(null);
+      setLoadingOrder(false);
+      return;
+    }
+
+    setLoadingOrder(true);
+    const { data: o, error: orderError } = await supabase.from("orders").select("*").eq("id", orderId).maybeSingle();
+    if (orderError) {
+      setLoadingOrder(false);
+      toast.error(orderError.message);
+      return;
+    }
+
     setOrder(o);
-    if (!o) return;
+    if (!o) {
+      setLoadingOrder(false);
+      return;
+    }
+
     const [i, s, a, r, cp] = await Promise.all([
       supabase.from("order_items").select("*, products(name)").eq("order_id", orderId),
       supabase.from("shops").select("*").eq("id", o.shop_id).maybeSingle(),
@@ -92,9 +110,14 @@ function OrderDetail() {
     } else {
       setRiderPhone(null);
     }
+    setLoadingOrder(false);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [orderId]);
+  useEffect(() => {
+    if (authLoading) return;
+    load();
+    /* eslint-disable-next-line */
+  }, [orderId, authLoading, user?.id]);
 
   // Realtime: refresh on any update to this order
   useEffect(() => {
@@ -119,6 +142,7 @@ function OrderDetail() {
   const updateStatus = async (status: string, extra: Record<string, any> = {}) => {
     setBusy(true);
     const patch: any = { status, ...extra };
+    if (status === "payment_submitted" && !patch.payment_submitted_at) patch.payment_submitted_at = new Date().toISOString();
     if (status === "payment_confirmed") patch.payment_confirmed_at = new Date().toISOString();
     const { error } = await supabase.from("orders").update(patch).eq("id", orderId);
     setBusy(false);
@@ -152,7 +176,9 @@ function OrderDetail() {
     toast.success("Boda imekabidhiwa"); setRiders([]); load();
   };
 
-  if (!order) return <AppShell><p>Inapakia…</p></AppShell>;
+  if (authLoading || loadingOrder) return <AppShell><p>Inapakia…</p></AppShell>;
+  if (!user) return <AppShell><p>Ingia ili uone oda hii.</p></AppShell>;
+  if (!order) return <AppShell><p>Oda hii haijapatikana au huna ruhusa ya kuiona.</p></AppShell>;
 
   const riderPos = liveRider ?? (rider?.current_lat ? { lat: rider.current_lat, lng: rider.current_lng } : null);
   const shopPos = shop?.lat != null && shop?.lng != null ? { lat: shop.lat, lng: shop.lng } : null;
@@ -263,8 +289,8 @@ function OrderDetail() {
                         </p>
                       )}
                       <div className="flex flex-wrap gap-2">
-                        <PaymentProofDialog orderId={orderId} onSubmitted={load} />
-                        <Button variant="outline" disabled={busy} onClick={() => updateStatus("payment_submitted", { payment_ref: "CASH/OFFLINE" })}>
+                        <PaymentProofDialog orderId={orderId} userId={user.id} onSubmitted={load} />
+                        <Button variant="outline" disabled={busy} onClick={() => updateStatus("payment_submitted", { payment_ref: "CASH/OFFLINE", payment_submitted_at: new Date().toISOString() })}>
                           Nitalipa nikifika (cash)
                         </Button>
                       </div>

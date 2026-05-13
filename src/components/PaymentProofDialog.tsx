@@ -4,19 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
 import { CheckCircle2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
-export function PaymentProofDialog({ orderId, onSubmitted }: { orderId: string; onSubmitted: () => void }) {
-  const { user } = useAuth();
+export function PaymentProofDialog({ orderId, userId, onSubmitted }: { orderId: string; userId: string; onSubmitted: () => void | Promise<void> }) {
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [ref, setRef] = useState("");
   const [busy, setBusy] = useState(false);
 
   const submit = async () => {
-    if (!user) return;
+    if (!userId) return toast.error("Ingia kwanza uendelee");
     if (!ref.trim() && !file) {
       return toast.error("Weka risiti au namba ya M-Pesa");
     }
@@ -24,7 +22,7 @@ export function PaymentProofDialog({ orderId, onSubmitted }: { orderId: string; 
     let proofUrl: string | null = null;
     if (file) {
       const ext = file.name.split(".").pop() ?? "jpg";
-      const path = `${user.id}/${orderId}_${Date.now()}.${ext}`;
+      const path = `${userId}/${orderId}_${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage.from("payment-proofs").upload(path, file, { contentType: file.type, upsert: true });
       if (upErr) { setBusy(false); return toast.error(upErr.message); }
       const { data } = await supabase.storage.from("payment-proofs").createSignedUrl(path, 60 * 60 * 24 * 365);
