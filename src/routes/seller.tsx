@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, Link, useRouterState, redirect } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { Store, Package, Receipt, ClipboardList } from "lucide-react";
+import { Store, Package, Receipt, ClipboardList, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/seller")({
@@ -15,6 +15,7 @@ const tabs = [
   { to: "/seller", label: "Dashboard", icon: Store, exact: true },
   { to: "/seller/products", label: "Products", icon: Package },
   { to: "/seller/orders", label: "Orders", icon: ClipboardList },
+  { to: "/seller/payments", label: "Malipo", icon: CreditCard },
   { to: "/seller/billing", label: "Billing", icon: Receipt },
 ];
 

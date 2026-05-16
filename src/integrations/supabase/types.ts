@@ -307,6 +307,7 @@ export type Database = {
           distance_km: number | null
           eta_min: number | null
           id: string
+          lipa_number_id: string | null
           notes: string | null
           payment_confirmed_at: string | null
           payment_proof_url: string | null
@@ -332,6 +333,7 @@ export type Database = {
           distance_km?: number | null
           eta_min?: number | null
           id?: string
+          lipa_number_id?: string | null
           notes?: string | null
           payment_confirmed_at?: string | null
           payment_proof_url?: string | null
@@ -357,6 +359,7 @@ export type Database = {
           distance_km?: number | null
           eta_min?: number | null
           id?: string
+          lipa_number_id?: string | null
           notes?: string | null
           payment_confirmed_at?: string | null
           payment_proof_url?: string | null
@@ -772,6 +775,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      shop_lipa_numbers: {
+        Row: {
+          account_name: string | null
+          account_type: string
+          active: boolean
+          created_at: string
+          id: string
+          instructions: string | null
+          is_default: boolean
+          number: string
+          provider: string
+          qr_code_url: string | null
+          shop_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          account_name?: string | null
+          account_type?: string
+          active?: boolean
+          created_at?: string
+          id?: string
+          instructions?: string | null
+          is_default?: boolean
+          number: string
+          provider: string
+          qr_code_url?: string | null
+          shop_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string | null
+          account_type?: string
+          active?: boolean
+          created_at?: string
+          id?: string
+          instructions?: string | null
+          is_default?: boolean
+          number?: string
+          provider?: string
+          qr_code_url?: string | null
+          shop_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       shops: {
         Row: {

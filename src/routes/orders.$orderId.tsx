@@ -31,6 +31,8 @@ import {
 } from "lucide-react";
 import { ReportDialog } from "@/components/ReportDialog";
 import { PaymentProofDialog } from "@/components/PaymentProofDialog";
+import { BrandedPaymentCard } from "@/components/BrandedPaymentCard";
+import { getProvider } from "@/lib/payment-providers";
 import { SellerOfferPanel } from "@/components/SellerOfferPanel";
 import { TrackingMap } from "@/components/TrackingMap";
 import { ReviewPrompt } from "@/components/ReviewPrompt";
@@ -93,6 +95,8 @@ function OrderDetail() {
   const [order, setOrder] = useState<Order | null>(null);
   const [items, setItems] = useState<OrderItem[]>([]);
   const [shop, setShop] = useState<Shop | null>(null);
+  const [lipas, setLipas] = useState<any[]>([]);
+  const [selectedLipaId, setSelectedLipaId] = useState<string | null>(null);
   const [address, setAddress] = useState<Address | null>(null);
   const [rider, setRider] = useState<Rider | null>(null);
   const [riderPhone, setRiderPhone] = useState<string | null>(null);
@@ -163,6 +167,21 @@ function OrderDetail() {
     setAddress(a.data);
     setRider(r.data);
     setClientProfile(cp.data);
+    if (s.data?.id) {
+      const { data: ln } = await supabase
+        .from("shop_lipa_numbers")
+        .select("*")
+        .eq("shop_id", s.data.id)
+        .eq("active", true)
+        .order("is_default", { ascending: false })
+        .order("sort_order", { ascending: true });
+      setLipas(ln ?? []);
+      const preferred = (o as any).lipa_number_id
+        ?? ln?.find((x: any) => x.is_default)?.id
+        ?? ln?.[0]?.id
+        ?? null;
+      setSelectedLipaId(preferred);
+    }
     if (s.data?.owner_id) {
       const { data: sp } = await supabase
         .from("profiles")
@@ -551,37 +570,65 @@ function OrderDetail() {
                             Ukibonyeza hapa chini utafungua sehemu ya kuweka namba ya muamala au kupakia picha ya risiti, kisha oda itahamia kwa muuzaji kuhakiki malipo.
                           </p>
                         </div>
-                        {shop?.lipa_number ? (
+                        {lipas.length > 0 ? (
+                          <>
+                            {lipas.length > 1 && (
+                              <div>
+                                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                  Chagua njia ya malipo ({lipas.length} zinapatikana)
+                                </p>
+                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                                  {lipas.map((l: any) => {
+                                    const p = getProvider(l.provider);
+                                    const sel = selectedLipaId === l.id;
+                                    return (
+                                      <button
+                                        key={l.id}
+                                        type="button"
+                                        onClick={async () => {
+                                          setSelectedLipaId(l.id);
+                                          await supabase.from("orders").update({ lipa_number_id: l.id } as any).eq("id", orderId);
+                                        }}
+                                        className={`overflow-hidden rounded-xl border transition ${sel ? "ring-2 ring-offset-1" : "opacity-80 hover:opacity-100"}`}
+                                        style={sel ? { ["--tw-ring-color" as any]: p.bg, borderColor: p.bg } : undefined}
+                                      >
+                                        <div className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-semibold" style={{ background: p.bg, color: p.fg }}>
+                                          <span className="grid h-5 w-5 place-items-center rounded text-[10px] font-black" style={{ background: p.fg, color: p.bg }}>{p.monogram}</span>
+                                          <span className="truncate">{p.shortName}</span>
+                                        </div>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                            {(() => {
+                              const chosen = lipas.find((l: any) => l.id === selectedLipaId) ?? lipas[0];
+                              return chosen ? (
+                                <BrandedPaymentCard
+                                  lipa={chosen}
+                                  amount={orderTotal}
+                                  verified={shop?.verified}
+                                  shopName={shop?.name}
+                                />
+                              ) : null;
+                            })()}
+                          </>
+                        ) : shop?.lipa_number ? (
                           <div className="rounded-xl border bg-primary/5 p-3">
-                            <p className="text-xs text-muted-foreground">Lipa Number (M-Pesa)</p>
+                            <p className="text-xs text-muted-foreground">Lipa Number</p>
                             <div className="flex items-center gap-2">
                               <p className="text-2xl font-bold">{shop.lipa_number}</p>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={() => {
-                                  if (shop.lipa_number) navigator.clipboard.writeText(shop.lipa_number);
-                                  toast.success("Imenakiliwa");
-                                }}
-                              >
+                              <Button size="icon" variant="ghost" onClick={() => { if (shop.lipa_number) navigator.clipboard.writeText(shop.lipa_number); toast.success("Imenakiliwa"); }}>
                                 <Copy className="h-4 w-4" />
                               </Button>
                             </div>
-                            <p className="mt-2 text-xs text-muted-foreground">
-                              Kiasi cha kulipa: <b>{formatKES(orderTotal)}</b>
-                            </p>
-                            {shop.qr_code_url && (
-                              <img
-                                src={shop.qr_code_url}
-                                alt="QR"
-                                className="mt-2 h-32 w-32 object-contain"
-                              />
-                            )}
+                            <p className="mt-2 text-xs text-muted-foreground">Kiasi cha kulipa: <b>{formatKES(orderTotal)}</b></p>
+                            {shop.qr_code_url && <img src={shop.qr_code_url} alt="QR" className="mt-2 h-32 w-32 object-contain" />}
                           </div>
                         ) : (
                           <p className="rounded-xl border bg-warning/10 p-3 text-xs text-muted-foreground">
-                            Duka halijaweka namba ya Lipa. Wasiliana na muuzaji moja kwa moja
-                            kupanga malipo.
+                            Duka halijaweka njia ya malipo. Wasiliana na muuzaji moja kwa moja.
                           </p>
                         )}
                         <div className="flex flex-wrap gap-2">

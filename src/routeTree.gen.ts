@@ -26,6 +26,7 @@ import { Route as CourierIndexRouteImport } from './routes/courier.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ShopsShopIdRouteImport } from './routes/shops.$shopId'
 import { Route as SellerProductsRouteImport } from './routes/seller.products'
+import { Route as SellerPaymentsRouteImport } from './routes/seller.payments'
 import { Route as SellerOrdersRouteImport } from './routes/seller.orders'
 import { Route as SellerBillingRouteImport } from './routes/seller.billing'
 import { Route as RiderHistoryRouteImport } from './routes/rider.history'
@@ -130,6 +131,11 @@ const ShopsShopIdRoute = ShopsShopIdRouteImport.update({
 const SellerProductsRoute = SellerProductsRouteImport.update({
   id: '/products',
   path: '/products',
+  getParentRoute: () => SellerRoute,
+} as any)
+const SellerPaymentsRoute = SellerPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
   getParentRoute: () => SellerRoute,
 } as any)
 const SellerOrdersRoute = SellerOrdersRouteImport.update({
@@ -264,6 +270,7 @@ export interface FileRoutesByFullPath {
   '/rider/history': typeof RiderHistoryRoute
   '/seller/billing': typeof SellerBillingRoute
   '/seller/orders': typeof SellerOrdersRoute
+  '/seller/payments': typeof SellerPaymentsRoute
   '/seller/products': typeof SellerProductsRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -298,6 +305,7 @@ export interface FileRoutesByTo {
   '/rider/history': typeof RiderHistoryRoute
   '/seller/billing': typeof SellerBillingRoute
   '/seller/orders': typeof SellerOrdersRoute
+  '/seller/payments': typeof SellerPaymentsRoute
   '/seller/products': typeof SellerProductsRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
   '/admin': typeof AdminIndexRoute
@@ -338,6 +346,7 @@ export interface FileRoutesById {
   '/rider/history': typeof RiderHistoryRoute
   '/seller/billing': typeof SellerBillingRoute
   '/seller/orders': typeof SellerOrdersRoute
+  '/seller/payments': typeof SellerPaymentsRoute
   '/seller/products': typeof SellerProductsRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -379,6 +388,7 @@ export interface FileRouteTypes {
     | '/rider/history'
     | '/seller/billing'
     | '/seller/orders'
+    | '/seller/payments'
     | '/seller/products'
     | '/shops/$shopId'
     | '/admin/'
@@ -413,6 +423,7 @@ export interface FileRouteTypes {
     | '/rider/history'
     | '/seller/billing'
     | '/seller/orders'
+    | '/seller/payments'
     | '/seller/products'
     | '/shops/$shopId'
     | '/admin'
@@ -452,6 +463,7 @@ export interface FileRouteTypes {
     | '/rider/history'
     | '/seller/billing'
     | '/seller/orders'
+    | '/seller/payments'
     | '/seller/products'
     | '/shops/$shopId'
     | '/admin/'
@@ -599,6 +611,13 @@ declare module '@tanstack/react-router' {
       path: '/products'
       fullPath: '/seller/products'
       preLoaderRoute: typeof SellerProductsRouteImport
+      parentRoute: typeof SellerRoute
+    }
+    '/seller/payments': {
+      id: '/seller/payments'
+      path: '/payments'
+      fullPath: '/seller/payments'
+      preLoaderRoute: typeof SellerPaymentsRouteImport
       parentRoute: typeof SellerRoute
     }
     '/seller/orders': {
@@ -813,6 +832,7 @@ const RiderRouteWithChildren = RiderRoute._addFileChildren(RiderRouteChildren)
 interface SellerRouteChildren {
   SellerBillingRoute: typeof SellerBillingRoute
   SellerOrdersRoute: typeof SellerOrdersRoute
+  SellerPaymentsRoute: typeof SellerPaymentsRoute
   SellerProductsRoute: typeof SellerProductsRoute
   SellerIndexRoute: typeof SellerIndexRoute
 }
@@ -820,6 +840,7 @@ interface SellerRouteChildren {
 const SellerRouteChildren: SellerRouteChildren = {
   SellerBillingRoute: SellerBillingRoute,
   SellerOrdersRoute: SellerOrdersRoute,
+  SellerPaymentsRoute: SellerPaymentsRoute,
   SellerProductsRoute: SellerProductsRoute,
   SellerIndexRoute: SellerIndexRoute,
 }

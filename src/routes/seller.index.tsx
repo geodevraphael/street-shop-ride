@@ -11,8 +11,10 @@ import { WizardStepper } from "@/components/WizardStepper";
 import { GeoAverager } from "@/components/GeoAverager";
 import { uploadFile } from "@/lib/upload";
 import { toast } from "sonner";
-import { Store, Receipt, ClipboardList, TrendingUp, Camera, Loader2, Gift, Calendar, AlertTriangle, Package } from "lucide-react";
+import { Store, Receipt, ClipboardList, TrendingUp, Camera, Loader2, Gift, Calendar, AlertTriangle, Package, CreditCard, Plus, Trash2, Star } from "lucide-react";
 import { BUSINESS_CATEGORIES, BUSINESS_CATEGORY_GROUPS } from "@/lib/business-categories";
+import { LipaNumberForm, EMPTY_LIPA, type LipaFormValue } from "@/components/LipaNumberForm";
+import { getProvider } from "@/lib/payment-providers";
 
 export const Route = createFileRoute("/seller/")({ component: SellerHome });
 
@@ -114,9 +116,15 @@ function SellerHome() {
       )}
 
       <div className="rounded-2xl border bg-card p-4">
-        <h2 className="font-semibold">{shop.name}</h2>
-        <p className="text-sm text-muted-foreground">{shop.category} · {shop.street ?? "No street"}</p>
-        <p className="mt-1 text-xs text-muted-foreground">Lipa: {shop.lipa_number ?? "—"}</p>
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <h2 className="font-semibold">{shop.name}</h2>
+            <p className="text-sm text-muted-foreground">{shop.category} · {shop.street ?? "No street"}</p>
+          </div>
+          <Link to="/seller/payments" className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/15">
+            <CreditCard className="h-3 w-3" /> Njia za malipo
+          </Link>
+        </div>
       </div>
 
       <div className="rounded-2xl border bg-gradient-to-br from-primary/10 to-accent p-4">
@@ -203,25 +211,57 @@ function SellerWizard({ onDone }: { onDone: () => void }) {
   const [idFile, setIdFile] = useState<File | null>(null);
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [coord, setCoord] = useState<{ lat: number; lng: number } | null>(null);
-  const [lipa, setLipa] = useState("");
-  const [qrFile, setQrFile] = useState<File | null>(null);
+  const [lipas, setLipas] = useState<LipaFormValue[]>([{ ...EMPTY_LIPA, is_default: true }]);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const updateLipa = (i: number, v: LipaFormValue) => {
+    setLipas((prev) => {
+      const next = [...prev];
+      // single default
+      if (v.is_default) next.forEach((x, j) => { if (j !== i) x.is_default = false; });
+      next[i] = v;
+      return next;
+    });
+  };
+  const addLipa = () => setLipas((prev) => [...prev, { ...EMPTY_LIPA }]);
+  const removeLipa = (i: number) => setLipas((prev) => {
+    const next = prev.filter((_, j) => j !== i);
+    if (next.length && !next.some((x) => x.is_default)) next[0].is_default = true;
+    return next;
+  });
 
   const finish = async () => {
     if (!user) return;
     if (!coord) return toast.error("Capture your location");
+    const validLipas = lipas.filter((l) => l.provider && l.number.trim());
+    if (validLipas.length === 0) return toast.error("Ongeza walau njia moja ya malipo");
     setBusy(true);
 
-    const qrUrl = qrFile ? await uploadFile("qr-codes", user.id, qrFile, "qr") : null;
     const coverUrl = coverFile ? await uploadFile("shop-covers", user.id, coverFile, "cover") : null;
+    const firstLipa = validLipas.find((l) => l.is_default) ?? validLipas[0];
     const { data: shop, error } = await supabase.from("shops").insert({
       owner_id: user.id, name, category, description, street,
       lat: coord.lat, lng: coord.lng,
-      lipa_number: lipa, qr_code_url: qrUrl, cover_url: coverUrl,
+      lipa_number: firstLipa.number, qr_code_url: firstLipa.qr_code_url, cover_url: coverUrl,
     }).select("*").single();
 
     if (error || !shop) { setBusy(false); return toast.error(error?.message ?? "Failed"); }
+
+    await supabase.from("shop_lipa_numbers").insert(
+      validLipas.map((l, i) => ({
+        shop_id: shop.id,
+        provider: l.provider,
+        account_type: l.account_type,
+        number: l.number.trim(),
+        account_name: l.account_name.trim() || null,
+        instructions: l.instructions.trim() || null,
+        qr_code_url: l.qr_code_url,
+        is_default: l.is_default,
+        active: true,
+        sort_order: i,
+      }))
+    );
 
     const idUrl = idFile ? await uploadFile("id-photos", user.id, idFile, "id") : null;
     const selfieUrl = selfieFile ? await uploadFile("selfies", user.id, selfieFile, "selfie") : null;
@@ -301,9 +341,36 @@ function SellerWizard({ onDone }: { onDone: () => void }) {
         )}
         {step === 2 && <GeoAverager onResult={setCoord} />}
         {step === 3 && (
-          <div className="space-y-3">
-            <div><Label>Lipa Number (Paybill / Till)</Label><Input value={lipa} onChange={(e) => setLipa(e.target.value)} placeholder="e.g. 123456" /></div>
-            <div><Label>Scan-to-Pay QR (image)</Label><Input type="file" accept="image/*" onChange={(e) => setQrFile(e.target.files?.[0] ?? null)} /></div>
+          <div className="space-y-4">
+            <div className="rounded-xl bg-secondary/40 p-3 text-xs text-muted-foreground">
+              Ongeza walau njia moja ya malipo. Unaweza kuongeza nyingi (M-Pesa, Mixx, Airtel, NMB, CRDB, Selcom…) — mteja atachagua ipi atumie.
+            </div>
+            {lipas.map((l, i) => {
+              const p = l.provider ? getProvider(l.provider) : null;
+              return (
+                <div key={i} className="rounded-xl border p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-sm font-semibold">
+                      Njia #{i + 1}{p ? ` — ${p.shortName}` : ""}
+                      {l.is_default && <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] text-primary"><Star className="h-3 w-3" /> Default</span>}
+                    </span>
+                    {lipas.length > 1 && (
+                      <Button size="sm" variant="ghost" onClick={() => removeLipa(i)} className="gap-1 text-destructive">
+                        <Trash2 className="h-3 w-3" /> Ondoa
+                      </Button>
+                    )}
+                  </div>
+                  <LipaNumberForm
+                    value={l}
+                    onChange={(v) => updateLipa(i, v)}
+                    userId={user!.id}
+                  />
+                </div>
+              );
+            })}
+            <Button variant="outline" onClick={addLipa} className="w-full gap-1.5">
+              <Plus className="h-4 w-4" /> Ongeza njia nyingine
+            </Button>
           </div>
         )}
 
