@@ -154,3 +154,85 @@ function VendorDialog({ vendor, onSaved, trigger }: { vendor?: Vendor; onSaved: 
     </Dialog>
   );
 }
+
+type Staff = { id: string; user_id: string; office: string | null; role: string; profile?: { full_name: string | null; phone: string | null } | null };
+
+function StaffDialog({ vendor, trigger }: { vendor: Vendor; trigger: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const [list, setList] = useState<Staff[]>([]);
+  const [userId, setUserId] = useState("");
+  const [office, setOffice] = useState("");
+  const [role, setRole] = useState("agent");
+  const [busy, setBusy] = useState(false);
+
+  const load = async () => {
+    const { data } = await supabase
+      .from("courier_staff")
+      .select("id, user_id, office, role")
+      .eq("vendor_id", vendor.id)
+      .order("created_at", { ascending: false });
+    const rows = (data as any[]) ?? [];
+    if (rows.length === 0) { setList([]); return; }
+    const { data: profs } = await supabase
+      .from("profiles")
+      .select("id, full_name, phone")
+      .in("id", rows.map((r) => r.user_id));
+    const pmap = new Map((profs ?? []).map((p: any) => [p.id, p]));
+    setList(rows.map((r) => ({ ...r, profile: pmap.get(r.user_id) ?? null })));
+  };
+
+  useEffect(() => { if (open) load(); }, [open]);
+
+  const add = async () => {
+    if (!userId.trim()) return toast.error("User ID inahitajika");
+    setBusy(true);
+    const { error } = await supabase.from("courier_staff").insert({
+      vendor_id: vendor.id, user_id: userId.trim(), office: office.trim() || null, role: role.trim() || "agent",
+    });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Wakala ameongezwa"); setUserId(""); setOffice(""); load();
+  };
+
+  const remove = async (id: string) => {
+    if (!confirm("Toa wakala huyu?")) return;
+    const { error } = await supabase.from("courier_staff").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    load();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogContent className="max-w-lg">
+        <DialogHeader><DialogTitle>Wakala wa {vendor.name}</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div className="rounded-lg border p-3">
+            <p className="mb-2 text-xs text-muted-foreground">
+              Nakili User ID kutoka ukurasa wa Users, kisha mtambulishe hapa.
+            </p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="sm:col-span-2"><Label>User ID (UUID)</Label><Input value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="uuid…" /></div>
+              <div><Label>Ofisi</Label><Input value={office} onChange={(e) => setOffice(e.target.value)} placeholder="Ubungo" /></div>
+              <div><Label>Cheo</Label><Input value={role} onChange={(e) => setRole(e.target.value)} placeholder="agent / manager" /></div>
+            </div>
+            <Button className="mt-3" size="sm" onClick={add} disabled={busy}>{busy ? "Inahifadhi…" : "Ongeza wakala"}</Button>
+          </div>
+
+          <div className="space-y-2">
+            {list.length === 0 && <p className="text-sm text-muted-foreground">Bado hakuna wakala.</p>}
+            {list.map((s) => (
+              <div key={s.id} className="flex items-center justify-between rounded-lg border p-2 text-sm">
+                <div>
+                  <div className="font-medium">{s.profile?.full_name || s.user_id.slice(0, 8)}</div>
+                  <div className="text-xs text-muted-foreground">{s.office ?? "—"} · {s.role}{s.profile?.phone ? ` · ${s.profile.phone}` : ""}</div>
+                </div>
+                <Button size="icon" variant="ghost" onClick={() => remove(s.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
