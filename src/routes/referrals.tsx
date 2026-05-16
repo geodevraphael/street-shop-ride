@@ -8,7 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
-import { Copy, Share2, Gift, Users, Bike, Store, Wallet, Check } from "lucide-react";
+import { Copy, Share2, Gift, Users, Wallet, Check, Send } from "lucide-react";
+
+const PER_INVITE = 1000;
+const PAYOUT_THRESHOLD = 20;
+const PAYOUT_AMOUNT = PER_INVITE * PAYOUT_THRESHOLD; // 20,000
 
 export const Route = createFileRoute("/referrals")({ component: ReferralsPage });
 
