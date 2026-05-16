@@ -68,6 +68,75 @@ export type Database = {
         }
         Relationships: []
       }
+      courier_vendors: {
+        Row: {
+          active: boolean
+          contact_phone: string | null
+          contact_whatsapp: string | null
+          created_at: string
+          id: string
+          logo_url: string | null
+          name: string
+          pricing_notes: string | null
+          regions_served: string[]
+        }
+        Insert: {
+          active?: boolean
+          contact_phone?: string | null
+          contact_whatsapp?: string | null
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name: string
+          pricing_notes?: string | null
+          regions_served?: string[]
+        }
+        Update: {
+          active?: boolean
+          contact_phone?: string | null
+          contact_whatsapp?: string | null
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
+          pricing_notes?: string | null
+          regions_served?: string[]
+        }
+        Relationships: []
+      }
+      delivery_offers: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          note: string | null
+          order_id: string
+          responded_at: string | null
+          rider_id: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          order_id: string
+          responded_at?: string | null
+          rider_id: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          order_id?: string
+          responded_at?: string | null
+          rider_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount: number
@@ -150,10 +219,17 @@ export type Database = {
       }
       orders: {
         Row: {
+          accepted_offer_id: string | null
           address_id: string | null
           client_id: string
+          courier_office_drop: string | null
+          courier_office_pickup: string | null
+          courier_tracking_ref: string | null
+          courier_vendor_id: string | null
           created_at: string
           delivery_fee: number
+          delivery_fee_locked: boolean
+          delivery_mode: string
           distance_km: number | null
           eta_min: number | null
           id: string
@@ -168,10 +244,17 @@ export type Database = {
           subtotal: number
         }
         Insert: {
+          accepted_offer_id?: string | null
           address_id?: string | null
           client_id: string
+          courier_office_drop?: string | null
+          courier_office_pickup?: string | null
+          courier_tracking_ref?: string | null
+          courier_vendor_id?: string | null
           created_at?: string
           delivery_fee?: number
+          delivery_fee_locked?: boolean
+          delivery_mode?: string
           distance_km?: number | null
           eta_min?: number | null
           id?: string
@@ -186,10 +269,17 @@ export type Database = {
           subtotal?: number
         }
         Update: {
+          accepted_offer_id?: string | null
           address_id?: string | null
           client_id?: string
+          courier_office_drop?: string | null
+          courier_office_pickup?: string | null
+          courier_tracking_ref?: string | null
+          courier_vendor_id?: string | null
           created_at?: string
           delivery_fee?: number
+          delivery_fee_locked?: boolean
+          delivery_mode?: string
           distance_km?: number | null
           eta_min?: number | null
           id?: string
@@ -728,6 +818,9 @@ export type Database = {
         | "delivered"
         | "completed"
         | "cancelled"
+        | "courier_dropped"
+        | "courier_in_transit"
+        | "courier_arrived"
       region_level:
         | "region"
         | "county"
@@ -883,6 +976,9 @@ export const Constants = {
         "delivered",
         "completed",
         "cancelled",
+        "courier_dropped",
+        "courier_in_transit",
+        "courier_arrived",
       ],
       region_level: [
         "region",
