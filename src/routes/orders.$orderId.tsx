@@ -33,6 +33,7 @@ import { ReportDialog } from "@/components/ReportDialog";
 import { PaymentProofDialog } from "@/components/PaymentProofDialog";
 import { SellerOfferPanel } from "@/components/SellerOfferPanel";
 import { TrackingMap } from "@/components/TrackingMap";
+import { ReviewPrompt } from "@/components/ReviewPrompt";
 import { useTrackOrder } from "@/lib/tracking";
 import { toast } from "sonner";
 
@@ -703,7 +704,19 @@ function OrderDetail() {
                     )}
 
                     {order.status === "completed" && (
-                      <p className="text-sm text-success">🎉 Asante! Oda imekamilika.</p>
+                      <div className="space-y-3">
+                        <p className="text-sm text-success">🎉 Asante! Oda imekamilika.</p>
+                        <ReviewPrompt
+                          orderId={order.id}
+                          targets={[
+                            ...(shop ? [{ type: "shop" as const, id: shop.id, label: shop.name }] : []),
+                            ...(rider ? [{ type: "rider" as const, id: rider.id, label: rider.full_name ?? "boda" }] : []),
+                            ...items
+                              .filter((i) => i.products?.name)
+                              .map((i) => ({ type: "product" as const, id: i.product_id, label: i.products!.name! })),
+                          ]}
+                        />
+                      </div>
                     )}
                   </div>
                 );
