@@ -1,5 +1,5 @@
 ﻿import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
@@ -24,6 +24,9 @@ import {
   CreditCard,
   Search,
   Check,
+  LoaderCircle,
+  BadgeCheck,
+  UserRound,
 } from "lucide-react";
 import { ReportDialog } from "@/components/ReportDialog";
 import { PaymentProofDialog } from "@/components/PaymentProofDialog";
@@ -41,6 +44,20 @@ type Shop = Tables["shops"]["Row"];
 type Address = Tables["addresses"]["Row"];
 type Rider = Tables["riders"]["Row"];
 type ProfileContact = Pick<Tables["profiles"]["Row"], "full_name" | "phone">;
+
+const ACTIVE_ORDER_STATUSES = [
+  "placed",
+  "accepted",
+  "payment_submitted",
+  "payment_confirmed",
+  "rider_assigned",
+  "picked_up",
+  "delivered",
+] as const;
+
+function hasPoint(lat?: number | null, lng?: number | null): lat is number {
+  return lat != null && lng != null;
+}
 
 function buildMapsUrl({
   shop,
@@ -68,7 +85,7 @@ function buildMapsUrl({
 
 function OrderDetail() {
   const { orderId } = Route.useParams();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, ready: authReady } = useAuth();
   const [order, setOrder] = useState<Order | null>(null);
   const [items, setItems] = useState<OrderItem[]>([]);
   const [shop, setShop] = useState<Shop | null>(null);
@@ -82,6 +99,9 @@ function OrderDetail() {
   const [clientPos, setClientPos] = useState<{ lat: number; lng: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [loadingOrder, setLoadingOrder] = useState(true);
+  const [trackBusy, setTrackBusy] = useState(false);
+  const [trackReady, setTrackReady] = useState(false);
+  const trackTimeoutRef = useRef<number | null>(null);
 
   // Role precedence on this order: client > seller > rider.
   // If you placed the order, you're the buyer here â€” even if you also own the
