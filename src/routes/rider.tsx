@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, Link, useRouterState, redirect } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { Bike, History, Receipt } from "lucide-react";
+import { Bike, History, Receipt, Briefcase } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/rider")({
@@ -13,6 +13,7 @@ export const Route = createFileRoute("/rider")({
 
 const tabs = [
   { to: "/rider", label: "Dashboard", icon: Bike, exact: true },
+  { to: "/rider/board", label: "Bodi ya Kazi", icon: Briefcase },
   { to: "/rider/history", label: "History", icon: History },
   { to: "/rider/billing", label: "Billing", icon: Receipt },
 ];
