@@ -1,4 +1,4 @@
-﻿import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -336,7 +336,7 @@ function OrderDetail() {
   if (authLoading || loadingOrder)
     return (
       <AppShell>
-        <p>Inapakiaâ€¦</p>
+        <p>Inapakia…</p>
       </AppShell>
     );
   if (!user)
@@ -366,23 +366,23 @@ function OrderDetail() {
         return {
           phone: riderPhone,
           label: "boda",
-          title: `Boda Â· ${rider.full_name ?? ""} ${rider.plate ? `(${rider.plate})` : ""}`,
+          title: `Boda · ${rider.full_name ?? ""} ${rider.plate ? `(${rider.plate})` : ""}`,
         };
       if (sellerProfile?.phone)
         return {
           phone: sellerProfile.phone,
           label: "muuzaji",
-          title: `Muuzaji Â· ${shop?.name ?? ""}`,
+          title: `Muuzaji · ${shop?.name ?? ""}`,
         };
     }
     if (isSeller) {
       if (rider && riderPhone)
-        return { phone: riderPhone, label: "boda", title: `Boda Â· ${rider.full_name ?? ""}` };
+        return { phone: riderPhone, label: "boda", title: `Boda · ${rider.full_name ?? ""}` };
       if (clientProfile?.phone)
         return {
           phone: clientProfile.phone,
           label: "mteja",
-          title: `Mteja Â· ${clientProfile.full_name ?? ""}`,
+          title: `Mteja · ${clientProfile.full_name ?? ""}`,
         };
     }
     if (isRider) {
@@ -390,13 +390,13 @@ function OrderDetail() {
         return {
           phone: clientProfile.phone,
           label: "mteja",
-          title: `Mteja Â· ${clientProfile.full_name ?? ""}`,
+          title: `Mteja · ${clientProfile.full_name ?? ""}`,
         };
       if (sellerProfile?.phone)
         return {
           phone: sellerProfile.phone,
           label: "muuzaji",
-          title: `Muuzaji Â· ${shop?.name ?? ""}`,
+          title: `Muuzaji · ${shop?.name ?? ""}`,
         };
     }
     return null;
@@ -425,7 +425,7 @@ function OrderDetail() {
             )}
           </div>
           <p className="text-xs text-muted-foreground">
-            #{order.id.slice(0, 8)} Â· {new Date(order.created_at).toLocaleString()}
+            #{order.id.slice(0, 8)} · {new Date(order.created_at).toLocaleString()}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
             {isSeller && (
@@ -606,7 +606,7 @@ function OrderDetail() {
                     {order.status === "payment_confirmed" && (
                       <div className="space-y-2">
                         <p className="text-sm">
-                          ðŸ’° Malipo yamethibitishwa. Muuzaji anatafuta bodaâ€¦
+                          ðŸ’° Malipo yamethibitishwa. Muuzaji anatafuta boda…
                         </p>
                         {sellerProfile?.phone && (
                           <ContactActions
@@ -621,7 +621,7 @@ function OrderDetail() {
                     {order.status === "rider_assigned" && (
                       <div className="space-y-2">
                         <p className="text-sm">
-                          ðŸ›µ Boda <b>{rider?.full_name ?? "rider"}</b>{" "}
+                          🛵 Boda <b>{rider?.full_name ?? "rider"}</b>{" "}
                           {rider?.plate ? `(${rider.plate})` : ""} amekabidhiwa. Inasubiri kuokota
                           bidhaa dukani.
                         </p>
@@ -671,7 +671,7 @@ function OrderDetail() {
                     )}
 
                     {order.status === "completed" && (
-                      <p className="text-sm text-success">ðŸŽ‰ Asante! Oda imekamilika.</p>
+                      <p className="text-sm text-success">🎉 Asante! Oda imekamilika.</p>
                     )}
                   </div>
                 );
@@ -938,7 +938,7 @@ function OrderDetail() {
                 height={340}
               />
               {!liveRider && (
-                <p className="mt-2 text-xs text-muted-foreground">Inasubiri ishara ya bodaâ€¦</p>
+                <p className="mt-2 text-xs text-muted-foreground">Inasubiri ishara ya boda…</p>
               )}
               {liveRider && (
                 <p className="mt-2 text-xs text-success">Boda inaonekana moja kwa moja</p>
@@ -952,7 +952,7 @@ function OrderDetail() {
               {items.map((i) => (
                 <li key={i.id} className="flex justify-between">
                   <span>
-                    {i.qty}Ã— {i.products?.name}
+                    {i.qty}× {i.products?.name}
                   </span>
                   <span>{formatKES(Number(i.price) * i.qty)}</span>
                 </li>
@@ -980,7 +980,7 @@ function OrderDetail() {
             </p>
             {order.distance_km && (
               <p className="mt-1 text-xs text-muted-foreground">
-                {Number(order.distance_km).toFixed(1)} km Â· {order.eta_min} min
+                {Number(order.distance_km).toFixed(1)} km · {order.eta_min} min
               </p>
             )}
           </div>
@@ -992,21 +992,21 @@ function OrderDetail() {
               {!isClient && clientProfile?.phone && (
                 <div>
                   <p className="text-xs text-muted-foreground">
-                    Mteja Â· {clientProfile.full_name ?? ""}
+                    Mteja · {clientProfile.full_name ?? ""}
                   </p>
                   <ContactActions phone={clientProfile.phone} label="mteja" message={orderTag} />
                 </div>
               )}
               {!isSeller && sellerProfile?.phone && (
                 <div>
-                  <p className="text-xs text-muted-foreground">Muuzaji Â· {shop?.name}</p>
+                  <p className="text-xs text-muted-foreground">Muuzaji · {shop?.name}</p>
                   <ContactActions phone={sellerProfile.phone} label="muuzaji" message={orderTag} />
                 </div>
               )}
               {rider && !isRider && (
                 <div>
                   <p className="text-xs text-muted-foreground">
-                    Boda Â· {rider.full_name ?? ""} {rider.plate ? `(${rider.plate})` : ""}
+                    Boda · {rider.full_name ?? ""} {rider.plate ? `(${rider.plate})` : ""}
                   </p>
                   <ContactActions phone={riderPhone} label="boda" message={orderTag} />
                 </div>
