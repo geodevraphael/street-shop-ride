@@ -270,17 +270,17 @@ function Checkout() {
           <div className="mt-3 space-y-1 text-sm">
             <Row label="Subtotal" v={formatKES(subtotal)} />
             <Row
-              label={`Delivery (${fare.km.toFixed(1)} km · ${fare.min} min)`}
-              v={formatKES(fare.fee)}
+              label={`Delivery (${fare.km.toFixed(1)} km · ${fare.min} min${fare.source === "osrm" ? " · njia halisi" : fare.source === "fallback" ? " · makadirio" : ""})`}
+              v={fare.computing ? "Inakokotoa…" : formatKES(fare.fee)}
             />
             <div className="my-2 border-t" />
             <Row label="Total" v={formatKES(subtotal + fare.fee)} bold />
           </div>
-          <Button className="mt-4 w-full" onClick={place} disabled={busy}>
+          <Button className="mt-4 w-full" onClick={place} disabled={busy || fare.computing}>
             {busy ? "Inaweka oda..." : "Weka oda (bila kulipa bado)"}
           </Button>
           <p className="mt-2 text-xs text-muted-foreground">
-            Hutalipa sasa. Utalipa baada ya muuzaji kukubali oda yako. Min delivery fee TSh 1,500.
+            Hutalipa sasa. Utalipa baada ya muuzaji kukubali oda yako. Min delivery fee {formatKES(pricingCfg.min_fare)}.
           </p>
         </aside>
       </div>
