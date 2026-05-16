@@ -220,6 +220,7 @@ export type Database = {
           price: number
           product_id: string
           qty: number
+          selected_attributes: Json
         }
         Insert: {
           id?: string
@@ -227,6 +228,7 @@ export type Database = {
           price?: number
           product_id: string
           qty?: number
+          selected_attributes?: Json
         }
         Update: {
           id?: string
@@ -234,6 +236,7 @@ export type Database = {
           price?: number
           product_id?: string
           qty?: number
+          selected_attributes?: Json
         }
         Relationships: [
           {
@@ -355,6 +358,7 @@ export type Database = {
       products: {
         Row: {
           active: boolean
+          attributes: Json
           category: string | null
           created_at: string
           description: string | null
@@ -365,9 +369,11 @@ export type Database = {
           price: number
           shop_id: string
           stock: number
+          variants: Json
         }
         Insert: {
           active?: boolean
+          attributes?: Json
           category?: string | null
           created_at?: string
           description?: string | null
@@ -378,9 +384,11 @@ export type Database = {
           price?: number
           shop_id: string
           stock?: number
+          variants?: Json
         }
         Update: {
           active?: boolean
+          attributes?: Json
           category?: string | null
           created_at?: string
           description?: string | null
@@ -391,6 +399,7 @@ export type Database = {
           price?: number
           shop_id?: string
           stock?: number
+          variants?: Json
         }
         Relationships: [
           {
