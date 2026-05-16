@@ -1,4 +1,4 @@
-﻿import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -105,7 +105,7 @@ function OrderDetail() {
   const trackTimeoutRef = useRef<number | null>(null);
 
   // Role precedence on this order: client > seller > rider.
-  // If you placed the order, you're the buyer here â€” even if you also own the
+  // If you placed the order, you're the buyer here — even if you also own the
   // shop or ride. Seller/rider actions for self-orders happen on their own
   // dashboards (/seller/orders, /rider). This prevents the buyer view from
   // disappearing when a seller buys from their own shop.
@@ -336,7 +336,7 @@ function OrderDetail() {
   if (authLoading || loadingOrder)
     return (
       <AppShell>
-        <p>Inapakiaâ€¦</p>
+        <p>Inapakia…</p>
       </AppShell>
     );
   if (!user)
@@ -366,23 +366,23 @@ function OrderDetail() {
         return {
           phone: riderPhone,
           label: "boda",
-          title: `Boda Â· ${rider.full_name ?? ""} ${rider.plate ? `(${rider.plate})` : ""}`,
+          title: `Boda · ${rider.full_name ?? ""} ${rider.plate ? `(${rider.plate})` : ""}`,
         };
       if (sellerProfile?.phone)
         return {
           phone: sellerProfile.phone,
           label: "muuzaji",
-          title: `Muuzaji Â· ${shop?.name ?? ""}`,
+          title: `Muuzaji · ${shop?.name ?? ""}`,
         };
     }
     if (isSeller) {
       if (rider && riderPhone)
-        return { phone: riderPhone, label: "boda", title: `Boda Â· ${rider.full_name ?? ""}` };
+        return { phone: riderPhone, label: "boda", title: `Boda · ${rider.full_name ?? ""}` };
       if (clientProfile?.phone)
         return {
           phone: clientProfile.phone,
           label: "mteja",
-          title: `Mteja Â· ${clientProfile.full_name ?? ""}`,
+          title: `Mteja · ${clientProfile.full_name ?? ""}`,
         };
     }
     if (isRider) {
@@ -390,13 +390,13 @@ function OrderDetail() {
         return {
           phone: clientProfile.phone,
           label: "mteja",
-          title: `Mteja Â· ${clientProfile.full_name ?? ""}`,
+          title: `Mteja · ${clientProfile.full_name ?? ""}`,
         };
       if (sellerProfile?.phone)
         return {
           phone: sellerProfile.phone,
           label: "muuzaji",
-          title: `Muuzaji Â· ${shop?.name ?? ""}`,
+          title: `Muuzaji · ${shop?.name ?? ""}`,
         };
     }
     return null;
@@ -425,7 +425,7 @@ function OrderDetail() {
             )}
           </div>
           <p className="text-xs text-muted-foreground">
-            #{order.id.slice(0, 8)} Â· {new Date(order.created_at).toLocaleString()}
+            #{order.id.slice(0, 8)} · {new Date(order.created_at).toLocaleString()}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
             {isSeller && (
@@ -498,7 +498,7 @@ function OrderDetail() {
               <p className="text-sm text-destructive">Oda hii imeghairiwa.</p>
             )}
 
-            {/* CLIENT actions â€” kila status ina kitufe au taarifa wazi */}
+            {/* CLIENT actions — kila status ina kitufe au taarifa wazi */}
             {isClient &&
               (() => {
                 const steps = [
@@ -523,12 +523,12 @@ function OrderDetail() {
 
                     {order.status === "placed" && (
                       <div className="space-y-2">
-                        <p className="text-sm">â³ Tunamsubiri muuzaji akubali oda yako.</p>
+                        <p className="text-sm">⏳ Tunamsubiri muuzaji akubali oda yako.</p>
                         {sellerProfile?.phone && (
                           <ContactActions
                             phone={sellerProfile.phone}
                             label="muuzaji"
-                            message={`${orderTag} â€” naomba ukubali oda yangu tafadhali`}
+                            message={`${orderTag} — naomba ukubali oda yangu tafadhali`}
                           />
                         )}
                         <Button variant="outline" size="sm" disabled={busy} onClick={cancelOrder}>
@@ -591,13 +591,13 @@ function OrderDetail() {
                     {order.status === "payment_submitted" && (
                       <div className="space-y-2">
                         <p className="text-sm">
-                          ðŸ“¨ Uthibitisho umetumwa. Tunamsubiri muuzaji athibitishe malipo.
+                          📨 Uthibitisho umetumwa. Tunamsubiri muuzaji athibitishe malipo.
                         </p>
                         {sellerProfile?.phone && (
                           <ContactActions
                             phone={sellerProfile.phone}
                             label="muuzaji"
-                            message={`${orderTag} â€” nimelipa, tafadhali thibitisha`}
+                            message={`${orderTag} — nimelipa, tafadhali thibitisha`}
                           />
                         )}
                       </div>
@@ -606,13 +606,13 @@ function OrderDetail() {
                     {order.status === "payment_confirmed" && (
                       <div className="space-y-2">
                         <p className="text-sm">
-                          ðŸ’° Malipo yamethibitishwa. Muuzaji anatafuta bodaâ€¦
+                          💰 Malipo yamethibitishwa. Muuzaji anatafuta boda…
                         </p>
                         {sellerProfile?.phone && (
                           <ContactActions
                             phone={sellerProfile.phone}
                             label="muuzaji"
-                            message={`${orderTag} â€” naomba upange boda`}
+                            message={`${orderTag} — naomba upange boda`}
                           />
                         )}
                       </div>
@@ -621,7 +621,7 @@ function OrderDetail() {
                     {order.status === "rider_assigned" && (
                       <div className="space-y-2">
                         <p className="text-sm">
-                          ðŸ›µ Boda <b>{rider?.full_name ?? "rider"}</b>{" "}
+                          🛵 Boda <b>{rider?.full_name ?? "rider"}</b>{" "}
                           {rider?.plate ? `(${rider.plate})` : ""} amekabidhiwa. Inasubiri kuokota
                           bidhaa dukani.
                         </p>
@@ -639,7 +639,7 @@ function OrderDetail() {
 
                     {order.status === "picked_up" && (
                       <div className="space-y-2">
-                        <p className="text-sm">ðŸ“¦ Bidhaa iko njiani kuja kwako!</p>
+                        <p className="text-sm">📦 Bidhaa iko njiani kuja kwako!</p>
                         <div className="flex flex-wrap gap-2">
                           <Button size="lg" onClick={openTracking} disabled={!authReady || trackBusy} className="gap-2">
                             {trackBusy ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
@@ -655,23 +655,23 @@ function OrderDetail() {
                     {order.status === "delivered" && (
                       <div className="space-y-2">
                         <p className="text-sm">
-                          ðŸ“¬ Boda anasema amekufikishia. Thibitisha umepokea bidhaa.
+                          📬 Boda anasema amekufikishia. Thibitisha umepokea bidhaa.
                         </p>
                         <Button size="lg" disabled={busy} onClick={() => updateStatus("completed")}>
-                          âœ“ Nimepokea bidhaa â€” kamilisha
+                          ✓ Nimepokea bidhaa — kamilisha
                         </Button>
                         {riderPhone && (
                           <ContactActions
                             phone={riderPhone}
                             label="boda"
-                            message={`${orderTag} â€” sijaipokea bado`}
+                            message={`${orderTag} — sijaipokea bado`}
                           />
                         )}
                       </div>
                     )}
 
                     {order.status === "completed" && (
-                      <p className="text-sm text-success">ðŸŽ‰ Asante! Oda imekamilika.</p>
+                      <p className="text-sm text-success">🎉 Asante! Oda imekamilika.</p>
                     )}
                   </div>
                 );
@@ -819,7 +819,7 @@ function OrderDetail() {
                               <Star className="h-3 w-3 fill-warning text-warning" />
                               {(r.rating ?? 5).toFixed(1)}
                             </span>
-                            <span>{r.plate ?? "â€”"}</span>
+                            <span>{r.plate ?? "—"}</span>
                             {(() => {
                               const shopPoint = toPoint(shop?.lat, shop?.lng);
                               const riderPoint = toPoint(r.current_lat, r.current_lng);
@@ -872,21 +872,36 @@ function OrderDetail() {
             )}
 
             {/* RIDER actions */}
+            {isRider && (order.status === "rider_assigned" || order.status === "picked_up") && (
+              <div className="space-y-3">
+                <RiderNavButtons
+                  status={order.status}
+                  shop={shopPos}
+                  destination={destinationPos}
+                  riderPos={riderPos}
+                />
+                <RiderFareEditor
+                  orderId={orderId}
+                  currentFee={Number(order.delivery_fee)}
+                  onSaved={load}
+                />
+              </div>
+            )}
             {isRider && order.status === "rider_assigned" && (
               <Button
                 size="lg"
-                className="h-16 w-full gap-3 text-xl font-black shadow-xl shadow-primary/30"
+                className="h-16 w-full gap-3 text-xl font-black shadow-xl shadow-primary/30 mt-3"
                 disabled={busy}
                 onClick={() => updateStatus("picked_up")}
               >
                 <PackageCheck className="h-7 w-7" />
-                Nimeokota bidhaa â€” anza safari
+                Nimeokota bidhaa — anza safari
               </Button>
             )}
             {isRider && order.status === "picked_up" && (
               <Button
                 size="lg"
-                className="h-16 w-full gap-3 text-xl font-black bg-success hover:bg-success/90 shadow-xl shadow-success/30"
+                className="h-16 w-full gap-3 text-xl font-black bg-success hover:bg-success/90 shadow-xl shadow-success/30 mt-3"
                 disabled={busy}
                 onClick={() => updateStatus("delivered")}
               >
@@ -938,7 +953,7 @@ function OrderDetail() {
                 height={340}
               />
               {!liveRider && (
-                <p className="mt-2 text-xs text-muted-foreground">Inasubiri ishara ya bodaâ€¦</p>
+                <p className="mt-2 text-xs text-muted-foreground">Inasubiri ishara ya boda…</p>
               )}
               {liveRider && (
                 <p className="mt-2 text-xs text-success">Boda inaonekana moja kwa moja</p>
@@ -952,7 +967,7 @@ function OrderDetail() {
               {items.map((i) => (
                 <li key={i.id} className="flex justify-between">
                   <span>
-                    {i.qty}Ã— {i.products?.name}
+                    {i.qty}× {i.products?.name}
                   </span>
                   <span>{formatKES(Number(i.price) * i.qty)}</span>
                 </li>
@@ -976,11 +991,11 @@ function OrderDetail() {
               Kutoka <b className="text-foreground">{shop?.name}</b>
             </p>
             <p className="mt-1 text-muted-foreground">
-              Hadi <b className="text-foreground">{address?.label ?? "â€”"}</b>
+              Hadi <b className="text-foreground">{address?.label ?? "—"}</b>
             </p>
             {order.distance_km && (
               <p className="mt-1 text-xs text-muted-foreground">
-                {Number(order.distance_km).toFixed(1)} km Â· {order.eta_min} min
+                {Number(order.distance_km).toFixed(1)} km · {order.eta_min} min
               </p>
             )}
           </div>
@@ -992,21 +1007,21 @@ function OrderDetail() {
               {!isClient && clientProfile?.phone && (
                 <div>
                   <p className="text-xs text-muted-foreground">
-                    Mteja Â· {clientProfile.full_name ?? ""}
+                    Mteja · {clientProfile.full_name ?? ""}
                   </p>
                   <ContactActions phone={clientProfile.phone} label="mteja" message={orderTag} />
                 </div>
               )}
               {!isSeller && sellerProfile?.phone && (
                 <div>
-                  <p className="text-xs text-muted-foreground">Muuzaji Â· {shop?.name}</p>
+                  <p className="text-xs text-muted-foreground">Muuzaji · {shop?.name}</p>
                   <ContactActions phone={sellerProfile.phone} label="muuzaji" message={orderTag} />
                 </div>
               )}
               {rider && !isRider && (
                 <div>
                   <p className="text-xs text-muted-foreground">
-                    Boda Â· {rider.full_name ?? ""} {rider.plate ? `(${rider.plate})` : ""}
+                    Boda · {rider.full_name ?? ""} {rider.plate ? `(${rider.plate})` : ""}
                   </p>
                   <ContactActions phone={riderPhone} label="boda" message={orderTag} />
                 </div>
@@ -1030,6 +1045,73 @@ function Row({ label, v, bold }: { label: string; v: string; bold?: boolean }) {
     <div className={`flex justify-between ${bold ? "font-semibold" : ""}`}>
       <span className="text-muted-foreground">{label}</span>
       <span>{v}</span>
+    </div>
+  );
+}
+
+type Pt = { lat: number; lng: number } | null | undefined;
+
+function gmapsDir(origin: Pt, dest: Pt): string | null {
+  if (!dest) return null;
+  const o = origin ? `${origin.lat},${origin.lng}` : "";
+  return `https://www.google.com/maps/dir/?api=1${o ? `&origin=${o}` : ""}&destination=${dest.lat},${dest.lng}&travelmode=driving`;
+}
+
+function RiderNavButtons({ status, shop, destination, riderPos }: { status: string; shop: Pt; destination: Pt; riderPos: Pt }) {
+  const target: Pt = status === "rider_assigned" ? shop : destination;
+  const label = status === "rider_assigned" ? "Nenda kuokota dukani" : "Nenda kwa mteja";
+  const url = gmapsDir(riderPos ?? null, target);
+  if (!url) {
+    return (
+      <p className="rounded-xl border bg-warning/10 p-3 text-xs text-warning-foreground">
+        Eneo halikupatikana — hatuwezi kufungua Google Maps sasa.
+      </p>
+    );
+  }
+  return (
+    <Button asChild size="lg" className="h-12 w-full gap-2">
+      <a href={url} target="_blank" rel="noreferrer">
+        <MapPin className="h-5 w-5" /> {label} (Google Maps)
+        <ExternalLink className="h-4 w-4 opacity-70" />
+      </a>
+    </Button>
+  );
+}
+
+function RiderFareEditor({ orderId, currentFee, onSaved }: { orderId: string; currentFee: number; onSaved: () => void }) {
+  const [val, setVal] = useState<string>(String(currentFee));
+  const [saving, setSaving] = useState(false);
+  useEffect(() => { setVal(String(currentFee)); }, [currentFee]);
+  const num = Number(val);
+  const dirty = Number.isFinite(num) && num >= 0 && num !== currentFee;
+  const save = async () => {
+    if (!dirty) return;
+    setSaving(true);
+    const { error } = await supabase.from("orders").update({ delivery_fee: num }).eq("id", orderId);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Bei ya delivery imesasishwa");
+    onSaved();
+  };
+  return (
+    <div className="rounded-xl border bg-card p-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Rekebisha bei ya delivery</p>
+      <p className="mt-0.5 text-[11px] text-muted-foreground">
+        Ukiona umbali halisi ni mkubwa au kuna ugumu wa njia, weka bei mpya. Mteja ataona mara moja.
+      </p>
+      <div className="mt-2 flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">TSh</span>
+        <input
+          type="number"
+          min={0}
+          value={val}
+          onChange={(e) => setVal(e.target.value)}
+          className="h-10 flex-1 rounded-md border bg-background px-3 text-sm"
+        />
+        <Button size="sm" onClick={save} disabled={!dirty || saving}>
+          {saving ? "Inahifadhi…" : "Hifadhi"}
+        </Button>
+      </div>
     </div>
   );
 }

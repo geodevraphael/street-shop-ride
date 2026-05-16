@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { useCart, cart } from "@/lib/cart";
-import { computeFare, distanceKm, etaMinutes, formatKES } from "@/lib/pricing";
+import { computeFareWith, getPricingConfig, routeDistance, formatKES, DEFAULT_PRICING, type PricingConfig } from "@/lib/pricing";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/use-auth";
@@ -107,14 +107,27 @@ function Checkout() {
   const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
   const address = addresses.find((a) => a.id === addressId);
 
-  const fare = useMemo(() => {
+  const [pricingCfg, setPricingCfg] = useState<PricingConfig>(DEFAULT_PRICING);
+  const [fare, setFare] = useState<{ km: number; min: number; fee: number; source: "osrm" | "fallback" | "none"; computing: boolean }>({
+    km: 0, min: 0, fee: DEFAULT_PRICING.min_fare, source: "none", computing: false,
+  });
+
+  useEffect(() => { getPricingConfig().then(setPricingCfg); }, []);
+
+  useEffect(() => {
     if (shop?.lat == null || shop?.lng == null || address?.lat == null || address?.lng == null) {
-      return { km: 0, min: 0, fee: 1500 };
+      setFare({ km: 0, min: 0, fee: pricingCfg.min_fare, source: "none", computing: false });
+      return;
     }
-    const km = distanceKm({ lat: shop.lat, lng: shop.lng }, { lat: address.lat, lng: address.lng });
-    const min = etaMinutes(km);
-    return { km, min, fee: computeFare(km, min) };
-  }, [shop, address]);
+    let cancelled = false;
+    setFare((f) => ({ ...f, computing: true }));
+    routeDistance({ lat: shop.lat!, lng: shop.lng! }, { lat: address.lat, lng: address.lng })
+      .then((r) => {
+        if (cancelled) return;
+        setFare({ km: r.km, min: r.min, fee: computeFareWith(pricingCfg, r.km, r.min), source: r.source, computing: false });
+      });
+    return () => { cancelled = true; };
+  }, [shop?.lat, shop?.lng, address?.lat, address?.lng, pricingCfg]);
 
   if (!user)
     return (
@@ -257,17 +270,17 @@ function Checkout() {
           <div className="mt-3 space-y-1 text-sm">
             <Row label="Subtotal" v={formatKES(subtotal)} />
             <Row
-              label={`Delivery (${fare.km.toFixed(1)} km · ${fare.min} min)`}
-              v={formatKES(fare.fee)}
+              label={`Delivery (${fare.km.toFixed(1)} km · ${fare.min} min${fare.source === "osrm" ? " · njia halisi" : fare.source === "fallback" ? " · makadirio" : ""})`}
+              v={fare.computing ? "Inakokotoa…" : formatKES(fare.fee)}
             />
             <div className="my-2 border-t" />
             <Row label="Total" v={formatKES(subtotal + fare.fee)} bold />
           </div>
-          <Button className="mt-4 w-full" onClick={place} disabled={busy}>
+          <Button className="mt-4 w-full" onClick={place} disabled={busy || fare.computing}>
             {busy ? "Inaweka oda..." : "Weka oda (bila kulipa bado)"}
           </Button>
           <p className="mt-2 text-xs text-muted-foreground">
-            Hutalipa sasa. Utalipa baada ya muuzaji kukubali oda yako. Min delivery fee TSh 1,500.
+            Hutalipa sasa. Utalipa baada ya muuzaji kukubali oda yako. Min delivery fee {formatKES(pricingCfg.min_fare)}.
           </p>
         </aside>
       </div>
