@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { ShareButton } from "@/components/ShareButton";
@@ -9,6 +9,8 @@ import { formatKES } from "@/lib/pricing";
 import { getCategory } from "@/lib/categories";
 import { ChevronLeft, MapPin, Plus, ShoppingBag, Star } from "lucide-react";
 import { toast } from "sonner";
+import { AttributeSummary, BuyerVariantPicker } from "@/components/AttributeFields";
+import { getBuyerPickFields } from "@/lib/product-attributes";
 
 export const Route = createFileRoute("/products/$productId")({
   head: () => ({ meta: [{ title: "Bidhaa · Product — Soko" }] }),
@@ -51,19 +53,40 @@ function ProductDetail() {
   const shareUrl = `/products/${product.id}`;
   const shareText = `${product.name} — ${formatKES(Number(product.price))} · ${shop?.name ?? "Soko"}`;
 
+  const productAttrs: Record<string, any> = product.attributes ?? {};
+  const requiredFields = useMemo(
+    () => getBuyerPickFields(product.category, productAttrs),
+    [product.category, product.attributes],
+  );
+  const [selected, setSelected] = useState<Record<string, any>>({});
+  const missingSelection = requiredFields.find((f) => {
+    const v = selected[f.key];
+    return v == null || v === "" || (Array.isArray(v) && v.length === 0);
+  });
+
   const addToCart = () => {
+    if (missingSelection) {
+      toast.error(`Tafadhali chagua: ${missingSelection.label}`);
+      return;
+    }
     cart.add({
       productId: product.id, shopId: product.shop_id, shopName: shop?.name ?? "Shop",
       name: product.name, price: Number(product.price), qty: 1, image_url: product.image_url,
+      selectedAttributes: selected,
     });
     toast.success("Imeongezwa kikapuni");
   };
 
   const orderNow = () => {
+    if (missingSelection) {
+      toast.error(`Tafadhali chagua: ${missingSelection.label}`);
+      return;
+    }
     cart.clear();
     cart.add({
       productId: product.id, shopId: product.shop_id, shopName: shop?.name ?? "Shop",
       name: product.name, price: Number(product.price), qty: 1, image_url: product.image_url,
+      selectedAttributes: selected,
     });
     nav({ to: "/checkout" });
   };
@@ -92,6 +115,15 @@ function ProductDetail() {
           <h1 className="mt-2 text-2xl font-bold">{product.name}</h1>
           <p className="mt-1 text-2xl font-bold text-primary">{formatKES(Number(product.price))}</p>
           {product.description && <p className="mt-3 text-sm text-muted-foreground">{product.description}</p>}
+
+          <AttributeSummary category={product.category} value={productAttrs} />
+
+          <BuyerVariantPicker
+            category={product.category}
+            productAttributes={productAttrs}
+            value={selected}
+            onChange={setSelected}
+          />
 
           <div className="mt-4 flex flex-wrap gap-2">
             <Button size="lg" className="gap-1.5" onClick={orderNow} disabled={product.stock <= 0}>

@@ -174,6 +174,7 @@ function Checkout() {
       product_id: i.productId,
       qty: i.qty,
       price: i.price,
+      selected_attributes: i.selectedAttributes ?? {},
     }));
     const { error: itemsError } = await supabase.from("order_items").insert(itemRows);
     if (itemsError) {
