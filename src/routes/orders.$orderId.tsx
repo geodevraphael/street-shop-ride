@@ -802,15 +802,17 @@ function OrderDetail() {
                               {(r.rating ?? 5).toFixed(1)}
                             </span>
                             <span>{r.plate ?? "â€”"}</span>
-                            {hasPoint(shop?.lat, shop?.lng) && hasPoint(r.current_lat, r.current_lng) && (
-                              <span className="font-medium text-primary">
-                                {distanceKm(
-                                  { lat: shop.lat, lng: shop.lng },
-                                  { lat: r.current_lat, lng: r.current_lng },
-                                ).toFixed(1)}{" "}
-                                km
-                              </span>
-                            )}
+                            {(() => {
+                              const shopPoint = toPoint(shop?.lat, shop?.lng);
+                              const riderPoint = toPoint(r.current_lat, r.current_lng);
+                              if (!shopPoint || !riderPoint) return null;
+
+                              return (
+                                <span className="font-medium text-primary">
+                                  {distanceKm(shopPoint, riderPoint).toFixed(1)} km
+                                </span>
+                              );
+                            })()}
                           </div>
                         </div>
                         <Button
