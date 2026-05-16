@@ -454,6 +454,24 @@ function OrderDetail() {
         </div>
       </div>
 
+      <section className={`mt-4 rounded-2xl border p-4 ${roleInfo.tone}`}>
+        <div className="flex items-start gap-3">
+          <div className="rounded-full border border-current/20 p-2">
+            <roleInfo.icon className="h-4 w-4" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-[11px] font-semibold uppercase tracking-wide opacity-80">Role yako kwenye oda</p>
+            <h2 className="text-sm font-semibold">{roleInfo.label} · {roleInfo.title}</h2>
+            <p className="text-sm opacity-90">{roleInfo.note}</p>
+            {isClient && (
+              <p className="text-xs opacity-80">
+                Session: {authReady ? "tayari" : "inapakia"} · Fuatilia: {trackingActive ? (trackReady ? "tayari kubofya" : "inaandaliwa") : "itasubiri boda/ramani"}
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+
       {quickContact && (
         <div className="mt-4 rounded-2xl border bg-primary/5 p-3">
           <p className="text-xs text-muted-foreground">
@@ -495,10 +513,6 @@ function OrderDetail() {
                 ];
                 const idx = steps.indexOf(order.status);
                 const stepLabel = idx >= 0 ? `Hatua ${idx + 1} ya ${steps.length}` : null;
-                const scrollToMap = () =>
-                  document
-                    .getElementById("track-map")
-                    ?.scrollIntoView({ behavior: "smooth", block: "start" });
                 return (
                   <div className="space-y-3">
                     {stepLabel && (
@@ -563,11 +577,7 @@ function OrderDetail() {
                           </p>
                         )}
                         <div className="flex flex-wrap gap-2">
-                          <PaymentProofDialog
-                            orderId={orderId}
-                            userId={user.id}
-                            onSubmitted={load}
-                          />
+                          <PaymentProofDialog orderId={orderId} userId={user.id} onSubmitted={load} disabled={!authReady || busy} />
                         </div>
                       </div>
                     )}
@@ -610,8 +620,9 @@ function OrderDetail() {
                           bidhaa dukani.
                         </p>
                         <div className="flex flex-wrap gap-2">
-                          <Button size="sm" variant="outline" onClick={scrollToMap}>
-                            Fuatilia kwenye ramani
+                          <Button size="sm" variant="outline" onClick={openTracking} disabled={!authReady || trackBusy} className="gap-2">
+                            {trackBusy ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
+                            {trackBusy ? "Inafungua ramani…" : "Fuatilia kwenye ramani"}
                           </Button>
                           {riderPhone && (
                             <ContactActions phone={riderPhone} label="boda" message={orderTag} />
@@ -624,8 +635,9 @@ function OrderDetail() {
                       <div className="space-y-2">
                         <p className="text-sm">ðŸ“¦ Bidhaa iko njiani kuja kwako!</p>
                         <div className="flex flex-wrap gap-2">
-                          <Button size="lg" onClick={scrollToMap}>
-                            Fuatilia boda kwenye ramani
+                          <Button size="lg" onClick={openTracking} disabled={!authReady || trackBusy} className="gap-2">
+                            {trackBusy ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
+                            {trackBusy ? "Inafungua ramani…" : "Fuatilia boda kwenye ramani"}
                           </Button>
                           {riderPhone && (
                             <ContactActions phone={riderPhone} label="boda" message={orderTag} />
