@@ -27,6 +27,7 @@ import { Route as SellerProductsRouteImport } from './routes/seller.products'
 import { Route as SellerOrdersRouteImport } from './routes/seller.orders'
 import { Route as SellerBillingRouteImport } from './routes/seller.billing'
 import { Route as RiderHistoryRouteImport } from './routes/rider.history'
+import { Route as RiderBoardRouteImport } from './routes/rider.board'
 import { Route as RiderBillingRouteImport } from './routes/rider.billing'
 import { Route as ProductsSearchRouteImport } from './routes/products.search'
 import { Route as ProductsProductIdRouteImport } from './routes/products.$productId'
@@ -39,6 +40,7 @@ import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminRegionsRouteImport } from './routes/admin.regions'
 import { Route as AdminReferralsRouteImport } from './routes/admin.referrals'
 import { Route as AdminPricingRouteImport } from './routes/admin.pricing'
+import { Route as AdminCouriersRouteImport } from './routes/admin.couriers'
 import { Route as AccountProfileRouteImport } from './routes/account.profile'
 import { Route as AccountAddressesRouteImport } from './routes/account.addresses'
 
@@ -132,6 +134,11 @@ const RiderHistoryRoute = RiderHistoryRouteImport.update({
   path: '/history',
   getParentRoute: () => RiderRoute,
 } as any)
+const RiderBoardRoute = RiderBoardRouteImport.update({
+  id: '/board',
+  path: '/board',
+  getParentRoute: () => RiderRoute,
+} as any)
 const RiderBillingRoute = RiderBillingRouteImport.update({
   id: '/billing',
   path: '/billing',
@@ -192,6 +199,11 @@ const AdminPricingRoute = AdminPricingRouteImport.update({
   path: '/pricing',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCouriersRoute = AdminCouriersRouteImport.update({
+  id: '/couriers',
+  path: '/couriers',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AccountProfileRoute = AccountProfileRouteImport.update({
   id: '/account/profile',
   path: '/account/profile',
@@ -215,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/shops': typeof ShopsRouteWithChildren
   '/account/addresses': typeof AccountAddressesRoute
   '/account/profile': typeof AccountProfileRoute
+  '/admin/couriers': typeof AdminCouriersRoute
   '/admin/pricing': typeof AdminPricingRoute
   '/admin/referrals': typeof AdminReferralsRoute
   '/admin/regions': typeof AdminRegionsRoute
@@ -227,6 +240,7 @@ export interface FileRoutesByFullPath {
   '/products/$productId': typeof ProductsProductIdRoute
   '/products/search': typeof ProductsSearchRoute
   '/rider/billing': typeof RiderBillingRoute
+  '/rider/board': typeof RiderBoardRoute
   '/rider/history': typeof RiderHistoryRoute
   '/seller/billing': typeof SellerBillingRoute
   '/seller/orders': typeof SellerOrdersRoute
@@ -245,6 +259,7 @@ export interface FileRoutesByTo {
   '/shops': typeof ShopsRouteWithChildren
   '/account/addresses': typeof AccountAddressesRoute
   '/account/profile': typeof AccountProfileRoute
+  '/admin/couriers': typeof AdminCouriersRoute
   '/admin/pricing': typeof AdminPricingRoute
   '/admin/referrals': typeof AdminReferralsRoute
   '/admin/regions': typeof AdminRegionsRoute
@@ -257,6 +272,7 @@ export interface FileRoutesByTo {
   '/products/$productId': typeof ProductsProductIdRoute
   '/products/search': typeof ProductsSearchRoute
   '/rider/billing': typeof RiderBillingRoute
+  '/rider/board': typeof RiderBoardRoute
   '/rider/history': typeof RiderHistoryRoute
   '/seller/billing': typeof SellerBillingRoute
   '/seller/orders': typeof SellerOrdersRoute
@@ -280,6 +296,7 @@ export interface FileRoutesById {
   '/shops': typeof ShopsRouteWithChildren
   '/account/addresses': typeof AccountAddressesRoute
   '/account/profile': typeof AccountProfileRoute
+  '/admin/couriers': typeof AdminCouriersRoute
   '/admin/pricing': typeof AdminPricingRoute
   '/admin/referrals': typeof AdminReferralsRoute
   '/admin/regions': typeof AdminRegionsRoute
@@ -292,6 +309,7 @@ export interface FileRoutesById {
   '/products/$productId': typeof ProductsProductIdRoute
   '/products/search': typeof ProductsSearchRoute
   '/rider/billing': typeof RiderBillingRoute
+  '/rider/board': typeof RiderBoardRoute
   '/rider/history': typeof RiderHistoryRoute
   '/seller/billing': typeof SellerBillingRoute
   '/seller/orders': typeof SellerOrdersRoute
@@ -316,6 +334,7 @@ export interface FileRouteTypes {
     | '/shops'
     | '/account/addresses'
     | '/account/profile'
+    | '/admin/couriers'
     | '/admin/pricing'
     | '/admin/referrals'
     | '/admin/regions'
@@ -328,6 +347,7 @@ export interface FileRouteTypes {
     | '/products/$productId'
     | '/products/search'
     | '/rider/billing'
+    | '/rider/board'
     | '/rider/history'
     | '/seller/billing'
     | '/seller/orders'
@@ -346,6 +366,7 @@ export interface FileRouteTypes {
     | '/shops'
     | '/account/addresses'
     | '/account/profile'
+    | '/admin/couriers'
     | '/admin/pricing'
     | '/admin/referrals'
     | '/admin/regions'
@@ -358,6 +379,7 @@ export interface FileRouteTypes {
     | '/products/$productId'
     | '/products/search'
     | '/rider/billing'
+    | '/rider/board'
     | '/rider/history'
     | '/seller/billing'
     | '/seller/orders'
@@ -380,6 +402,7 @@ export interface FileRouteTypes {
     | '/shops'
     | '/account/addresses'
     | '/account/profile'
+    | '/admin/couriers'
     | '/admin/pricing'
     | '/admin/referrals'
     | '/admin/regions'
@@ -392,6 +415,7 @@ export interface FileRouteTypes {
     | '/products/$productId'
     | '/products/search'
     | '/rider/billing'
+    | '/rider/board'
     | '/rider/history'
     | '/seller/billing'
     | '/seller/orders'
@@ -549,6 +573,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RiderHistoryRouteImport
       parentRoute: typeof RiderRoute
     }
+    '/rider/board': {
+      id: '/rider/board'
+      path: '/board'
+      fullPath: '/rider/board'
+      preLoaderRoute: typeof RiderBoardRouteImport
+      parentRoute: typeof RiderRoute
+    }
     '/rider/billing': {
       id: '/rider/billing'
       path: '/billing'
@@ -633,6 +664,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPricingRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/couriers': {
+      id: '/admin/couriers'
+      path: '/couriers'
+      fullPath: '/admin/couriers'
+      preLoaderRoute: typeof AdminCouriersRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/account/profile': {
       id: '/account/profile'
       path: '/account/profile'
@@ -651,6 +689,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminCouriersRoute: typeof AdminCouriersRoute
   AdminPricingRoute: typeof AdminPricingRoute
   AdminReferralsRoute: typeof AdminReferralsRoute
   AdminRegionsRoute: typeof AdminRegionsRoute
@@ -661,6 +700,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminCouriersRoute: AdminCouriersRoute,
   AdminPricingRoute: AdminPricingRoute,
   AdminReferralsRoute: AdminReferralsRoute,
   AdminRegionsRoute: AdminRegionsRoute,
@@ -687,12 +727,14 @@ const OrdersRouteWithChildren =
 
 interface RiderRouteChildren {
   RiderBillingRoute: typeof RiderBillingRoute
+  RiderBoardRoute: typeof RiderBoardRoute
   RiderHistoryRoute: typeof RiderHistoryRoute
   RiderIndexRoute: typeof RiderIndexRoute
 }
 
 const RiderRouteChildren: RiderRouteChildren = {
   RiderBillingRoute: RiderBillingRoute,
+  RiderBoardRoute: RiderBoardRoute,
   RiderHistoryRoute: RiderHistoryRoute,
   RiderIndexRoute: RiderIndexRoute,
 }
