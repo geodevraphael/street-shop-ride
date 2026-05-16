@@ -238,25 +238,17 @@ function Checkout() {
           </section>
 
           <section className="rounded-2xl border bg-card p-4">
-            <h3 className="mb-2 font-semibold">Malipo baada ya oda kukubaliwa</h3>
-            <p className="text-sm text-muted-foreground">
-              Weka oda kwanza. Muuzaji akiikubali, utalipa kiasi kamili na kutuma proof/reference
-              kwenye ukurasa wa oda.
+            <h3 className="mb-2 font-semibold">Jinsi mchakato unavyofanya kazi</h3>
+            <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
+              <li><b className="text-foreground">Weka oda</b> — muuzaji atapata taarifa kwenye duka lake.</li>
+              <li><b className="text-foreground">Muuzaji akubali</b> oda (anahakiki stock na upatikanaji).</li>
+              <li>Baada ya kukubaliwa, <b className="text-foreground">utaona namba ya Lipa/QR</b> kwenye ukurasa wa oda, kisha lipa.</li>
+              <li><b className="text-foreground">Tuma uthibitisho wa malipo</b> (reference au picha ya risiti).</li>
+              <li>Muuzaji akihakiki malipo, <b className="text-foreground">delivery huanza</b> na boda hupatikana.</li>
+            </ol>
+            <p className="mt-3 rounded-lg bg-warning/10 p-2 text-xs text-warning-foreground">
+              Huoni namba ya malipo sasa hivi — hii inalinda usilipe kabla muuzaji hajathibitisha bidhaa ipo.
             </p>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-xl border p-3">
-                <p className="text-xs text-muted-foreground">Lipa Number</p>
-                <p className="text-xl font-bold">{shop?.lipa_number ?? "—"}</p>
-              </div>
-              <div className="grid place-items-center rounded-xl border p-3">
-                {shop?.qr_code_url ? (
-                  <img src={shop.qr_code_url} alt="QR" className="h-28 w-28 object-contain" />
-                ) : (
-                  <p className="text-xs text-muted-foreground">No QR uploaded</p>
-                )}
-                <p className="mt-1 text-xs text-muted-foreground">Scan to pay</p>
-              </div>
-            </div>
           </section>
         </div>
 
@@ -272,9 +264,11 @@ function Checkout() {
             <Row label="Total" v={formatKES(subtotal + fare.fee)} bold />
           </div>
           <Button className="mt-4 w-full" onClick={place} disabled={busy}>
-            {busy ? "Inaweka oda..." : "Weka oda"}
+            {busy ? "Inaweka oda..." : "Weka oda (bila kulipa bado)"}
           </Button>
-          <p className="mt-2 text-xs text-muted-foreground">Min delivery fee TSh 1,500.</p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Hutalipa sasa. Utalipa baada ya muuzaji kukubali oda yako. Min delivery fee TSh 1,500.
+          </p>
         </aside>
       </div>
     </AppShell>
