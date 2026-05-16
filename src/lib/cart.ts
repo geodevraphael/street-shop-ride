@@ -8,6 +8,8 @@ export type CartItem = {
   price: number;
   qty: number;
   image_url?: string | null;
+  /** Buyer-selected size/color/storage etc. — stored on order_items.selected_attributes */
+  selectedAttributes?: Record<string, any>;
 };
 
 const KEY = "lm_cart_v1";
