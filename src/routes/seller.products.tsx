@@ -15,6 +15,8 @@ import { toast } from "sonner";
 import { formatKES } from "@/lib/pricing";
 import { CATEGORIES, getCategory } from "@/lib/categories";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AttributeFieldsEditor } from "@/components/AttributeFields";
+import { getAttributeSchema } from "@/lib/product-attributes";
 
 export const Route = createFileRoute("/seller/products")({ component: SellerProducts });
 
@@ -76,7 +78,6 @@ function SellerProducts() {
 function ProductWizard({ shopId, userId, onDone }: { shopId: string; userId: string; onDone: () => void }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
-  const steps = ["Basics", "Pricing", "Photo"];
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
@@ -84,9 +85,16 @@ function ProductWizard({ shopId, userId, onDone }: { shopId: string; userId: str
   const [price, setPrice] = useState("");
   const [stock, setStock] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [attributes, setAttributes] = useState<Record<string, any>>({});
   const [busy, setBusy] = useState(false);
 
-  const reset = () => { setStep(0); setName(""); setDescription(""); setCategory(""); setIsFood(false); setPrice(""); setStock(""); setFile(null); };
+  const hasAttrStep = getAttributeSchema(category).length > 0;
+  const steps = hasAttrStep ? ["Basics", "Maelezo", "Bei", "Picha"] : ["Basics", "Bei", "Picha"];
+
+  const reset = () => {
+    setStep(0); setName(""); setDescription(""); setCategory(""); setIsFood(false);
+    setPrice(""); setStock(""); setFile(null); setAttributes({});
+  };
 
   const save = async () => {
     setBusy(true);
@@ -94,12 +102,19 @@ function ProductWizard({ shopId, userId, onDone }: { shopId: string; userId: str
     const { error } = await supabase.from("products").insert({
       shop_id: shopId, name, description, category, is_food: isFood,
       price: Number(price) || 0, stock: Number(stock) || 0, image_url: url,
+      attributes,
     });
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Product added");
     setOpen(false); reset(); onDone();
   };
+
+  // Step indices change when the attributes step is present
+  const basicsIdx = 0;
+  const attrIdx = hasAttrStep ? 1 : -1;
+  const priceIdx = hasAttrStep ? 2 : 1;
+  const photoIdx = hasAttrStep ? 3 : 2;
 
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
