@@ -19,11 +19,13 @@ export function PaymentProofDialog({
   userId,
   onSubmitted,
   disabled = false,
+  triggerLabel = "Nimelipia",
 }: {
   orderId: string;
   userId: string;
   onSubmitted: () => void | Promise<void>;
   disabled?: boolean;
+  triggerLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -77,7 +79,7 @@ export function PaymentProofDialog({
       <DialogTrigger asChild>
         <Button size="lg" className="gap-1.5" disabled={disabled || busy}>
           {busy ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-          {busy ? "Inatuma ushahidi…" : submitted ? "Ushahidi umetumwa" : "Nimelipia"}
+          {busy ? "Inatuma ushahidi…" : submitted ? "Ushahidi umetumwa" : triggerLabel}
         </Button>
       </DialogTrigger>
       <DialogContent>

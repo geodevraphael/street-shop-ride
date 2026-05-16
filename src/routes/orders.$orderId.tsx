@@ -543,6 +543,12 @@ function OrderDetail() {
                           Muuzaji amekubali. <b>Lipa sasa</b> kisha tuma uthibitisho wa malipo ili
                           muuzaji aanze delivery.
                         </p>
+                        <div className="rounded-xl border bg-secondary/40 p-3 text-sm">
+                          <p className="font-medium">Uko hatua ya malipo sasa.</p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Ukibonyeza hapa chini utafungua sehemu ya kuweka namba ya muamala au kupakia picha ya risiti, kisha oda itahamia kwa muuzaji kuhakiki malipo.
+                          </p>
+                        </div>
                         {shop?.lipa_number ? (
                           <div className="rounded-xl border bg-primary/5 p-3">
                             <p className="text-xs text-muted-foreground">Lipa Number (M-Pesa)</p>
@@ -577,7 +583,7 @@ function OrderDetail() {
                           </p>
                         )}
                         <div className="flex flex-wrap gap-2">
-                          <PaymentProofDialog orderId={orderId} userId={user.id} onSubmitted={load} disabled={!authReady || busy} />
+                          <PaymentProofDialog orderId={orderId} userId={user.id} onSubmitted={load} disabled={!authReady || busy} triggerLabel="Lipa kisha tuma uthibitisho" />
                         </div>
                       </div>
                     )}
