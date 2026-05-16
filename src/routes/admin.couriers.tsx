@@ -73,6 +73,7 @@ function AdminCouriers() {
               </div>
               <div className="flex items-center gap-2">
                 <Switch checked={v.active} onCheckedChange={() => toggle(v)} />
+                <StaffDialog vendor={v} trigger={<Button size="sm" variant="outline">Wakala</Button>} />
                 <VendorDialog
                   vendor={v}
                   onSaved={load}
