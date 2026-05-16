@@ -68,6 +68,41 @@ export type Database = {
         }
         Relationships: []
       }
+      courier_staff: {
+        Row: {
+          created_at: string
+          id: string
+          office: string | null
+          role: string
+          user_id: string
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          office?: string | null
+          role?: string
+          user_id: string
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          office?: string | null
+          role?: string
+          user_id?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courier_staff_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "courier_vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courier_vendors: {
         Row: {
           active: boolean
@@ -799,6 +834,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_courier_staff: { Args: { _vendor_id: string }; Returns: boolean }
       referrals_enabled: { Args: never; Returns: boolean }
     }
     Enums: {
