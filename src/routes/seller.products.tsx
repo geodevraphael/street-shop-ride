@@ -64,7 +64,16 @@ function SellerProducts() {
                     <h3 className="font-semibold">{p.name}</h3>
                     <p className="text-xs text-muted-foreground">{p.category} · stock {p.stock}</p>
                   </div>
-                  <Button size="icon" variant="ghost" onClick={() => remove(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  <ConfirmDialog
+                    title="Futa bidhaa?"
+                    description={`Una uhakika unataka kufuta "${p.name}"? Hatua hii haiwezi kurudishwa.`}
+                    confirmLabel="Futa"
+                    destructive
+                    onConfirm={() => remove(p.id)}
+                    trigger={
+                      <Button size="icon" variant="ghost" aria-label={`Futa ${p.name}`}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    }
+                  />
                 </div>
                 <p className="mt-1 text-sm font-semibold text-primary">{formatKES(Number(p.price))}</p>
               </div>
