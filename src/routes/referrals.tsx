@@ -233,15 +233,6 @@ function ReferralsPage() {
   );
 }
 
-function RuleCard({ icon: Icon, title, desc, progress }: any) {
-  return (
-    <div className="rounded-2xl border bg-card p-4">
-      <div className="flex items-center gap-2 text-sm font-semibold"><Icon className="h-4 w-4 text-primary" /> {title}</div>
-      <p className="mt-1 text-xs text-muted-foreground">{desc}</p>
-      <p className="mt-2 text-xs font-mono text-primary">{progress}</p>
-    </div>
-  );
-}
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
