@@ -1048,3 +1048,70 @@ function Row({ label, v, bold }: { label: string; v: string; bold?: boolean }) {
     </div>
   );
 }
+
+type Pt = { lat: number; lng: number } | null | undefined;
+
+function gmapsDir(origin: Pt, dest: Pt): string | null {
+  if (!dest) return null;
+  const o = origin ? `${origin.lat},${origin.lng}` : "";
+  return `https://www.google.com/maps/dir/?api=1${o ? `&origin=${o}` : ""}&destination=${dest.lat},${dest.lng}&travelmode=driving`;
+}
+
+function RiderNavButtons({ status, shop, destination, riderPos }: { status: string; shop: Pt; destination: Pt; riderPos: Pt }) {
+  const target: Pt = status === "rider_assigned" ? shop : destination;
+  const label = status === "rider_assigned" ? "Nenda kuokota dukani" : "Nenda kwa mteja";
+  const url = gmapsDir(riderPos ?? null, target);
+  if (!url) {
+    return (
+      <p className="rounded-xl border bg-warning/10 p-3 text-xs text-warning-foreground">
+        Eneo halikupatikana — hatuwezi kufungua Google Maps sasa.
+      </p>
+    );
+  }
+  return (
+    <Button asChild size="lg" className="h-12 w-full gap-2">
+      <a href={url} target="_blank" rel="noreferrer">
+        <MapPin className="h-5 w-5" /> {label} (Google Maps)
+        <ExternalLink className="h-4 w-4 opacity-70" />
+      </a>
+    </Button>
+  );
+}
+
+function RiderFareEditor({ orderId, currentFee, onSaved }: { orderId: string; currentFee: number; onSaved: () => void }) {
+  const [val, setVal] = useState<string>(String(currentFee));
+  const [saving, setSaving] = useState(false);
+  useEffect(() => { setVal(String(currentFee)); }, [currentFee]);
+  const num = Number(val);
+  const dirty = Number.isFinite(num) && num >= 0 && num !== currentFee;
+  const save = async () => {
+    if (!dirty) return;
+    setSaving(true);
+    const { error } = await supabase.from("orders").update({ delivery_fee: num }).eq("id", orderId);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Bei ya delivery imesasishwa");
+    onSaved();
+  };
+  return (
+    <div className="rounded-xl border bg-card p-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Rekebisha bei ya delivery</p>
+      <p className="mt-0.5 text-[11px] text-muted-foreground">
+        Ukiona umbali halisi ni mkubwa au kuna ugumu wa njia, weka bei mpya. Mteja ataona mara moja.
+      </p>
+      <div className="mt-2 flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">TSh</span>
+        <input
+          type="number"
+          min={0}
+          value={val}
+          onChange={(e) => setVal(e.target.value)}
+          className="h-10 flex-1 rounded-md border bg-background px-3 text-sm"
+        />
+        <Button size="sm" onClick={save} disabled={!dirty || saving}>
+          {saving ? "Inahifadhi…" : "Hifadhi"}
+        </Button>
+      </div>
+    </div>
+  );
+}
