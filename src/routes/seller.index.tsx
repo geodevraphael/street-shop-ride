@@ -341,9 +341,36 @@ function SellerWizard({ onDone }: { onDone: () => void }) {
         )}
         {step === 2 && <GeoAverager onResult={setCoord} />}
         {step === 3 && (
-          <div className="space-y-3">
-            <div><Label>Lipa Number (Paybill / Till)</Label><Input value={lipa} onChange={(e) => setLipa(e.target.value)} placeholder="e.g. 123456" /></div>
-            <div><Label>Scan-to-Pay QR (image)</Label><Input type="file" accept="image/*" onChange={(e) => setQrFile(e.target.files?.[0] ?? null)} /></div>
+          <div className="space-y-4">
+            <div className="rounded-xl bg-secondary/40 p-3 text-xs text-muted-foreground">
+              Ongeza walau njia moja ya malipo. Unaweza kuongeza nyingi (M-Pesa, Mixx, Airtel, NMB, CRDB, Selcom…) — mteja atachagua ipi atumie.
+            </div>
+            {lipas.map((l, i) => {
+              const p = l.provider ? getProvider(l.provider) : null;
+              return (
+                <div key={i} className="rounded-xl border p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-sm font-semibold">
+                      Njia #{i + 1}{p ? ` — ${p.shortName}` : ""}
+                      {l.is_default && <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] text-primary"><Star className="h-3 w-3" /> Default</span>}
+                    </span>
+                    {lipas.length > 1 && (
+                      <Button size="sm" variant="ghost" onClick={() => removeLipa(i)} className="gap-1 text-destructive">
+                        <Trash2 className="h-3 w-3" /> Ondoa
+                      </Button>
+                    )}
+                  </div>
+                  <LipaNumberForm
+                    value={l}
+                    onChange={(v) => updateLipa(i, v)}
+                    userId={user!.id}
+                  />
+                </div>
+              );
+            })}
+            <Button variant="outline" onClick={addLipa} className="w-full gap-1.5">
+              <Plus className="h-4 w-4" /> Ongeza njia nyingine
+            </Button>
           </div>
         )}
 
