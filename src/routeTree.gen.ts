@@ -14,6 +14,7 @@ import { Route as SellerRouteImport } from './routes/seller'
 import { Route as RiderRouteImport } from './routes/rider'
 import { Route as ReferralsRouteImport } from './routes/referrals'
 import { Route as OrdersRouteImport } from './routes/orders'
+import { Route as CourierRouteImport } from './routes/courier'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -21,6 +22,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SellerIndexRouteImport } from './routes/seller.index'
 import { Route as RiderIndexRouteImport } from './routes/rider.index'
 import { Route as OrdersIndexRouteImport } from './routes/orders.index'
+import { Route as CourierIndexRouteImport } from './routes/courier.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ShopsShopIdRouteImport } from './routes/shops.$shopId'
 import { Route as SellerProductsRouteImport } from './routes/seller.products'
@@ -32,6 +34,7 @@ import { Route as RiderBillingRouteImport } from './routes/rider.billing'
 import { Route as ProductsSearchRouteImport } from './routes/products.search'
 import { Route as ProductsProductIdRouteImport } from './routes/products.$productId'
 import { Route as OrdersOrderIdRouteImport } from './routes/orders.$orderId'
+import { Route as CourierOfficesRouteImport } from './routes/courier.offices'
 import { Route as AuthRegisterRouteImport } from './routes/auth.register'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
@@ -69,6 +72,11 @@ const OrdersRoute = OrdersRouteImport.update({
   path: '/orders',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CourierRoute = CourierRouteImport.update({
+  id: '/courier',
+  path: '/courier',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CheckoutRoute = CheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
@@ -103,6 +111,11 @@ const OrdersIndexRoute = OrdersIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => OrdersRoute,
+} as any)
+const CourierIndexRoute = CourierIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CourierRoute,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
@@ -158,6 +171,11 @@ const OrdersOrderIdRoute = OrdersOrderIdRouteImport.update({
   id: '/$orderId',
   path: '/$orderId',
   getParentRoute: () => OrdersRoute,
+} as any)
+const CourierOfficesRoute = CourierOfficesRouteImport.update({
+  id: '/offices',
+  path: '/offices',
+  getParentRoute: () => CourierRoute,
 } as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
   id: '/auth/register',
@@ -220,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/courier': typeof CourierRouteWithChildren
   '/orders': typeof OrdersRouteWithChildren
   '/referrals': typeof ReferralsRoute
   '/rider': typeof RiderRouteWithChildren
@@ -236,6 +255,7 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminUsersRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/courier/offices': typeof CourierOfficesRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/products/search': typeof ProductsSearchRoute
@@ -247,6 +267,7 @@ export interface FileRoutesByFullPath {
   '/seller/products': typeof SellerProductsRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/courier/': typeof CourierIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/rider/': typeof RiderIndexRoute
   '/seller/': typeof SellerIndexRoute
@@ -268,6 +289,7 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AdminUsersRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/courier/offices': typeof CourierOfficesRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/products/search': typeof ProductsSearchRoute
@@ -279,6 +301,7 @@ export interface FileRoutesByTo {
   '/seller/products': typeof SellerProductsRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
   '/admin': typeof AdminIndexRoute
+  '/courier': typeof CourierIndexRoute
   '/orders': typeof OrdersIndexRoute
   '/rider': typeof RiderIndexRoute
   '/seller': typeof SellerIndexRoute
@@ -289,6 +312,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/courier': typeof CourierRouteWithChildren
   '/orders': typeof OrdersRouteWithChildren
   '/referrals': typeof ReferralsRoute
   '/rider': typeof RiderRouteWithChildren
@@ -305,6 +329,7 @@ export interface FileRoutesById {
   '/admin/users': typeof AdminUsersRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/courier/offices': typeof CourierOfficesRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/products/search': typeof ProductsSearchRoute
@@ -316,6 +341,7 @@ export interface FileRoutesById {
   '/seller/products': typeof SellerProductsRoute
   '/shops/$shopId': typeof ShopsShopIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/courier/': typeof CourierIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/rider/': typeof RiderIndexRoute
   '/seller/': typeof SellerIndexRoute
@@ -327,6 +353,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cart'
     | '/checkout'
+    | '/courier'
     | '/orders'
     | '/referrals'
     | '/rider'
@@ -343,6 +370,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/auth/login'
     | '/auth/register'
+    | '/courier/offices'
     | '/orders/$orderId'
     | '/products/$productId'
     | '/products/search'
@@ -354,6 +382,7 @@ export interface FileRouteTypes {
     | '/seller/products'
     | '/shops/$shopId'
     | '/admin/'
+    | '/courier/'
     | '/orders/'
     | '/rider/'
     | '/seller/'
@@ -375,6 +404,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/auth/login'
     | '/auth/register'
+    | '/courier/offices'
     | '/orders/$orderId'
     | '/products/$productId'
     | '/products/search'
@@ -386,6 +416,7 @@ export interface FileRouteTypes {
     | '/seller/products'
     | '/shops/$shopId'
     | '/admin'
+    | '/courier'
     | '/orders'
     | '/rider'
     | '/seller'
@@ -395,6 +426,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cart'
     | '/checkout'
+    | '/courier'
     | '/orders'
     | '/referrals'
     | '/rider'
@@ -411,6 +443,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/auth/login'
     | '/auth/register'
+    | '/courier/offices'
     | '/orders/$orderId'
     | '/products/$productId'
     | '/products/search'
@@ -422,6 +455,7 @@ export interface FileRouteTypes {
     | '/seller/products'
     | '/shops/$shopId'
     | '/admin/'
+    | '/courier/'
     | '/orders/'
     | '/rider/'
     | '/seller/'
@@ -432,6 +466,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
+  CourierRoute: typeof CourierRouteWithChildren
   OrdersRoute: typeof OrdersRouteWithChildren
   ReferralsRoute: typeof ReferralsRoute
   RiderRoute: typeof RiderRouteWithChildren
@@ -482,6 +517,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/courier': {
+      id: '/courier'
+      path: '/courier'
+      fullPath: '/courier'
+      preLoaderRoute: typeof CourierRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/checkout': {
       id: '/checkout'
       path: '/checkout'
@@ -530,6 +572,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/orders/'
       preLoaderRoute: typeof OrdersIndexRouteImport
       parentRoute: typeof OrdersRoute
+    }
+    '/courier/': {
+      id: '/courier/'
+      path: '/'
+      fullPath: '/courier/'
+      preLoaderRoute: typeof CourierIndexRouteImport
+      parentRoute: typeof CourierRoute
     }
     '/admin/': {
       id: '/admin/'
@@ -607,6 +656,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/orders/$orderId'
       preLoaderRoute: typeof OrdersOrderIdRouteImport
       parentRoute: typeof OrdersRoute
+    }
+    '/courier/offices': {
+      id: '/courier/offices'
+      path: '/offices'
+      fullPath: '/courier/offices'
+      preLoaderRoute: typeof CourierOfficesRouteImport
+      parentRoute: typeof CourierRoute
     }
     '/auth/register': {
       id: '/auth/register'
@@ -712,6 +768,19 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface CourierRouteChildren {
+  CourierOfficesRoute: typeof CourierOfficesRoute
+  CourierIndexRoute: typeof CourierIndexRoute
+}
+
+const CourierRouteChildren: CourierRouteChildren = {
+  CourierOfficesRoute: CourierOfficesRoute,
+  CourierIndexRoute: CourierIndexRoute,
+}
+
+const CourierRouteWithChildren =
+  CourierRoute._addFileChildren(CourierRouteChildren)
+
 interface OrdersRouteChildren {
   OrdersOrderIdRoute: typeof OrdersOrderIdRoute
   OrdersIndexRoute: typeof OrdersIndexRoute
@@ -773,6 +842,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
+  CourierRoute: CourierRouteWithChildren,
   OrdersRoute: OrdersRouteWithChildren,
   ReferralsRoute: ReferralsRoute,
   RiderRoute: RiderRouteWithChildren,
@@ -788,3 +858,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
