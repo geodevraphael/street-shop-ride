@@ -658,7 +658,7 @@ function OrderDetail() {
                           📬 Boda anasema amekufikishia. Thibitisha umepokea bidhaa.
                         </p>
                         <Button size="lg" disabled={busy} onClick={() => updateStatus("completed")}>
-                          âœ“ Nimepokea bidhaa — kamilisha
+                          ✓ Nimepokea bidhaa — kamilisha
                         </Button>
                         {riderPhone && (
                           <ContactActions
