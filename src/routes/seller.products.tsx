@@ -16,6 +16,7 @@ import { formatKES } from "@/lib/pricing";
 import { CATEGORIES, getCategory } from "@/lib/categories";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AttributeFieldsEditor } from "@/components/AttributeFields";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { getAttributeSchema } from "@/lib/product-attributes";
 
 export const Route = createFileRoute("/seller/products")({ component: SellerProducts });
