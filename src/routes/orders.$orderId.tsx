@@ -872,10 +872,25 @@ function OrderDetail() {
             )}
 
             {/* RIDER actions */}
+            {isRider && (order.status === "rider_assigned" || order.status === "picked_up") && (
+              <div className="space-y-3">
+                <RiderNavButtons
+                  status={order.status}
+                  shop={shopPos}
+                  destination={destinationPos}
+                  riderPos={riderPos}
+                />
+                <RiderFareEditor
+                  orderId={orderId}
+                  currentFee={Number(order.delivery_fee)}
+                  onSaved={load}
+                />
+              </div>
+            )}
             {isRider && order.status === "rider_assigned" && (
               <Button
                 size="lg"
-                className="h-16 w-full gap-3 text-xl font-black shadow-xl shadow-primary/30"
+                className="h-16 w-full gap-3 text-xl font-black shadow-xl shadow-primary/30 mt-3"
                 disabled={busy}
                 onClick={() => updateStatus("picked_up")}
               >
@@ -886,7 +901,7 @@ function OrderDetail() {
             {isRider && order.status === "picked_up" && (
               <Button
                 size="lg"
-                className="h-16 w-full gap-3 text-xl font-black bg-success hover:bg-success/90 shadow-xl shadow-success/30"
+                className="h-16 w-full gap-3 text-xl font-black bg-success hover:bg-success/90 shadow-xl shadow-success/30 mt-3"
                 disabled={busy}
                 onClick={() => updateStatus("delivered")}
               >
