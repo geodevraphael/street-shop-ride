@@ -93,6 +93,8 @@ function OrderDetail() {
   const [order, setOrder] = useState<Order | null>(null);
   const [items, setItems] = useState<OrderItem[]>([]);
   const [shop, setShop] = useState<Shop | null>(null);
+  const [lipas, setLipas] = useState<any[]>([]);
+  const [selectedLipaId, setSelectedLipaId] = useState<string | null>(null);
   const [address, setAddress] = useState<Address | null>(null);
   const [rider, setRider] = useState<Rider | null>(null);
   const [riderPhone, setRiderPhone] = useState<string | null>(null);
