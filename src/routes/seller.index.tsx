@@ -11,7 +11,7 @@ import { WizardStepper } from "@/components/WizardStepper";
 import { GeoAverager } from "@/components/GeoAverager";
 import { uploadFile } from "@/lib/upload";
 import { toast } from "sonner";
-import { Store, Receipt, ClipboardList, TrendingUp, Camera, Loader2, Gift } from "lucide-react";
+import { Store, Receipt, ClipboardList, TrendingUp, Camera, Loader2, Gift, Calendar, AlertTriangle, Package } from "lucide-react";
 import { BUSINESS_CATEGORIES, BUSINESS_CATEGORY_GROUPS } from "@/lib/business-categories";
 
 export const Route = createFileRoute("/seller/")({ component: SellerHome });
@@ -20,7 +20,14 @@ function SellerHome() {
   const { user } = useAuth();
   const [shop, setShop] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ orders: 0, sales: 0 });
+  const [stats, setStats] = useState({
+    todaySales: 0,
+    weekSales: 0,
+    todayOrders: 0,
+    pendingActions: 0,
+    totalRevenue: 0,
+  });
+  const [lowStock, setLowStock] = useState<any[]>([]);
 
   const load = async () => {
     if (!user) return;
@@ -28,9 +35,24 @@ function SellerHome() {
     setShop(s);
     setLoading(false);
     if (s) {
-      const { data: o } = await supabase.from("orders").select("subtotal,status").eq("shop_id", s.id);
-      const completed = (o ?? []).filter((x: any) => x.status === "completed");
-      setStats({ orders: o?.length ?? 0, sales: completed.reduce((sum: number, x: any) => sum + Number(x.subtotal), 0) });
+      const now = new Date();
+      const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+      const startWeek = new Date(now.getTime() - 7 * 86400000).toISOString();
+
+      const [{ data: o }, { data: low }] = await Promise.all([
+        supabase.from("orders").select("subtotal,status,created_at").eq("shop_id", s.id),
+        supabase.from("products").select("id,name,stock,image_url").eq("shop_id", s.id).lte("stock", 5).gt("stock", -1).order("stock", { ascending: true }).limit(5),
+      ]);
+      const orders = o ?? [];
+      const completed = orders.filter((x: any) => x.status === "completed" || x.status === "delivered");
+      setStats({
+        todaySales: completed.filter((x: any) => x.created_at >= startToday).reduce((s: number, x: any) => s + Number(x.subtotal), 0),
+        weekSales: completed.filter((x: any) => x.created_at >= startWeek).reduce((s: number, x: any) => s + Number(x.subtotal), 0),
+        todayOrders: orders.filter((x: any) => x.created_at >= startToday).length,
+        pendingActions: orders.filter((x: any) => x.status === "placed" || x.status === "payment_submitted").length,
+        totalRevenue: completed.reduce((s: number, x: any) => s + Number(x.subtotal), 0),
+      });
+      setLowStock(low ?? []);
     }
   };
   useEffect(() => { load(); }, [user]);
@@ -44,11 +66,52 @@ function SellerHome() {
     <div className="space-y-4">
       <ShopCoverCard shop={shop} onUpdated={load} />
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Stat icon={Store} label="Sales count" value={shop.sales_count} />
-        <Stat icon={ClipboardList} label="Orders" value={stats.orders} />
-        <Stat icon={TrendingUp} label="Revenue" value={`TSh ${stats.sales.toLocaleString()}`} />
+      {stats.pendingActions > 0 && (
+        <Link to="/seller/orders" className="flex items-center justify-between rounded-2xl border-2 border-warning bg-warning/10 p-4 transition hover:bg-warning/15">
+          <div className="flex items-center gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-warning/20 text-warning">
+              <AlertTriangle className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-semibold">{stats.pendingActions} oda zinakusubiri</p>
+              <p className="text-xs text-muted-foreground">Bofya kuona na kuchukua hatua</p>
+            </div>
+          </div>
+          <span className="text-sm font-semibold text-warning">→</span>
+        </Link>
+      )}
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat icon={Calendar} label="Mauzo ya leo" value={`TSh ${stats.todaySales.toLocaleString()}`} />
+        <Stat icon={TrendingUp} label="Wiki hii" value={`TSh ${stats.weekSales.toLocaleString()}`} />
+        <Stat icon={ClipboardList} label="Oda za leo" value={stats.todayOrders} />
+        <Stat icon={Store} label="Jumla ya mauzo" value={shop.sales_count} />
       </div>
+
+      {lowStock.length > 0 && (
+        <div className="rounded-2xl border bg-card p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <Package className="h-4 w-4 text-warning" />
+            <h3 className="font-semibold">Stock inakaribia kuisha</h3>
+          </div>
+          <div className="space-y-2">
+            {lowStock.map((p: any) => (
+              <Link key={p.id} to="/seller/products" className="flex items-center gap-3 rounded-xl border bg-secondary/40 p-2 hover:bg-secondary">
+                <div className="h-10 w-10 overflow-hidden rounded bg-secondary">
+                  {p.image_url && <img src={p.image_url} alt="" className="h-full w-full object-cover" />}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{p.name}</p>
+                  <p className="text-xs text-muted-foreground">Imebaki {p.stock}</p>
+                </div>
+                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${p.stock === 0 ? "bg-destructive text-destructive-foreground" : "bg-warning text-warning-foreground"}`}>
+                  {p.stock === 0 ? "Imeisha" : "Chache"}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="rounded-2xl border bg-card p-4">
         <h2 className="font-semibold">{shop.name}</h2>
