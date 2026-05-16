@@ -921,6 +921,9 @@ function OrderDetail() {
                   </Button>
                 )}
               </div>
+              <div className="mb-3 rounded-xl border bg-secondary/40 p-3 text-xs text-muted-foreground">
+                {!trackReady ? "Ramani na Fuatilia zinaandaliwa baada ya session kukamilika…" : liveRider ? "Ufuatiliaji uko hai sasa; utaona boda akisogea hapa." : "Ramani iko tayari. Ishara ya boda ikifika utaiona hapa moja kwa moja."}
+              </div>
               <TrackingMap
                 shop={shopPos}
                 destination={destinationPos}
