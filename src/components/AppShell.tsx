@@ -7,6 +7,7 @@ import { useCart } from "@/lib/cart";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const ACTIVE_ORDER_STATUSES = ["placed", "accepted", "payment_submitted", "payment_confirmed", "rider_assigned", "picked_up", "delivered"] as const;
 
@@ -84,6 +85,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             )}
             {user ? (
               <>
+                <NotificationBell />
                 <Link to="/referrals" className="hidden md:inline">
                   <Button variant="ghost" size="sm" className="gap-1.5"><Gift className="h-4 w-4" /> Alika</Button>
                 </Link>

@@ -6,8 +6,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { OrderStatusPill } from "@/components/OrderStatusPill";
 import { OrderProgressMini } from "@/components/OrderProgressMini";
 import { formatKES } from "@/lib/pricing";
-import { Truck, RefreshCcw } from "lucide-react";
+import { Truck, RefreshCcw, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/orders/")({ component: Orders });
 
@@ -68,11 +69,26 @@ function Orders() {
       </div>
 
       {loading ? (
-        <p className="mt-6 text-sm text-muted-foreground">Inapakia…</p>
+        <div className="mt-6 space-y-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border bg-card p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-44" />
+                </div>
+                <Skeleton className="h-6 w-20 rounded-full" />
+              </div>
+              <Skeleton className="mt-3 h-2 w-full" />
+            </div>
+          ))}
+        </div>
       ) : orders.length === 0 ? (
         <div className="mt-8 rounded-2xl border bg-card p-8 text-center">
-          <p className="text-sm text-muted-foreground">Bado huna oda yoyote.</p>
-          <Link to="/products/search" className="mt-3 inline-block text-sm font-semibold text-primary">Anza kununua</Link>
+          <Package className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
+          <p className="text-sm font-medium">Bado huna oda yoyote</p>
+          <p className="mt-1 text-xs text-muted-foreground">Anza kuvinjari maduka na bidhaa karibu nawe</p>
+          <Link to="/products/search" className="mt-4 inline-block rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Anza kununua</Link>
         </div>
       ) : (
         <>

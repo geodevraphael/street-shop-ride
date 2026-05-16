@@ -33,6 +33,8 @@ import { ReportDialog } from "@/components/ReportDialog";
 import { PaymentProofDialog } from "@/components/PaymentProofDialog";
 import { SellerOfferPanel } from "@/components/SellerOfferPanel";
 import { TrackingMap } from "@/components/TrackingMap";
+import { ReviewPrompt } from "@/components/ReviewPrompt";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useTrackOrder } from "@/lib/tracking";
 import { toast } from "sonner";
 
@@ -296,7 +298,6 @@ function OrderDetail() {
   };
 
   const cancelOrder = async () => {
-    if (!confirm("Una uhakika unataka kughairi oda hii?")) return;
     await updateStatus("cancelled");
   };
 
@@ -703,7 +704,19 @@ function OrderDetail() {
                     )}
 
                     {order.status === "completed" && (
-                      <p className="text-sm text-success">🎉 Asante! Oda imekamilika.</p>
+                      <div className="space-y-3">
+                        <p className="text-sm text-success">🎉 Asante! Oda imekamilika.</p>
+                        <ReviewPrompt
+                          orderId={order.id}
+                          targets={[
+                            ...(shop ? [{ type: "shop" as const, id: shop.id, label: shop.name }] : []),
+                            ...(rider ? [{ type: "rider" as const, id: rider.id, label: rider.full_name ?? "boda" }] : []),
+                            ...items
+                              .filter((i) => i.products?.name)
+                              .map((i) => ({ type: "product" as const, id: i.product_id, label: i.products!.name! })),
+                          ]}
+                        />
+                      </div>
                     )}
                   </div>
                 );
@@ -944,12 +957,18 @@ function OrderDetail() {
             )}
 
             {canCancel && (isClient || isSeller) && order.status !== "cancelled" && (
-              <button
-                onClick={cancelOrder}
-                className="mt-4 flex items-center gap-1 text-xs text-destructive hover:underline"
-              >
-                <XCircle className="h-3.5 w-3.5" /> Ghairi oda
-              </button>
+              <ConfirmDialog
+                title="Ghairi oda?"
+                description="Hatua hii haiwezi kurudishwa. Mteja na muuzaji watapata arifa."
+                confirmLabel="Ndio, ghairi"
+                destructive
+                onConfirm={cancelOrder}
+                trigger={
+                  <button className="mt-4 flex items-center gap-1 text-xs text-destructive hover:underline">
+                    <XCircle className="h-3.5 w-3.5" /> Ghairi oda
+                  </button>
+                }
+              />
             )}
           </section>
 
