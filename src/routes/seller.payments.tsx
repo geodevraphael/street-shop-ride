@@ -171,7 +171,7 @@ function SellerPayments() {
                       title="Futa njia ya malipo?"
                       description={`${p.shortName} — ${row.number}`}
                       confirmLabel="Futa"
-                      onConfirm={() => remove(row.id)}
+                      onConfirm={async () => { await remove(row.id); }}
                       trigger={
                         <Button size="sm" variant="outline" className="gap-1 text-destructive">
                           <Trash2 className="h-3 w-3" />
