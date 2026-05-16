@@ -160,13 +160,21 @@ function ProductWizard({ shopId, userId, onDone }: { shopId: string; userId: str
             </div>
           </div>
         )}
-        {step === 1 && (
+        {hasAttrStep && step === attrIdx && (
+          <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+            <p className="text-xs text-muted-foreground">
+              Jaza sifa za bidhaa hii. Mteja atatumia hizi kuchagua saizi/rangi wakati wa kuagiza.
+            </p>
+            <AttributeFieldsEditor category={category} value={attributes} onChange={setAttributes} />
+          </div>
+        )}
+        {step === priceIdx && (
           <div className="space-y-3">
             <div><Label>Price (TSh)</Label><Input type="number" value={price} onChange={(e) => setPrice(e.target.value)} /></div>
             <div><Label>Stock</Label><Input type="number" value={stock} onChange={(e) => setStock(e.target.value)} /></div>
           </div>
         )}
-        {step === 2 && (
+        {step === photoIdx && (
           <div className="space-y-3">
             <div><Label>Photo</Label><Input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></div>
           </div>
