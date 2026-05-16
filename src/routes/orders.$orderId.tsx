@@ -1,5 +1,5 @@
 ﻿import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
@@ -24,6 +24,10 @@ import {
   CreditCard,
   Search,
   Check,
+  LoaderCircle,
+  BadgeCheck,
+  UserRound,
+  Store,
 } from "lucide-react";
 import { ReportDialog } from "@/components/ReportDialog";
 import { PaymentProofDialog } from "@/components/PaymentProofDialog";
@@ -41,6 +45,20 @@ type Shop = Tables["shops"]["Row"];
 type Address = Tables["addresses"]["Row"];
 type Rider = Tables["riders"]["Row"];
 type ProfileContact = Pick<Tables["profiles"]["Row"], "full_name" | "phone">;
+
+const ACTIVE_ORDER_STATUSES = [
+  "placed",
+  "accepted",
+  "payment_submitted",
+  "payment_confirmed",
+  "rider_assigned",
+  "picked_up",
+  "delivered",
+] as const;
+
+function toPoint(lat?: number | null, lng?: number | null) {
+  return lat != null && lng != null ? { lat, lng } : null;
+}
 
 function buildMapsUrl({
   shop,
@@ -68,7 +86,7 @@ function buildMapsUrl({
 
 function OrderDetail() {
   const { orderId } = Route.useParams();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, ready: authReady } = useAuth();
   const [order, setOrder] = useState<Order | null>(null);
   const [items, setItems] = useState<OrderItem[]>([]);
   const [shop, setShop] = useState<Shop | null>(null);
@@ -82,6 +100,9 @@ function OrderDetail() {
   const [clientPos, setClientPos] = useState<{ lat: number; lng: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [loadingOrder, setLoadingOrder] = useState(true);
+  const [trackBusy, setTrackBusy] = useState(false);
+  const [trackReady, setTrackReady] = useState(false);
+  const trackTimeoutRef = useRef<number | null>(null);
 
   // Role precedence on this order: client > seller > rider.
   // If you placed the order, you're the buyer here â€” even if you also own the
@@ -192,6 +213,74 @@ function OrderDetail() {
     return () => navigator.geolocation.clearWatch(id);
   }, [trackingActive, isClient]);
 
+  useEffect(() => {
+    setTrackReady(false);
+    if (trackTimeoutRef.current) window.clearTimeout(trackTimeoutRef.current);
+    if (!trackingActive) return;
+
+    trackTimeoutRef.current = window.setTimeout(() => {
+      setTrackReady(true);
+      setTrackBusy(false);
+    }, 250);
+
+    return () => {
+      if (trackTimeoutRef.current) window.clearTimeout(trackTimeoutRef.current);
+    };
+  }, [trackingActive, order?.status, authReady]);
+
+  const openTracking = () => {
+    setTrackBusy(true);
+    document.getElementById("track-map")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.setTimeout(() => {
+      setTrackBusy(false);
+      setTrackReady(true);
+    }, 450);
+  };
+
+  const roleInfo = useMemo(() => {
+    if (isClient) {
+      return {
+        label: "Mteja",
+        title: "Unafanya hatua za mnunuzi kwenye oda hii",
+        note:
+          "Ndiyo maana unaweza kubofya Fuatilia, kutuma ushahidi wa malipo, na kuthibitisha umepokea mzigo inapofika.",
+        tone: "bg-primary/10 text-primary border-primary/20",
+        icon: UserRound,
+      };
+    }
+
+    if (isSeller) {
+      return {
+        label: "Muuzaji",
+        title: `Unafanya hatua za duka ${shop?.name ?? "hili"}`,
+        note:
+          "Hapa utaona vitendo vya kukubali oda, kuthibitisha malipo, na kumpa boda mzigo. Hatua za mteja zimefichwa kwako kwenye oda hii.",
+        tone: "bg-accent/60 text-accent-foreground border-accent/30",
+        icon: Store,
+      };
+    }
+
+    if (isRider) {
+      return {
+        label: "Boda",
+        title: "Unafanya hatua za usafirishaji kwenye oda hii",
+        note:
+          "Hapa utaona kuokota mzigo, kusasisha safari, na kuthibitisha umefikisha. Fuatilia ya mteja haionekani kama wewe si mnunuzi wa oda hii.",
+        tone: "bg-warning/15 text-warning-foreground border-warning/30",
+        icon: Bike,
+      };
+    }
+
+    return {
+      label: "Mtazamaji",
+      title: "Role yako haijatambuliwa kwenye oda hii",
+      note:
+        "Kama ulipaswa kuona vitendo vya oda, fungua ukiwa umeingia na account iliyoweka oda au yenye jukumu la oda hii.",
+      tone: "bg-secondary text-secondary-foreground border-border",
+      icon: BadgeCheck,
+    };
+  }, [isClient, isSeller, isRider, shop?.name]);
+
   const updateStatus = async (status: OrderStatus, extra: Partial<Order> = {}) => {
     setBusy(true);
     const patch: Partial<Order> = { status, ...extra };
@@ -214,22 +303,15 @@ function OrderDetail() {
     setSearchingRiders(true);
     const { data } = await supabase.from("riders").select("*").eq("available", true);
     let list = data ?? [];
-    if (shop?.lat) {
+    const shopPoint = toPoint(shop?.lat, shop?.lng);
+    if (shopPoint) {
       list = [...list].sort((a, b) => {
+        const riderPointA = toPoint(a.current_lat, a.current_lng);
+        const riderPointB = toPoint(b.current_lat, b.current_lng);
         const da =
-          a.current_lat != null && a.current_lng != null
-            ? distanceKm(
-                { lat: shop.lat, lng: shop.lng },
-                { lat: a.current_lat, lng: a.current_lng },
-              )
-            : 9999;
+          riderPointA ? distanceKm(shopPoint, riderPointA) : 9999;
         const db =
-          b.current_lat != null && b.current_lng != null
-            ? distanceKm(
-                { lat: shop.lat, lng: shop.lng },
-                { lat: b.current_lat, lng: b.current_lng },
-              )
-            : 9999;
+          riderPointB ? distanceKm(shopPoint, riderPointB) : 9999;
         return da - db;
       });
     }
@@ -270,11 +352,9 @@ function OrderDetail() {
       </AppShell>
     );
 
-  const riderPos =
-    liveRider ?? (rider?.current_lat ? { lat: rider.current_lat, lng: rider.current_lng } : null);
-  const shopPos = shop?.lat != null && shop?.lng != null ? { lat: shop.lat, lng: shop.lng } : null;
-  const destinationPos =
-    address?.lat != null && address?.lng != null ? { lat: address.lat, lng: address.lng } : null;
+  const riderPos = liveRider ?? toPoint(rider?.current_lat, rider?.current_lng);
+  const shopPos = toPoint(shop?.lat, shop?.lng);
+  const destinationPos = toPoint(address?.lat, address?.lng);
   const orderTag = `Oda #${order.id.slice(0, 8)}`;
   const orderTotal = Number(order.subtotal) + Number(order.delivery_fee);
   const mapUrl = buildMapsUrl({ shop: shopPos, destination: destinationPos, rider: riderPos });
@@ -374,6 +454,24 @@ function OrderDetail() {
         </div>
       </div>
 
+      <section className={`mt-4 rounded-2xl border p-4 ${roleInfo.tone}`}>
+        <div className="flex items-start gap-3">
+          <div className="rounded-full border border-current/20 p-2">
+            <roleInfo.icon className="h-4 w-4" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-[11px] font-semibold uppercase tracking-wide opacity-80">Role yako kwenye oda</p>
+            <h2 className="text-sm font-semibold">{roleInfo.label} · {roleInfo.title}</h2>
+            <p className="text-sm opacity-90">{roleInfo.note}</p>
+            {isClient && (
+              <p className="text-xs opacity-80">
+                Session: {authReady ? "tayari" : "inapakia"} · Fuatilia: {trackingActive ? (trackReady ? "tayari kubofya" : "inaandaliwa") : "itasubiri boda/ramani"}
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+
       {quickContact && (
         <div className="mt-4 rounded-2xl border bg-primary/5 p-3">
           <p className="text-xs text-muted-foreground">
@@ -415,10 +513,6 @@ function OrderDetail() {
                 ];
                 const idx = steps.indexOf(order.status);
                 const stepLabel = idx >= 0 ? `Hatua ${idx + 1} ya ${steps.length}` : null;
-                const scrollToMap = () =>
-                  document
-                    .getElementById("track-map")
-                    ?.scrollIntoView({ behavior: "smooth", block: "start" });
                 return (
                   <div className="space-y-3">
                     {stepLabel && (
@@ -458,7 +552,7 @@ function OrderDetail() {
                                 size="icon"
                                 variant="ghost"
                                 onClick={() => {
-                                  navigator.clipboard.writeText(shop.lipa_number);
+                                  if (shop.lipa_number) navigator.clipboard.writeText(shop.lipa_number);
                                   toast.success("Imenakiliwa");
                                 }}
                               >
@@ -483,11 +577,7 @@ function OrderDetail() {
                           </p>
                         )}
                         <div className="flex flex-wrap gap-2">
-                          <PaymentProofDialog
-                            orderId={orderId}
-                            userId={user.id}
-                            onSubmitted={load}
-                          />
+                          <PaymentProofDialog orderId={orderId} userId={user.id} onSubmitted={load} disabled={!authReady || busy} />
                         </div>
                       </div>
                     )}
@@ -530,8 +620,9 @@ function OrderDetail() {
                           bidhaa dukani.
                         </p>
                         <div className="flex flex-wrap gap-2">
-                          <Button size="sm" variant="outline" onClick={scrollToMap}>
-                            Fuatilia kwenye ramani
+                          <Button size="sm" variant="outline" onClick={openTracking} disabled={!authReady || trackBusy} className="gap-2">
+                            {trackBusy ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
+                            {trackBusy ? "Inafungua ramani…" : "Fuatilia kwenye ramani"}
                           </Button>
                           {riderPhone && (
                             <ContactActions phone={riderPhone} label="boda" message={orderTag} />
@@ -544,8 +635,9 @@ function OrderDetail() {
                       <div className="space-y-2">
                         <p className="text-sm">ðŸ“¦ Bidhaa iko njiani kuja kwako!</p>
                         <div className="flex flex-wrap gap-2">
-                          <Button size="lg" onClick={scrollToMap}>
-                            Fuatilia boda kwenye ramani
+                          <Button size="lg" onClick={openTracking} disabled={!authReady || trackBusy} className="gap-2">
+                            {trackBusy ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
+                            {trackBusy ? "Inafungua ramani…" : "Fuatilia boda kwenye ramani"}
                           </Button>
                           {riderPhone && (
                             <ContactActions phone={riderPhone} label="boda" message={orderTag} />
@@ -722,15 +814,17 @@ function OrderDetail() {
                               {(r.rating ?? 5).toFixed(1)}
                             </span>
                             <span>{r.plate ?? "â€”"}</span>
-                            {shop?.lat && r.current_lat && (
-                              <span className="font-medium text-primary">
-                                {distanceKm(
-                                  { lat: shop.lat, lng: shop.lng },
-                                  { lat: r.current_lat, lng: r.current_lng },
-                                ).toFixed(1)}{" "}
-                                km
-                              </span>
-                            )}
+                            {(() => {
+                              const shopPoint = toPoint(shop?.lat, shop?.lng);
+                              const riderPoint = toPoint(r.current_lat, r.current_lng);
+                              if (!shopPoint || !riderPoint) return null;
+
+                              return (
+                                <span className="font-medium text-primary">
+                                  {distanceKm(shopPoint, riderPoint).toFixed(1)} km
+                                </span>
+                              );
+                            })()}
                           </div>
                         </div>
                         <Button
@@ -826,6 +920,9 @@ function OrderDetail() {
                     </a>
                   </Button>
                 )}
+              </div>
+              <div className="mb-3 rounded-xl border bg-secondary/40 p-3 text-xs text-muted-foreground">
+                {!trackReady ? "Ramani na Fuatilia zinaandaliwa baada ya session kukamilika…" : liveRider ? "Ufuatiliaji uko hai sasa; utaona boda akisogea hapa." : "Ramani iko tayari. Ishara ya boda ikifika utaiona hapa moja kwa moja."}
               </div>
               <TrackingMap
                 shop={shopPos}

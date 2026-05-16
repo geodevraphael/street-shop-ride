@@ -108,7 +108,9 @@ function Checkout() {
   const address = addresses.find((a) => a.id === addressId);
 
   const fare = useMemo(() => {
-    if (!shop?.lat || !address?.lat) return { km: 0, min: 0, fee: 1500 };
+    if (shop?.lat == null || shop?.lng == null || address?.lat == null || address?.lng == null) {
+      return { km: 0, min: 0, fee: 1500 };
+    }
     const km = distanceKm({ lat: shop.lat, lng: shop.lng }, { lat: address.lat, lng: address.lng });
     const min = etaMinutes(km);
     return { km, min, fee: computeFare(km, min) };

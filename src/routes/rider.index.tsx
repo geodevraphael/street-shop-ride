@@ -17,6 +17,8 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/rider/")({ component: RiderHome });
 
+type RiderOrderStatus = "picked_up" | "delivered";
+
 function RiderHome() {
   const { user } = useAuth();
   const [rider, setRider] = useState<any>(null);
@@ -53,7 +55,7 @@ function RiderHome() {
     return () => { supabase.removeChannel(ch); };
   }, [rider?.id]);
 
-  const updateOrderStatus = async (orderId: string, status: string) => {
+  const updateOrderStatus = async (orderId: string, status: RiderOrderStatus) => {
     setBusy(true);
     const { error } = await supabase.from("orders").update({ status }).eq("id", orderId);
     setBusy(false);
