@@ -146,6 +146,11 @@ function CartView({ items }: { items: ReturnType<typeof useCart> }) {
               <div className="flex-1">
                 <h3 className="font-medium">{i.name}</h3>
                 <p className="text-sm text-muted-foreground">{formatKES(i.price)} kwa moja</p>
+                {i.selectedAttributes && Object.keys(i.selectedAttributes).length > 0 && (
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {Object.entries(i.selectedAttributes).map(([k, v]) => `${k}: ${v}`).join(" · ")}
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-1">
                 <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => cart.setQty(i.productId, i.qty - 1)}><Minus className="h-3 w-3" /></Button>
