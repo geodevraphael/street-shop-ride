@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+const ACTIVE_ORDER_STATUSES = ["placed", "accepted", "payment_submitted", "payment_confirmed", "rider_assigned", "picked_up", "delivered"] as const;
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, roles, signOut } = useAuth();
   const items = useCart();
@@ -18,11 +20,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // Track active orders for the badge indicator
   useEffect(() => {
     if (!user) { setActiveOrderCount(0); return; }
-    const ACTIVE = ["placed", "accepted", "payment_submitted", "payment_confirmed", "rider_assigned", "picked_up", "delivered"];
     supabase.from("orders")
       .select("id", { count: "exact" })
       .eq("client_id", user.id)
-      .in("status", ACTIVE)
+      .in("status", ACTIVE_ORDER_STATUSES)
       .then(({ count }) => setActiveOrderCount(count ?? 0));
   }, [user]);
 
