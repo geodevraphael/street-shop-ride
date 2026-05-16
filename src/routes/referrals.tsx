@@ -24,6 +24,7 @@ function ReferralsPage() {
   const [phone, setPhone] = useState("");
   const [savingPhone, setSavingPhone] = useState(false);
   const [enabled, setEnabled] = useState(true);
+  const [requesting, setRequesting] = useState(false);
 
   const load = async () => {
     if (!user) return;
