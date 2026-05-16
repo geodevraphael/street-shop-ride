@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "@/components/NotificationBell";
+import sokoLogo from "@/assets/soko-logo.png";
 
 const ACTIVE_ORDER_STATUSES = ["placed", "accepted", "payment_submitted", "payment_confirmed", "rider_assigned", "picked_up", "delivered"] as const;
 
@@ -44,8 +45,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
           <Link to="/" className="flex items-center gap-2 font-semibold">
-            <img src="/icon-512.png" alt="Soko" className="h-8 w-8 rounded-lg object-cover" />
-            <span>Soko</span>
+            <img src={sokoLogo} alt="Soko" className="h-8 w-auto hidden sm:block" />
+            <img src="/icon-512.png" alt="" aria-hidden className="h-8 w-8 rounded-lg object-cover sm:hidden" />
+            <span className="sr-only">Soko</span>
           </Link>
 
           <nav className="ml-4 hidden items-center gap-1 md:flex">
