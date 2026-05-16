@@ -27,6 +27,7 @@ import {
   LoaderCircle,
   BadgeCheck,
   UserRound,
+  Store,
 } from "lucide-react";
 import { ReportDialog } from "@/components/ReportDialog";
 import { PaymentProofDialog } from "@/components/PaymentProofDialog";
@@ -255,7 +256,7 @@ function OrderDetail() {
         note:
           "Hapa utaona vitendo vya kukubali oda, kuthibitisha malipo, na kumpa boda mzigo. Hatua za mteja zimefichwa kwako kwenye oda hii.",
         tone: "bg-accent/60 text-accent-foreground border-accent/30",
-        icon: StoreRoleIcon,
+        icon: Store,
       };
     }
 
@@ -302,7 +303,7 @@ function OrderDetail() {
     setSearchingRiders(true);
     const { data } = await supabase.from("riders").select("*").eq("available", true);
     let list = data ?? [];
-    if (shop?.lat) {
+    if (hasPoint(shop?.lat, shop?.lng)) {
       list = [...list].sort((a, b) => {
         const da =
           a.current_lat != null && a.current_lng != null
@@ -359,7 +360,7 @@ function OrderDetail() {
     );
 
   const riderPos =
-    liveRider ?? (rider?.current_lat ? { lat: rider.current_lat, lng: rider.current_lng } : null);
+    liveRider ?? (hasPoint(rider?.current_lat, rider?.current_lng) ? { lat: rider.current_lat, lng: rider.current_lng } : null);
   const shopPos = shop?.lat != null && shop?.lng != null ? { lat: shop.lat, lng: shop.lng } : null;
   const destinationPos =
     address?.lat != null && address?.lng != null ? { lat: address.lat, lng: address.lng } : null;
@@ -546,7 +547,7 @@ function OrderDetail() {
                                 size="icon"
                                 variant="ghost"
                                 onClick={() => {
-                                  navigator.clipboard.writeText(shop.lipa_number);
+                                  if (shop.lipa_number) navigator.clipboard.writeText(shop.lipa_number);
                                   toast.success("Imenakiliwa");
                                 }}
                               >
@@ -810,7 +811,7 @@ function OrderDetail() {
                               {(r.rating ?? 5).toFixed(1)}
                             </span>
                             <span>{r.plate ?? "â€”"}</span>
-                            {shop?.lat && r.current_lat && (
+                            {hasPoint(shop?.lat, shop?.lng) && hasPoint(r.current_lat, r.current_lng) && (
                               <span className="font-medium text-primary">
                                 {distanceKm(
                                   { lat: shop.lat, lng: shop.lng },
