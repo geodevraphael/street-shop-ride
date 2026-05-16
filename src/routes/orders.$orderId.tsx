@@ -816,8 +816,9 @@ function OrderDetail() {
               <div className="space-y-4">
                 <div className="flex items-center gap-2 rounded-xl bg-primary/10 p-4 text-sm text-primary font-medium">
                   <Bike className="h-5 w-5" />
-                  <p>Malipo yamethibitishwa. Sasa tafuta boda boda kumkabidhi bidhaa.</p>
+                  <p>Malipo yamethibitishwa. Pokea ofa za boda hapa chini, au tafuta boda mwenyewe.</p>
                 </div>
+                <SellerOfferPanel orderId={orderId} onAccepted={load} />
                 <Button
                   size="lg"
                   className="h-12 w-full gap-2 shadow-md shadow-primary/20"
