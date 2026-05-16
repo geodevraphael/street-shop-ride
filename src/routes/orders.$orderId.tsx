@@ -523,7 +523,7 @@ function OrderDetail() {
 
                     {order.status === "placed" && (
                       <div className="space-y-2">
-                        <p className="text-sm">â³ Tunamsubiri muuzaji akubali oda yako.</p>
+                        <p className="text-sm">⏳ Tunamsubiri muuzaji akubali oda yako.</p>
                         {sellerProfile?.phone && (
                           <ContactActions
                             phone={sellerProfile.phone}
