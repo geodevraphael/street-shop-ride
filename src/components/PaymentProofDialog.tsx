@@ -11,22 +11,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle2, Upload } from "lucide-react";
+import { CheckCircle2, LoaderCircle, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 export function PaymentProofDialog({
   orderId,
   userId,
   onSubmitted,
+  disabled = false,
 }: {
   orderId: string;
   userId: string;
   onSubmitted: () => void | Promise<void>;
+  disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [ref, setRef] = useState("");
   const [busy, setBusy] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const submit = async () => {
     if (!userId) return toast.error("Ingia kwanza uendelee");
@@ -62,6 +65,7 @@ export function PaymentProofDialog({
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Asante! Muuzaji atathibitisha malipo");
+    setSubmitted(true);
     setFile(null);
     setRef("");
     setOpen(false);
@@ -71,8 +75,9 @@ export function PaymentProofDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="lg" className="gap-1.5">
-          <CheckCircle2 className="h-4 w-4" /> Nimelipia
+        <Button size="lg" className="gap-1.5" disabled={disabled || busy}>
+          {busy ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+          {busy ? "Inatuma ushahidi…" : submitted ? "Ushahidi umetumwa" : "Nimelipia"}
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -101,8 +106,8 @@ export function PaymentProofDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={submit} disabled={busy || (!ref.trim() && !file)} className="gap-1.5">
-            <Upload className="h-4 w-4" />
+          <Button onClick={submit} disabled={disabled || busy || (!ref.trim() && !file)} className="gap-1.5">
+            {busy ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
             {busy ? "Inatuma…" : "Tuma uthibitisho"}
           </Button>
         </DialogFooter>
