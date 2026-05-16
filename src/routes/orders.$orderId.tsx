@@ -212,6 +212,74 @@ function OrderDetail() {
     return () => navigator.geolocation.clearWatch(id);
   }, [trackingActive, isClient]);
 
+  useEffect(() => {
+    setTrackReady(false);
+    if (trackTimeoutRef.current) window.clearTimeout(trackTimeoutRef.current);
+    if (!trackingActive) return;
+
+    trackTimeoutRef.current = window.setTimeout(() => {
+      setTrackReady(true);
+      setTrackBusy(false);
+    }, 250);
+
+    return () => {
+      if (trackTimeoutRef.current) window.clearTimeout(trackTimeoutRef.current);
+    };
+  }, [trackingActive, order?.status, authReady]);
+
+  const openTracking = () => {
+    setTrackBusy(true);
+    document.getElementById("track-map")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.setTimeout(() => {
+      setTrackBusy(false);
+      setTrackReady(true);
+    }, 450);
+  };
+
+  const roleInfo = useMemo(() => {
+    if (isClient) {
+      return {
+        label: "Mteja",
+        title: "Unafanya hatua za mnunuzi kwenye oda hii",
+        note:
+          "Ndiyo maana unaweza kubofya Fuatilia, kutuma ushahidi wa malipo, na kuthibitisha umepokea mzigo inapofika.",
+        tone: "bg-primary/10 text-primary border-primary/20",
+        icon: UserRound,
+      };
+    }
+
+    if (isSeller) {
+      return {
+        label: "Muuzaji",
+        title: `Unafanya hatua za duka ${shop?.name ?? "hili"}`,
+        note:
+          "Hapa utaona vitendo vya kukubali oda, kuthibitisha malipo, na kumpa boda mzigo. Hatua za mteja zimefichwa kwako kwenye oda hii.",
+        tone: "bg-accent/60 text-accent-foreground border-accent/30",
+        icon: StoreRoleIcon,
+      };
+    }
+
+    if (isRider) {
+      return {
+        label: "Boda",
+        title: "Unafanya hatua za usafirishaji kwenye oda hii",
+        note:
+          "Hapa utaona kuokota mzigo, kusasisha safari, na kuthibitisha umefikisha. Fuatilia ya mteja haionekani kama wewe si mnunuzi wa oda hii.",
+        tone: "bg-warning/15 text-warning-foreground border-warning/30",
+        icon: Bike,
+      };
+    }
+
+    return {
+      label: "Mtazamaji",
+      title: "Role yako haijatambuliwa kwenye oda hii",
+      note:
+        "Kama ulipaswa kuona vitendo vya oda, fungua ukiwa umeingia na account iliyoweka oda au yenye jukumu la oda hii.",
+      tone: "bg-secondary text-secondary-foreground border-border",
+      icon: BadgeCheck,
+    };
+  }, [isClient, isSeller, isRider, shop?.name]);
+
   const updateStatus = async (status: OrderStatus, extra: Partial<Order> = {}) => {
     setBusy(true);
     const patch: Partial<Order> = { status, ...extra };
