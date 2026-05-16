@@ -24,6 +24,7 @@ function ReferralsPage() {
   const [phone, setPhone] = useState("");
   const [savingPhone, setSavingPhone] = useState(false);
   const [enabled, setEnabled] = useState(true);
+  const [requesting, setRequesting] = useState(false);
 
   const load = async () => {
     if (!user) return;
@@ -94,7 +95,6 @@ function ReferralsPage() {
   const claimableAmount = claimableChunks * PAYOUT_AMOUNT;
   const remainingToNext = PAYOUT_THRESHOLD - (qualifiedInvites % PAYOUT_THRESHOLD);
 
-  const [requesting, setRequesting] = useState(false);
   const requestPayout = async () => {
     if (!user) return;
     if (claimableChunks < 1) return toast.error(`Unahitaji watu ${PAYOUT_THRESHOLD} waliokamilisha.`);
