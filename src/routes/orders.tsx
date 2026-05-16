@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,9 +25,14 @@ const NEXT_HINT: Record<string, string> = {
 };
 
 function Orders() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const { user } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  if (pathname !== "/orders") {
+    return <Outlet />;
+  }
 
   const load = () => {
     if (!user) return;
