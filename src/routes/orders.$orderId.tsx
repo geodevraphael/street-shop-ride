@@ -165,6 +165,21 @@ function OrderDetail() {
     setAddress(a.data);
     setRider(r.data);
     setClientProfile(cp.data);
+    if (s.data?.id) {
+      const { data: ln } = await supabase
+        .from("shop_lipa_numbers")
+        .select("*")
+        .eq("shop_id", s.data.id)
+        .eq("active", true)
+        .order("is_default", { ascending: false })
+        .order("sort_order", { ascending: true });
+      setLipas(ln ?? []);
+      const preferred = (o as any).lipa_number_id
+        ?? ln?.find((x: any) => x.is_default)?.id
+        ?? ln?.[0]?.id
+        ?? null;
+      setSelectedLipaId(preferred);
+    }
     if (s.data?.owner_id) {
       const { data: sp } = await supabase
         .from("profiles")
