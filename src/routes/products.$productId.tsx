@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { ShareButton } from "@/components/ShareButton";
@@ -9,6 +9,8 @@ import { formatKES } from "@/lib/pricing";
 import { getCategory } from "@/lib/categories";
 import { ChevronLeft, MapPin, Plus, ShoppingBag, Star } from "lucide-react";
 import { toast } from "sonner";
+import { AttributeSummary, BuyerVariantPicker } from "@/components/AttributeFields";
+import { getBuyerPickFields } from "@/lib/product-attributes";
 
 export const Route = createFileRoute("/products/$productId")({
   head: () => ({ meta: [{ title: "Bidhaa · Product — Soko" }] }),
