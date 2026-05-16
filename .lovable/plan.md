@@ -1,52 +1,83 @@
-# Multi-Provider Lipa Numbers + Branded Payment Page
+# Delivery Subsidy & Transparent Boda Payment
 
 ## Lengo
-Seller anaweza kusajili **lipa numbers nyingi** kutoka watoa-huduma tofauti (M-Pesa, Tigo Pesa/Mixx by Yas, Airtel Money, Halopesa, TTCL, NMB, CRDB, NBC, Selcom, n.k.). Mteja anachagua njia anayopendelea wakati wa kulipa. Ukurasa wa malipo unaonyesha rangi rasmi ya provider ili kujenga imani.
+Wakati wa checkout, mteja **HAONI** gharama ya boda — anaona tu jumla ya bidhaa. Baada ya muuzaji kukubali oda, anajadiliana na boda kuhusu nauli, halafu anaweka:
+
+- **Total boda fee** (kile alichokubaliana na boda)
+- **Subsidy ya muuzaji**: `0%` (mteja analipa yote) / `50%` (split) / `100%` (free delivery — muuzaji analipa yote)
+
+Mteja anaona breakdown wazi: "Boda: 3,000 · Muuzaji amechangia 1,500 · Wewe utalipa 1,500". Anajumuisha kwenye malipo yake.
+
+Baada ya delivery, mteja **anathibitisha "Nimempa boda malipo yake"** (kama mteja ndiye anayelipa boda mkononi) au kama muuzaji analipa boda, hatua hii inahamishiwa kwa muuzaji.
 
 ## Mabadiliko
 
-### 1. Database (migration mpya)
-- Jedwali jipya **`shop_lipa_numbers`** lenye:
-  - `shop_id`, `provider` (enum/text), `account_type` (till/paybill/account/wallet), `number`, `account_name`, `instructions`, `qr_code_url`, `is_default`, `active`, `sort_order`.
-  - RLS: public read; owner full write; admin override.
-- Jedwali **`orders`**: ongeza `lipa_number_id` (mteja amechagua ipi).
-- Lipa namba ya zamani kwenye `shops.lipa_number` itabaki kama backward-compat (read-only).
+### 1. Database
+Migration mpya kwenye `orders`:
+- `delivery_subsidy_pct` int default 0 (0–100). Asilimia ambayo muuzaji anachangia.
+- `delivery_negotiated` boolean default false. Inakuwa true muuzaji akiweka nauli.
+- `boda_paid_confirmed` boolean default false.
+- `boda_paid_confirmed_at` timestamptz.
+- `boda_paid_by` text — 'client' au 'seller'.
 
-### 2. Providers catalog (`src/lib/payment-providers.ts`)
-Orodha ngumu yenye: key, swahili/english label, logo color, brand bg & fg (hex/oklch), aina ya account inayohitajika, placeholder ya namba, USSD code (mf. `*150*00#`), na maelezo mafupi.
-- Mobile money: M-Pesa (Vodacom), Tigo Pesa / Mixx by Yas, Airtel Money, Halopesa, TTCL Pesa, Azam Pesa.
-- Banks: NMB, CRDB, NBC, Stanbic, Equity, Exim, DTB.
-- Aggregators: Selcom Pay.
+Rekebisha `delivery_fee` semantics: tutahifadhi `delivery_fee` kama **total fee** (kile boda anapata). Ongeza VIEW/helper kuhesabu `client_share = delivery_fee * (100 - subsidy_pct) / 100`.
 
-### 3. Seller registration wizard
-Hatua ya **Payments** inabadilishwa:
-- Picker ya provider (grid ya cards zenye rangi za brand + logo).
-- Form inayobadilika kulingana na provider (Till vs Paybill+Account vs Bank Account+Name).
-- Kitufe **+ Ongeza njia nyingine** ili kuongeza watoa huduma zaidi kabla ya kumaliza.
-- Mmoja anachaguliwa kama **default**.
+Sasisha `validate_order_status_transition`: kuhama kutoka `accepted` → `payment_submitted` kuruhusiwa tu kama `delivery_negotiated = true` (au subsidy = 100%, hapo mteja halipi boda kabisa lakini bado anapaswa kulipa bidhaa).
 
-### 4. Ukurasa wa kusimamia (`/seller/payments`)
-Ukurasa mpya wa seller — orodha ya lipa numbers zote, ongeza, hariri, futa, weka default. Quick-toggle ya active.
-Link kwenye seller dashboard.
+### 2. Checkout (`src/routes/checkout.tsx`)
+- **Ondoa** Delivery row & fare computation kabisa kwenye summary.
+- Total = subtotal tu.
+- Kopi mpya: "Gharama ya boda itapangwa na muuzaji baada ya kukubali oda. Wengine wanachangia au kulipia yote." 
+- Bado tunatuma `distance_km`/`eta_min` kama hint kwa muuzaji, lakini `delivery_fee = 0` na `delivery_subsidy_pct = 0` (defaults).
 
-### 5. Checkout & Order page
-- **Checkout**: ikiwa duka lina lipa numbers zaidi ya moja, mteja anaona picker ya brand cards na anachagua moja. Hifadhi `lipa_number_id` kwenye order. Kama haijachaguliwa, default itatumika.
-- **Order page (status = accepted)**: badala ya kadi rahisi, onyesha **branded payment card** — full-bleed gradient ya rangi ya provider, logo/badge, namba kubwa yenye copy-button, kiasi cha kulipa, hatua za USSD (`*150*00#` n.k.), QR (kama ipo), na onyo la usalama ("Hakikisha jina ni X kabla ya kuthibitisha"). Mteja anaweza kubadilisha provider kama duka lina nyingi.
+### 3. Seller — baada ya kukubali (`seller.orders.tsx` + `orders.$orderId.tsx` seller view)
+Component mpya `DeliveryNegotiationCard.tsx` inayoonekana kwa muuzaji kati ya `accepted` na `payment_confirmed`:
+- Input: "Nauli ya boda" (TZS)
+- Toggle ya subsidy: **Mteja alipe yote (0%)** / **Tugawane 50/50** / **Mimi nitalipa boda yote (100%)** + custom slider
+- Preview live: "Mteja atalipa nyongeza ya X. Wewe utachangia Y."
+- Button: "Tuma kwa mteja" → updates `delivery_fee`, `delivery_subsidy_pct`, `delivery_negotiated=true`.
 
-### 6. Trust signals kwenye payment card
-- Badge ya "Imethibitishwa" kama duka ni verified.
-- Jina la mpokeaji (account_name) likionyeshwa kwa herufi nzito.
-- Maelezo: "Tuma uthibitisho baada ya kulipa. Hutoshiriki PIN yako."
-- Rangi & logo zinazoendana na provider.
+Kabla ya hii kufanyika, mteja ataona "Muuzaji anajadiliana na boda…" badala ya BrandedPaymentCard.
 
-## Technical Notes
-- Brand colors zitatumika kupitia inline styles (sio Tailwind tokens) kwa kuwa ni za nje ya design system — tutaweka helper `getProviderTheme(key)` itakayorudisha `{ bg, fg, accent }`.
-- Logos: SVG/text-based ndani ya component (hatutapakua trademarked assets) — tutatumia monogram + brand color block.
-- Backward compatibility: kama `shop_lipa_numbers` haina rekodi, tutaonyesha `shops.lipa_number` ya zamani.
+### 4. Order page mteja view (`orders.$orderId.tsx`)
+Wakati `accepted` & `!delivery_negotiated`:
+- Card: "Muuzaji anajadiliana na boda kuhusu nauli. Subiri kidogo…" (spinner)
+- Hide payment card.
 
-## Files
-- `supabase/migrations/<new>.sql` — table, RLS, column.
-- `src/lib/payment-providers.ts` — catalog.
-- `src/components/LipaNumberForm.tsx`, `LipaNumberCard.tsx`, `LipaProviderPicker.tsx`, `BrandedPaymentCard.tsx`.
-- `src/routes/seller.payments.tsx` — management room.
-- Hariri: `seller.index.tsx` (wizard + link), `checkout.tsx`, `orders.$orderId.tsx`, `seller.tsx` (nav).
+Wakati `accepted` & `delivery_negotiated`:
+- **Delivery breakdown card** (mpya) — transparent:
+  ```
+  Bidhaa:                  15,000
+  Nauli ya boda:            3,000
+  Mchango wa muuzaji:      −1,500  (50% subsidy badge ya kijani)
+  ─────────────────────────────────
+  Utalipa muuzaji:         16,500
+  ```
+- Kama subsidy = 100%: onyesha "Muuzaji analipia boda yote 🎉 — wewe unalipa bidhaa tu."
+- BrandedPaymentCard tumia `client_total = subtotal + client_share`.
+
+### 5. Confirm boda paid (mteja, baada ya `delivered`)
+Kama subsidy < 100%, mteja anaona hatua ya ziada kabla ya `completed`:
+- Card ya manjano: "Je, umemkabidhi boda nauli yake ya {client_share}?"
+- Buttons: **"Ndiyo, nimempa"** (sets `boda_paid_confirmed=true`, `boda_paid_by='client'`) au "Bado"
+- Status haiwezi kwenda `completed` mpaka hii itolewe.
+
+Kama subsidy = 100%, hatua hii inafichwa kwa mteja; muuzaji ndiye anayethibitisha (toleo la `seller.orders.tsx`).
+
+### 6. Files
+**Create:**
+- `supabase/migrations/<new>.sql`
+- `src/components/DeliveryNegotiationCard.tsx` (seller input)
+- `src/components/DeliveryBreakdownCard.tsx` (transparent breakdown kwa mteja)
+- `src/components/BodaPaymentConfirm.tsx` (confirm step)
+- `src/lib/delivery-share.ts` (helper: `computeClientShare(fee, subsidyPct)`)
+
+**Edit:**
+- `src/routes/checkout.tsx` — ondoa fare display
+- `src/routes/orders.$orderId.tsx` — wire negotiation gate, breakdown, confirm step
+- `src/routes/seller.orders.tsx` — show negotiation prompt on accepted orders
+
+## Technical notes
+- `delivery_fee` inabaki kama **total** boda anachopata. `client_share` ni derived, sio stored.
+- RLS: column updates za `delivery_fee`, `delivery_subsidy_pct`, `delivery_negotiated` zinaruhusiwa kwa shop owner tu (tayari kupitia `orders_update` policy + status validation trigger ataongezewa rule).
+- Backward-compat: oda za zamani ambazo zilikuwa na `delivery_fee` zilizowekwa wakati wa checkout zitabaki kufanya kazi — kama `delivery_negotiated` haipo (NULL/false), tutaonyesha breakdown ya legacy bila subsidy.
