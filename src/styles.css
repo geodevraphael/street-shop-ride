@@ -62,13 +62,13 @@
   --accent-foreground: oklch(0.22 0.02 65);
   --destructive: oklch(0.6 0.22 25);
   --destructive-foreground: oklch(0.99 0.005 80);
-  --success: oklch(0.68 0.15 155);
+  --success: oklch(0.65 0.17 145);
   --success-foreground: oklch(0.99 0.005 80);
   --warning: oklch(0.78 0.15 80);
   --warning-foreground: oklch(0.18 0.02 65);
   --border: oklch(0.92 0.008 80);
   --input: oklch(0.92 0.008 80);
-  --ring: oklch(0.74 0.16 65);
+  --ring: oklch(0.705 0.176 45);
   --sidebar: oklch(0.98 0.005 80);
   --sidebar-foreground: oklch(0.22 0.02 65);
   --sidebar-primary: oklch(0.74 0.16 65);
