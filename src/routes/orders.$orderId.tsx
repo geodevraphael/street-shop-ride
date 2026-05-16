@@ -34,6 +34,7 @@ import { PaymentProofDialog } from "@/components/PaymentProofDialog";
 import { SellerOfferPanel } from "@/components/SellerOfferPanel";
 import { TrackingMap } from "@/components/TrackingMap";
 import { ReviewPrompt } from "@/components/ReviewPrompt";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useTrackOrder } from "@/lib/tracking";
 import { toast } from "sonner";
 
@@ -297,7 +298,6 @@ function OrderDetail() {
   };
 
   const cancelOrder = async () => {
-    if (!confirm("Una uhakika unataka kughairi oda hii?")) return;
     await updateStatus("cancelled");
   };
 
@@ -957,12 +957,18 @@ function OrderDetail() {
             )}
 
             {canCancel && (isClient || isSeller) && order.status !== "cancelled" && (
-              <button
-                onClick={cancelOrder}
-                className="mt-4 flex items-center gap-1 text-xs text-destructive hover:underline"
-              >
-                <XCircle className="h-3.5 w-3.5" /> Ghairi oda
-              </button>
+              <ConfirmDialog
+                title="Ghairi oda?"
+                description="Hatua hii haiwezi kurudishwa. Mteja na muuzaji watapata arifa."
+                confirmLabel="Ndio, ghairi"
+                destructive
+                onConfirm={cancelOrder}
+                trigger={
+                  <button className="mt-4 flex items-center gap-1 text-xs text-destructive hover:underline">
+                    <XCircle className="h-3.5 w-3.5" /> Ghairi oda
+                  </button>
+                }
+              />
             )}
           </section>
 
