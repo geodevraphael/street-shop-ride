@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { ReportDialog } from "@/components/ReportDialog";
 import { PaymentProofDialog } from "@/components/PaymentProofDialog";
+import { SellerOfferPanel } from "@/components/SellerOfferPanel";
 import { TrackingMap } from "@/components/TrackingMap";
 import { useTrackOrder } from "@/lib/tracking";
 import { toast } from "sonner";
