@@ -11,7 +11,7 @@ import { WizardStepper } from "@/components/WizardStepper";
 import { GeoAverager } from "@/components/GeoAverager";
 import { uploadFile } from "@/lib/upload";
 import { OrderStatusPill } from "@/components/OrderStatusPill";
-import { ShieldCheck, Locate, Radio, Package, CheckCircle2, Bike, AlertCircle } from "lucide-react";
+import { ShieldCheck, Locate, Radio, Package, CheckCircle2, Bike, AlertCircle, Star, TrendingUp, Calendar } from "lucide-react";
 import { useBroadcastPosition } from "@/lib/tracking";
 import { toast } from "sonner";
 
@@ -26,6 +26,7 @@ function RiderHome() {
   const [available, setAvailable] = useState(true);
   const [openOrders, setOpenOrders] = useState<any[]>([]);
   const [busy, setBusy] = useState(false);
+  const [earnings, setEarnings] = useState({ today: 0, week: 0, todayCount: 0 });
 
   const load = async () => {
     if (!user) return;
@@ -33,13 +34,30 @@ function RiderHome() {
     setRider(data); setLoading(false);
     if (data) setAvailable(data.available);
     if (data) {
-      const { data: o } = await supabase
-        .from("orders")
-        .select("*, shops(name, lat, lng)")
-        .eq("rider_id", data.id)
-        .not("status", "in", "(completed,cancelled)")
-        .order("created_at", { ascending: false });
+      const now = new Date();
+      const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+      const startWeek = new Date(now.getTime() - 7 * 86400000).toISOString();
+      const [{ data: o }, { data: done }] = await Promise.all([
+        supabase
+          .from("orders")
+          .select("*, shops(name, lat, lng)")
+          .eq("rider_id", data.id)
+          .not("status", "in", "(completed,cancelled)")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("orders")
+          .select("delivery_fee, created_at, status")
+          .eq("rider_id", data.id)
+          .in("status", ["delivered", "completed"])
+          .gte("created_at", startWeek),
+      ]);
       setOpenOrders(o ?? []);
+      const all = done ?? [];
+      setEarnings({
+        today: all.filter((x: any) => x.created_at >= startToday).reduce((s: number, x: any) => s + Number(x.delivery_fee), 0),
+        week: all.reduce((s: number, x: any) => s + Number(x.delivery_fee), 0),
+        todayCount: all.filter((x: any) => x.created_at >= startToday).length,
+      });
     }
   };
 
@@ -109,6 +127,28 @@ function RiderHome() {
         <Button variant="outline" size="sm" className="mt-3 gap-1.5" onClick={updateLocation} id="update-location-btn">
           <Locate className="h-3.5 w-3.5" /> Sasisha eneo langu
         </Button>
+      </div>
+
+      {/* Earnings */}
+      <div className="grid grid-cols-3 gap-2">
+        <div className="rounded-2xl border bg-card p-3 text-center">
+          <Calendar className="mx-auto h-4 w-4 text-primary" />
+          <p className="mt-1 text-[10px] uppercase text-muted-foreground">Leo</p>
+          <p className="text-sm font-bold">TSh {earnings.today.toLocaleString()}</p>
+          <p className="text-[10px] text-muted-foreground">{earnings.todayCount} safari</p>
+        </div>
+        <div className="rounded-2xl border bg-card p-3 text-center">
+          <TrendingUp className="mx-auto h-4 w-4 text-success" />
+          <p className="mt-1 text-[10px] uppercase text-muted-foreground">Wiki</p>
+          <p className="text-sm font-bold">TSh {earnings.week.toLocaleString()}</p>
+          <p className="text-[10px] text-muted-foreground">siku 7</p>
+        </div>
+        <div className="rounded-2xl border bg-card p-3 text-center">
+          <Star className="mx-auto h-4 w-4 text-warning" />
+          <p className="mt-1 text-[10px] uppercase text-muted-foreground">Rating</p>
+          <p className="text-sm font-bold">{Number(rider.rating ?? 5).toFixed(1)}</p>
+          <p className="text-[10px] text-muted-foreground">jumla</p>
+        </div>
       </div>
 
       {/* LIVE BROADCAST — active delivery in progress */}
