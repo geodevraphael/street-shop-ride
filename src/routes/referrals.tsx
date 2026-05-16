@@ -95,7 +95,6 @@ function ReferralsPage() {
   const claimableAmount = claimableChunks * PAYOUT_AMOUNT;
   const remainingToNext = PAYOUT_THRESHOLD - (qualifiedInvites % PAYOUT_THRESHOLD);
 
-  const [requesting, setRequesting] = useState(false);
   const requestPayout = async () => {
     if (!user) return;
     if (claimableChunks < 1) return toast.error(`Unahitaji watu ${PAYOUT_THRESHOLD} waliokamilisha.`);
