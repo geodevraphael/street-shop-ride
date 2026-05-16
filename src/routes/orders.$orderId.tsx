@@ -56,8 +56,8 @@ const ACTIVE_ORDER_STATUSES = [
   "delivered",
 ] as const;
 
-function hasPoint(lat?: number | null, lng?: number | null): lat is number {
-  return lat != null && lng != null;
+function toPoint(lat?: number | null, lng?: number | null) {
+  return lat != null && lng != null ? { lat, lng } : null;
 }
 
 function buildMapsUrl({
@@ -303,22 +303,15 @@ function OrderDetail() {
     setSearchingRiders(true);
     const { data } = await supabase.from("riders").select("*").eq("available", true);
     let list = data ?? [];
-    if (hasPoint(shop?.lat, shop?.lng)) {
+    const shopPoint = toPoint(shop?.lat, shop?.lng);
+    if (shopPoint) {
       list = [...list].sort((a, b) => {
+        const riderPointA = toPoint(a.current_lat, a.current_lng);
+        const riderPointB = toPoint(b.current_lat, b.current_lng);
         const da =
-          a.current_lat != null && a.current_lng != null
-            ? distanceKm(
-                { lat: shop.lat, lng: shop.lng },
-                { lat: a.current_lat, lng: a.current_lng },
-              )
-            : 9999;
+          riderPointA ? distanceKm(shopPoint, riderPointA) : 9999;
         const db =
-          b.current_lat != null && b.current_lng != null
-            ? distanceKm(
-                { lat: shop.lat, lng: shop.lng },
-                { lat: b.current_lat, lng: b.current_lng },
-              )
-            : 9999;
+          riderPointB ? distanceKm(shopPoint, riderPointB) : 9999;
         return da - db;
       });
     }
@@ -359,11 +352,9 @@ function OrderDetail() {
       </AppShell>
     );
 
-  const riderPos =
-    liveRider ?? (hasPoint(rider?.current_lat, rider?.current_lng) ? { lat: rider.current_lat, lng: rider.current_lng } : null);
-  const shopPos = shop?.lat != null && shop?.lng != null ? { lat: shop.lat, lng: shop.lng } : null;
-  const destinationPos =
-    address?.lat != null && address?.lng != null ? { lat: address.lat, lng: address.lng } : null;
+  const riderPos = liveRider ?? toPoint(rider?.current_lat, rider?.current_lng);
+  const shopPos = toPoint(shop?.lat, shop?.lng);
+  const destinationPos = toPoint(address?.lat, address?.lng);
   const orderTag = `Oda #${order.id.slice(0, 8)}`;
   const orderTotal = Number(order.subtotal) + Number(order.delivery_fee);
   const mapUrl = buildMapsUrl({ shop: shopPos, destination: destinationPos, rider: riderPos });
