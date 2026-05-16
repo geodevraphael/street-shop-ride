@@ -107,14 +107,27 @@ function Checkout() {
   const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
   const address = addresses.find((a) => a.id === addressId);
 
-  const fare = useMemo(() => {
+  const [pricingCfg, setPricingCfg] = useState<PricingConfig>(DEFAULT_PRICING);
+  const [fare, setFare] = useState<{ km: number; min: number; fee: number; source: "osrm" | "fallback" | "none"; computing: boolean }>({
+    km: 0, min: 0, fee: DEFAULT_PRICING.min_fare, source: "none", computing: false,
+  });
+
+  useEffect(() => { getPricingConfig().then(setPricingCfg); }, []);
+
+  useEffect(() => {
     if (shop?.lat == null || shop?.lng == null || address?.lat == null || address?.lng == null) {
-      return { km: 0, min: 0, fee: 1500 };
+      setFare({ km: 0, min: 0, fee: pricingCfg.min_fare, source: "none", computing: false });
+      return;
     }
-    const km = distanceKm({ lat: shop.lat, lng: shop.lng }, { lat: address.lat, lng: address.lng });
-    const min = etaMinutes(km);
-    return { km, min, fee: computeFare(km, min) };
-  }, [shop, address]);
+    let cancelled = false;
+    setFare((f) => ({ ...f, computing: true }));
+    routeDistance({ lat: shop.lat!, lng: shop.lng! }, { lat: address.lat, lng: address.lng })
+      .then((r) => {
+        if (cancelled) return;
+        setFare({ km: r.km, min: r.min, fee: computeFareWith(pricingCfg, r.km, r.min), source: r.source, computing: false });
+      });
+    return () => { cancelled = true; };
+  }, [shop?.lat, shop?.lng, address?.lat, address?.lng, pricingCfg]);
 
   if (!user)
     return (
