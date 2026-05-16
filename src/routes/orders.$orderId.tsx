@@ -593,6 +593,37 @@ function OrderDetail() {
                         <p className="text-sm">
                           📨 Uthibitisho umetumwa. Tunamsubiri muuzaji athibitishe malipo.
                         </p>
+                        {(order.payment_ref || order.payment_proof_url) && (
+                          <div className="rounded-xl border bg-secondary/40 p-3 space-y-2">
+                            <p className="text-xs font-semibold uppercase text-muted-foreground">
+                              Ushahidi uliotuma
+                            </p>
+                            {order.payment_ref && (
+                              <p className="text-sm">
+                                Namba ya muamala: <b>{order.payment_ref}</b>
+                              </p>
+                            )}
+                            {order.payment_proof_url && (
+                              <a
+                                href={order.payment_proof_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="block group relative"
+                              >
+                                <img
+                                  src={order.payment_proof_url}
+                                  alt="Ushahidi wa malipo"
+                                  className="max-h-60 w-full rounded-lg border object-cover transition-opacity group-hover:opacity-90"
+                                />
+                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Button variant="secondary" size="sm" className="gap-1">
+                                    <ExternalLink className="h-4 w-4" /> Fungua
+                                  </Button>
+                                </div>
+                              </a>
+                            )}
+                          </div>
+                        )}
                         {sellerProfile?.phone && (
                           <ContactActions
                             phone={sellerProfile.phone}
