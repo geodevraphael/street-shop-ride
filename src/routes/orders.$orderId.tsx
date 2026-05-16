@@ -31,6 +31,8 @@ import {
 } from "lucide-react";
 import { ReportDialog } from "@/components/ReportDialog";
 import { PaymentProofDialog } from "@/components/PaymentProofDialog";
+import { BrandedPaymentCard } from "@/components/BrandedPaymentCard";
+import { getProvider } from "@/lib/payment-providers";
 import { SellerOfferPanel } from "@/components/SellerOfferPanel";
 import { TrackingMap } from "@/components/TrackingMap";
 import { ReviewPrompt } from "@/components/ReviewPrompt";
