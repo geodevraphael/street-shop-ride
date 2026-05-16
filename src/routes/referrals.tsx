@@ -75,40 +75,56 @@ function ReferralsPage() {
     load();
   };
 
-  const sellerRefs = referrals.filter((r) => r.referred_role === "seller");
-  const bodaRefs = referrals.filter((r) => r.referred_role === "rider");
-  const qualifiedSellers = sellerRefs.filter((r) => r.qualified).length;
-  const qualifiedBodas = bodaRefs.filter((r) => r.qualified).length;
+  const totalInvites = referrals.length;
+  const qualifiedInvites = referrals.filter((r) => r.qualified).length;
 
-  const cashEarned = rewards
-    .filter((r) => r.reward_type === "cash_payout")
+  const invitePayouts = rewards.filter(
+    (r) => r.reward_type === "cash_payout" && r.details?.kind === "invite_20"
+  );
+  const requestedOrPaidAmount = invitePayouts.reduce((s, r) => s + Number(r.amount), 0);
+  const paidAmount = invitePayouts
+    .filter((r) => r.status === "paid")
     .reduce((s, r) => s + Number(r.amount), 0);
-  const cashPaid = rewards
-    .filter((r) => r.reward_type === "cash_payout" && r.status === "paid")
-    .reduce((s, r) => s + Number(r.amount), 0);
-  const cashPending = cashEarned - cashPaid;
+  const pendingAmount = requestedOrPaidAmount - paidAmount;
 
-  const subDiscountMonths = rewards
-    .filter((r) => r.reward_type === "subscription_discount")
-    .reduce((s, r) => s + Number(r.details?.months ?? 0), 0);
-  const bodaDiscountPct = rewards
-    .filter((r) => r.reward_type === "boda_discount")
-    .reduce((s, r) => s + Number(r.amount), 0);
+  const totalEarned = qualifiedInvites * PER_INVITE;
+  const eligibleChunks = Math.floor(qualifiedInvites / PAYOUT_THRESHOLD);
+  const requestedChunks = Math.floor(requestedOrPaidAmount / PAYOUT_AMOUNT);
+  const claimableChunks = Math.max(0, eligibleChunks - requestedChunks);
+  const claimableAmount = claimableChunks * PAYOUT_AMOUNT;
+  const remainingToNext = PAYOUT_THRESHOLD - (qualifiedInvites % PAYOUT_THRESHOLD);
 
-  const clientRefs = referrals.filter((r) => r.referred_role === "client");
-  const qualifiedClients = clientRefs.filter((r) => r.qualified).length;
+  const [requesting, setRequesting] = useState(false);
+  const requestPayout = async () => {
+    if (!user) return;
+    if (claimableChunks < 1) return toast.error(`Unahitaji watu ${PAYOUT_THRESHOLD} waliokamilisha.`);
+    if (!phone) return toast.error("Hifadhi namba ya malipo kwanza.");
+    setRequesting(true);
+    const { error } = await supabase.from("referral_rewards").insert({
+      user_id: user.id,
+      reward_type: "cash_payout",
+      amount: PAYOUT_AMOUNT,
+      status: "pending",
+      paid_phone: phone,
+      details: { kind: "invite_20", invites: PAYOUT_THRESHOLD, per_invite: PER_INVITE },
+    });
+    setRequesting(false);
+    if (error) return toast.error(error.message);
+    toast.success("Ombi la malipo limetumwa kwa admin.");
+    load();
+  };
 
   return (
     <AppShell>
       <div className="mx-auto max-w-3xl space-y-5">
         <div>
           <h1 className="text-2xl font-bold">Referral Program</h1>
-          <p className="text-sm text-muted-foreground">Alika watu — pata zawadi za pesa na punguzo.</p>
+          <p className="text-sm text-muted-foreground">Alika watu — kila mtu = TSh {PER_INVITE.toLocaleString()}.</p>
         </div>
 
         {!enabled && (
           <div className="rounded-2xl border border-amber-500/40 bg-amber-50 p-4 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
-            Referral program imezimwa kwa sasa na admin. Bado unaweza kuona historia yako, lakini hakuna zawadi mpya zitatolewa.
+            Referral program imezimwa kwa sasa na admin.
           </div>
         )}
 
@@ -126,37 +142,48 @@ function ReferralsPage() {
           <p className="mt-2 break-all text-xs text-muted-foreground">{link}</p>
         </div>
 
-        {/* Reward rules — show only those applicable to this user */}
-        {(() => {
-          const isSeller = roles.includes("seller");
-          const isRider = roles.includes("rider");
-          const cards: React.ReactNode[] = [];
-          // Cash payouts: anyone can earn by inviting sellers / clients
-          cards.push(<RuleCard key="s10" icon={Wallet} title="Sellers 10 = TSh 10,000" desc="Alika sellers 10 wanaolist bidhaa, pata TSh 10,000 kwa simu yako." progress={`${qualifiedSellers}/10`} />);
-          cards.push(<RuleCard key="c100" icon={Users} title="Clients 100 + 30% = TSh 100,000" desc="Alika wateja 100 na angalau 30% wanunue mara ya kwanza, pata TSh 100,000." progress={`${clientRefs.length}/100 · ${qualifiedClients}/30`} />);
-          // Subscription discount: only sellers (they pay monthly fee)
-          if (isSeller) cards.push(<RuleCard key="s5" icon={Store} title="Sellers 5 = 50% off" desc="Alika sellers 5; pata punguzo 50% kwa miezi 2 ya ada ya mwezi." progress={`${qualifiedSellers}/5`} />);
-          // Boda discount: only riders (applied to their boda fees)
-          if (isRider) cards.push(<RuleCard key="b2" icon={Bike} title="Boda 2 = 2% off" desc="Kila boda 2 wanaojisajili kupitia kwako, pata 2% punguzo kwenye ada." progress={`${qualifiedBodas}/2`} />);
-          return <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{cards}</div>;
-        })()}
+        {/* Rule */}
+        <div className="rounded-2xl border bg-card p-5">
+          <div className="flex items-center gap-2 text-sm font-semibold"><Wallet className="h-4 w-4 text-primary" /> Kanuni ya malipo</div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Kila mtu unayemwalika anayejisajili na kuwa active = <b>TSh {PER_INVITE.toLocaleString()}</b>. Ukifikia <b>{PAYOUT_THRESHOLD} watu</b>, omba malipo ya <b>TSh {PAYOUT_AMOUNT.toLocaleString()}</b> kutoka kwa admin.
+          </p>
+          <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div className="h-full bg-primary transition-all" style={{ width: `${qualifiedInvites >= PAYOUT_THRESHOLD ? 100 : (qualifiedInvites % PAYOUT_THRESHOLD) / PAYOUT_THRESHOLD * 100}%` }} />
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            {qualifiedInvites} / {PAYOUT_THRESHOLD} waliokamilisha · {remainingToNext === PAYOUT_THRESHOLD ? 0 : remainingToNext} wabaki kufikia payout inayofuata
+          </p>
+        </div>
 
         {/* Earnings summary */}
         <div className="grid gap-3 sm:grid-cols-3">
-          <Stat label="Pesa zilizopatikana" value={`TSh ${cashEarned.toLocaleString()}`} sub={`Inasubiri: TSh ${cashPending.toLocaleString()}`} />
-          <Stat label="Miezi ya punguzo" value={`${subDiscountMonths} mo`} sub="50% off ada ya muuzaji" />
-          <Stat label="Punguzo la boda" value={`${bodaDiscountPct}%`} sub="Kwenye ada yako" />
+          <Stat label="Jumla iliyopatikana" value={`TSh ${totalEarned.toLocaleString()}`} sub={`${qualifiedInvites} × ${PER_INVITE.toLocaleString()}`} />
+          <Stat label="Inayoweza kuombwa" value={`TSh ${claimableAmount.toLocaleString()}`} sub={`${claimableChunks} payout(s) tayari`} />
+          <Stat label="Inasubiri admin" value={`TSh ${pendingAmount.toLocaleString()}`} sub={`Iliyolipwa: TSh ${paidAmount.toLocaleString()}`} />
         </div>
 
-        {/* Payout phone */}
+        {/* Payout phone + request */}
         <div className="rounded-2xl border bg-card p-4">
           <h3 className="font-semibold">Namba ya malipo (Mobile money)</h3>
-          <p className="text-xs text-muted-foreground">Tutatumia namba hii kutuma TSh 10,000 utakapostahili.</p>
+          <p className="text-xs text-muted-foreground">Admin atatumia namba hii kukulipa TSh {PAYOUT_AMOUNT.toLocaleString()}.</p>
           <div className="mt-3 flex gap-2">
             <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="07XX XXX XXX" />
             <Button onClick={savePhone} disabled={savingPhone || !phone}>Hifadhi</Button>
           </div>
+          <Button
+            onClick={requestPayout}
+            disabled={requesting || claimableChunks < 1 || !phone}
+            className="mt-3 w-full gap-2"
+          >
+            <Send className="h-4 w-4" />
+            {claimableChunks >= 1
+              ? `Omba malipo TSh ${claimableAmount.toLocaleString()}`
+              : `Omba malipo (unahitaji ${remainingToNext} zaidi)`}
+          </Button>
+          <p className="mt-2 text-[11px] text-muted-foreground">Jumla ulioalika: {totalInvites} · Waliokamilisha: {qualifiedInvites}</p>
         </div>
+
 
         {/* Referrals list */}
         <div className="rounded-2xl border bg-card">
