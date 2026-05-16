@@ -45,6 +45,13 @@ function ProductDetail() {
     })();
   }, [productId]);
 
+  const productAttrs: Record<string, any> = product?.attributes ?? {};
+  const requiredFields = useMemo(
+    () => (product ? getBuyerPickFields(product.category, productAttrs) : []),
+    [product?.category, product?.attributes],
+  );
+  const [selected, setSelected] = useState<Record<string, any>>({});
+
   if (missing) throw notFound();
   if (!product) return <AppShell><p className="text-muted-foreground">Inapakia…</p></AppShell>;
 
@@ -52,13 +59,6 @@ function ProductDetail() {
   const Icon = cat.icon;
   const shareUrl = `/products/${product.id}`;
   const shareText = `${product.name} — ${formatKES(Number(product.price))} · ${shop?.name ?? "Soko"}`;
-
-  const productAttrs: Record<string, any> = product.attributes ?? {};
-  const requiredFields = useMemo(
-    () => getBuyerPickFields(product.category, productAttrs),
-    [product.category, product.attributes],
-  );
-  const [selected, setSelected] = useState<Record<string, any>>({});
   const missingSelection = requiredFields.find((f) => {
     const v = selected[f.key];
     return v == null || v === "" || (Array.isArray(v) && v.length === 0);
