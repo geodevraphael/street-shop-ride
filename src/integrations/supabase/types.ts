@@ -295,6 +295,9 @@ export type Database = {
         Row: {
           accepted_offer_id: string | null
           address_id: string | null
+          boda_paid_by: string | null
+          boda_paid_confirmed: boolean
+          boda_paid_confirmed_at: string | null
           client_id: string
           courier_office_drop: string | null
           courier_office_pickup: string | null
@@ -304,6 +307,8 @@ export type Database = {
           delivery_fee: number
           delivery_fee_locked: boolean
           delivery_mode: string
+          delivery_negotiated: boolean
+          delivery_subsidy_pct: number
           distance_km: number | null
           eta_min: number | null
           id: string
@@ -321,6 +326,9 @@ export type Database = {
         Insert: {
           accepted_offer_id?: string | null
           address_id?: string | null
+          boda_paid_by?: string | null
+          boda_paid_confirmed?: boolean
+          boda_paid_confirmed_at?: string | null
           client_id: string
           courier_office_drop?: string | null
           courier_office_pickup?: string | null
@@ -330,6 +338,8 @@ export type Database = {
           delivery_fee?: number
           delivery_fee_locked?: boolean
           delivery_mode?: string
+          delivery_negotiated?: boolean
+          delivery_subsidy_pct?: number
           distance_km?: number | null
           eta_min?: number | null
           id?: string
@@ -347,6 +357,9 @@ export type Database = {
         Update: {
           accepted_offer_id?: string | null
           address_id?: string | null
+          boda_paid_by?: string | null
+          boda_paid_confirmed?: boolean
+          boda_paid_confirmed_at?: string | null
           client_id?: string
           courier_office_drop?: string | null
           courier_office_pickup?: string | null
@@ -356,6 +369,8 @@ export type Database = {
           delivery_fee?: number
           delivery_fee_locked?: boolean
           delivery_mode?: string
+          delivery_negotiated?: boolean
+          delivery_subsidy_pct?: number
           distance_km?: number | null
           eta_min?: number | null
           id?: string
