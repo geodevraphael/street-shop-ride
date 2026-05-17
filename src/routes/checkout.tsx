@@ -257,13 +257,14 @@ function Checkout() {
             <h3 className="mb-2 font-semibold">Jinsi mchakato unavyofanya kazi</h3>
             <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
               <li><b className="text-foreground">Weka oda</b> — muuzaji atapata taarifa kwenye duka lake.</li>
-              <li><b className="text-foreground">Muuzaji akubali</b> oda (anahakiki stock na upatikanaji).</li>
-              <li>Baada ya kukubaliwa, <b className="text-foreground">utaona namba ya Lipa/QR</b> kwenye ukurasa wa oda, kisha lipa.</li>
-              <li><b className="text-foreground">Tuma uthibitisho wa malipo</b> (reference au picha ya risiti).</li>
-              <li>Muuzaji akihakiki malipo, <b className="text-foreground">delivery huanza</b> na boda hupatikana.</li>
+              <li><b className="text-foreground">Muuzaji akubali</b> oda (anahakiki stock).</li>
+              <li><b className="text-foreground">Muuzaji anajadiliana na boda</b> kuhusu nauli, halafu anakutumia bei kamili.</li>
+              <li>Utaona <b className="text-foreground">Lipa namba/QR</b> + mchanganuo wa bidhaa na nauli (kama mteja anachangia).</li>
+              <li><b className="text-foreground">Lipa muuzaji</b>, tuma uthibitisho, halafu mpe boda nauli yake mkononi (kama ipo).</li>
             </ol>
             <p className="mt-3 rounded-lg bg-warning/10 p-2 text-xs text-warning-foreground">
-              Huoni namba ya malipo sasa hivi — hii inalinda usilipe kabla muuzaji hajathibitisha bidhaa ipo.
+              Nauli ya boda haionekani sasa — muuzaji ataipanga baada ya kukubali oda. Wengine
+              huchangia au kulipia yote.
             </p>
           </section>
         </div>
@@ -271,19 +272,21 @@ function Checkout() {
         <aside className="rounded-2xl border bg-card p-4 lg:sticky lg:top-20 lg:self-start">
           <h3 className="font-semibold">Summary</h3>
           <div className="mt-3 space-y-1 text-sm">
-            <Row label="Subtotal" v={formatKES(subtotal)} />
+            <Row label="Bidhaa (subtotal)" v={formatKES(subtotal)} />
             <Row
-              label={`Delivery (${fare.km.toFixed(1)} km · ${fare.min} min${fare.source === "osrm" ? " · njia halisi" : fare.source === "fallback" ? " · makadirio" : ""})`}
-              v={fare.computing ? "Inakokotoa…" : formatKES(fare.fee)}
+              label="Nauli ya boda"
+              v="Itapangwa na muuzaji"
+              muted
             />
             <div className="my-2 border-t" />
-            <Row label="Total" v={formatKES(subtotal + fare.fee)} bold />
+            <Row label="Utalipa sasa" v={formatKES(subtotal)} bold />
           </div>
-          <Button className="mt-4 w-full" onClick={place} disabled={busy || fare.computing}>
+          <Button className="mt-4 w-full" onClick={place} disabled={busy}>
             {busy ? "Inaweka oda..." : "Weka oda (bila kulipa bado)"}
           </Button>
           <p className="mt-2 text-xs text-muted-foreground">
-            Hutalipa sasa. Utalipa baada ya muuzaji kukubali oda yako. Min delivery fee {formatKES(pricingCfg.min_fare)}.
+            Hutalipa sasa. Muuzaji atakapokubali na kupanga nauli ya boda, utapata mchanganuo
+            kamili wa bei.
           </p>
         </aside>
       </div>
