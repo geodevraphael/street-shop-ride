@@ -1159,10 +1159,22 @@ function OrderDetail() {
 
         <aside className="space-y-3 lg:sticky lg:top-20 lg:self-start">
           <div className="rounded-2xl border bg-card p-4 text-sm">
-            <Row label="Jumla ndogo" v={formatKES(Number(order.subtotal))} />
-            <Row label="Usafirishaji" v={formatKES(Number(order.delivery_fee))} />
+            <Row label="Bidhaa" v={formatKES(Number(order.subtotal))} />
+            {!negotiated ? (
+              <Row label="Nauli ya boda" v="Itapangwa na muuzaji" />
+            ) : (
+              <>
+                {deliveryFee > 0 && subsidyPct > 0 && subsidyPct < 100 && (
+                  <Row label={`Mchango wa muuzaji (${subsidyPct}%)`} v={`− ${formatKES(deliveryFee - clientBodaShare)}`} />
+                )}
+                <Row
+                  label={subsidyPct >= 100 ? "Boda (muuzaji analipa)" : "Nauli yako kwa boda"}
+                  v={subsidyPct >= 100 ? formatKES(0) : formatKES(clientBodaShare)}
+                />
+              </>
+            )}
             <div className="my-2 border-t" />
-            <Row label="Jumla" v={formatKES(orderTotal)} bold />
+            <Row label="Utalipa muuzaji" v={formatKES(orderTotal)} bold />
           </div>
 
           <div className="rounded-2xl border bg-card p-4 text-sm">
