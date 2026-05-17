@@ -842,15 +842,47 @@ function OrderDetail() {
             )}
             {isSeller && order.status === "accepted" && (
               <div className="space-y-4">
-                <div className="rounded-xl border bg-secondary/50 p-4">
-                  <p className="text-sm font-medium">
-                    Oda imekubaliwa. Sasa tunamsubiri mteja alipe na kutuma proof/reference ya
-                    malipo.
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Ukishapata proof, hatua ya kuhakiki malipo itaonekana hapa moja kwa moja.
-                  </p>
-                </div>
+                {!negotiated ? (
+                  <>
+                    <div className="rounded-xl border bg-warning/10 p-4">
+                      <p className="text-sm font-semibold">Hatua inayofuata: panga nauli ya boda</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Wasiliana na boda kupata bei. Kisha weka nauli + mchango wako (kama upo).
+                        Mteja ataona mchanganuo halisi na atalipa.
+                      </p>
+                    </div>
+                    <DeliveryNegotiationCard
+                      orderId={orderId}
+                      initialFee={deliveryFee}
+                      initialPct={subsidyPct}
+                      onSaved={load}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <div className="rounded-xl border bg-success/10 p-4">
+                      <p className="text-sm font-medium">
+                        Nauli imetumwa kwa mteja. Tunamsubiri alipe.
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Nauli ya boda: <b>{formatKES(deliveryFee)}</b> · Mchango wako: <b>{subsidyPct}%</b>
+                      </p>
+                    </div>
+                    <details>
+                      <summary className="cursor-pointer text-xs text-muted-foreground">
+                        Badilisha nauli au mchango
+                      </summary>
+                      <div className="mt-2">
+                        <DeliveryNegotiationCard
+                          orderId={orderId}
+                          initialFee={deliveryFee}
+                          initialPct={subsidyPct}
+                          onSaved={load}
+                        />
+                      </div>
+                    </details>
+                  </>
+                )}
               </div>
             )}
             {isSeller && order.status === "payment_submitted" && (
