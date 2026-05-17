@@ -37,6 +37,10 @@ import { SellerOfferPanel } from "@/components/SellerOfferPanel";
 import { TrackingMap } from "@/components/TrackingMap";
 import { ReviewPrompt } from "@/components/ReviewPrompt";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { DeliveryNegotiationCard } from "@/components/DeliveryNegotiationCard";
+import { DeliveryBreakdownCard } from "@/components/DeliveryBreakdownCard";
+import { BodaPaymentConfirm } from "@/components/BodaPaymentConfirm";
+import { computeClientShare } from "@/lib/delivery-share";
 import { useTrackOrder } from "@/lib/tracking";
 import { toast } from "sonner";
 
@@ -377,7 +381,12 @@ function OrderDetail() {
   const shopPos = toPoint(shop?.lat, shop?.lng);
   const destinationPos = toPoint(address?.lat, address?.lng);
   const orderTag = `Oda #${order.id.slice(0, 8)}`;
-  const orderTotal = Number(order.subtotal) + Number(order.delivery_fee);
+  const deliveryFee = Number(order.delivery_fee) || 0;
+  const subsidyPct = Number((order as any).delivery_subsidy_pct) || 0;
+  const negotiated = Boolean((order as any).delivery_negotiated);
+  const bodaPaidConfirmed = Boolean((order as any).boda_paid_confirmed);
+  const clientBodaShare = computeClientShare(deliveryFee, subsidyPct);
+  const orderTotal = Number(order.subtotal) + clientBodaShare;
   const mapUrl = buildMapsUrl({ shop: shopPos, destination: destinationPos, rider: riderPos });
 
   // Quick-contact: the most relevant other party for the current user, right now
@@ -558,18 +567,40 @@ function OrderDetail() {
                       </div>
                     )}
 
-                    {order.status === "accepted" && (
+                    {order.status === "accepted" && !negotiated && (
+                      <div className="space-y-3">
+                        <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-4">
+                          <div className="flex items-start gap-3">
+                            <LoaderCircle className="mt-0.5 h-5 w-5 animate-spin text-primary" />
+                            <div>
+                              <p className="font-semibold">Muuzaji anajadiliana na boda…</p>
+                              <p className="mt-1 text-sm text-muted-foreground">
+                                Anatafuta boda na kupanga nauli. Utapata mchanganuo kamili wa bei
+                                (na kama anachangia nauli) hapa hivi karibuni.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        {sellerProfile?.phone && (
+                          <ContactActions
+                            phone={sellerProfile.phone}
+                            label="muuzaji"
+                            message={`${orderTag} — naomba kupata bei`}
+                          />
+                        )}
+                      </div>
+                    )}
+
+                    {order.status === "accepted" && negotiated && (
                       <div className="space-y-3">
                         <p className="text-sm">
-                          Muuzaji amekubali. <b>Lipa sasa</b> kisha tuma uthibitisho wa malipo ili
-                          muuzaji aanze delivery.
+                          Muuzaji amepanga nauli. <b>Lipa sasa</b> kisha tuma uthibitisho.
                         </p>
-                        <div className="rounded-xl border bg-secondary/40 p-3 text-sm">
-                          <p className="font-medium">Uko hatua ya malipo sasa.</p>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            Ukibonyeza hapa chini utafungua sehemu ya kuweka namba ya muamala au kupakia picha ya risiti, kisha oda itahamia kwa muuzaji kuhakiki malipo.
-                          </p>
-                        </div>
+                        <DeliveryBreakdownCard
+                          subtotal={Number(order.subtotal)}
+                          deliveryFee={deliveryFee}
+                          subsidyPct={subsidyPct}
+                        />
                         {lipas.length > 0 ? (
                           <>
                             {lipas.length > 1 && (
@@ -733,13 +764,30 @@ function OrderDetail() {
                     )}
 
                     {order.status === "delivered" && (
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         <p className="text-sm">
                           📬 Boda anasema amekufikishia. Thibitisha umepokea bidhaa.
                         </p>
-                        <Button size="lg" disabled={busy} onClick={() => updateStatus("completed")}>
+                        {subsidyPct < 100 && clientBodaShare > 0 && (
+                          <BodaPaymentConfirm
+                            orderId={orderId}
+                            clientShare={clientBodaShare}
+                            confirmed={bodaPaidConfirmed}
+                            onConfirmed={load}
+                          />
+                        )}
+                        <Button
+                          size="lg"
+                          disabled={busy || (subsidyPct < 100 && clientBodaShare > 0 && !bodaPaidConfirmed)}
+                          onClick={() => updateStatus("completed")}
+                        >
                           ✓ Nimepokea bidhaa — kamilisha
                         </Button>
+                        {subsidyPct < 100 && clientBodaShare > 0 && !bodaPaidConfirmed && (
+                          <p className="text-xs text-muted-foreground">
+                            Thibitisha kwanza umemkabidhi boda nauli yake ili kukamilisha.
+                          </p>
+                        )}
                         {riderPhone && (
                           <ContactActions
                             phone={riderPhone}
@@ -794,15 +842,47 @@ function OrderDetail() {
             )}
             {isSeller && order.status === "accepted" && (
               <div className="space-y-4">
-                <div className="rounded-xl border bg-secondary/50 p-4">
-                  <p className="text-sm font-medium">
-                    Oda imekubaliwa. Sasa tunamsubiri mteja alipe na kutuma proof/reference ya
-                    malipo.
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Ukishapata proof, hatua ya kuhakiki malipo itaonekana hapa moja kwa moja.
-                  </p>
-                </div>
+                {!negotiated ? (
+                  <>
+                    <div className="rounded-xl border bg-warning/10 p-4">
+                      <p className="text-sm font-semibold">Hatua inayofuata: panga nauli ya boda</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Wasiliana na boda kupata bei. Kisha weka nauli + mchango wako (kama upo).
+                        Mteja ataona mchanganuo halisi na atalipa.
+                      </p>
+                    </div>
+                    <DeliveryNegotiationCard
+                      orderId={orderId}
+                      initialFee={deliveryFee}
+                      initialPct={subsidyPct}
+                      onSaved={load}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <div className="rounded-xl border bg-success/10 p-4">
+                      <p className="text-sm font-medium">
+                        Nauli imetumwa kwa mteja. Tunamsubiri alipe.
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Nauli ya boda: <b>{formatKES(deliveryFee)}</b> · Mchango wako: <b>{subsidyPct}%</b>
+                      </p>
+                    </div>
+                    <details>
+                      <summary className="cursor-pointer text-xs text-muted-foreground">
+                        Badilisha nauli au mchango
+                      </summary>
+                      <div className="mt-2">
+                        <DeliveryNegotiationCard
+                          orderId={orderId}
+                          initialFee={deliveryFee}
+                          initialPct={subsidyPct}
+                          onSaved={load}
+                        />
+                      </div>
+                    </details>
+                  </>
+                )}
               </div>
             )}
             {isSeller && order.status === "payment_submitted" && (
@@ -1079,10 +1159,22 @@ function OrderDetail() {
 
         <aside className="space-y-3 lg:sticky lg:top-20 lg:self-start">
           <div className="rounded-2xl border bg-card p-4 text-sm">
-            <Row label="Jumla ndogo" v={formatKES(Number(order.subtotal))} />
-            <Row label="Usafirishaji" v={formatKES(Number(order.delivery_fee))} />
+            <Row label="Bidhaa" v={formatKES(Number(order.subtotal))} />
+            {!negotiated ? (
+              <Row label="Nauli ya boda" v="Itapangwa na muuzaji" />
+            ) : (
+              <>
+                {deliveryFee > 0 && subsidyPct > 0 && subsidyPct < 100 && (
+                  <Row label={`Mchango wa muuzaji (${subsidyPct}%)`} v={`− ${formatKES(deliveryFee - clientBodaShare)}`} />
+                )}
+                <Row
+                  label={subsidyPct >= 100 ? "Boda (muuzaji analipa)" : "Nauli yako kwa boda"}
+                  v={subsidyPct >= 100 ? formatKES(0) : formatKES(clientBodaShare)}
+                />
+              </>
+            )}
             <div className="my-2 border-t" />
-            <Row label="Jumla" v={formatKES(orderTotal)} bold />
+            <Row label="Utalipa muuzaji" v={formatKES(orderTotal)} bold />
           </div>
 
           <div className="rounded-2xl border bg-card p-4 text-sm">
