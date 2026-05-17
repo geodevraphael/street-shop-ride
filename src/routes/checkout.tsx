@@ -294,11 +294,11 @@ function Checkout() {
   );
 }
 
-function Row({ label, v, bold }: { label: string; v: string; bold?: boolean }) {
+function Row({ label, v, bold, muted }: { label: string; v: string; bold?: boolean; muted?: boolean }) {
   return (
     <div className={`flex justify-between ${bold ? "font-semibold" : ""}`}>
       <span className="text-muted-foreground">{label}</span>
-      <span>{v}</span>
+      <span className={muted ? "text-muted-foreground italic" : ""}>{v}</span>
     </div>
   );
 }
