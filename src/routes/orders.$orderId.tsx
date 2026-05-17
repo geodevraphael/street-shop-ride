@@ -764,13 +764,30 @@ function OrderDetail() {
                     )}
 
                     {order.status === "delivered" && (
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         <p className="text-sm">
                           📬 Boda anasema amekufikishia. Thibitisha umepokea bidhaa.
                         </p>
-                        <Button size="lg" disabled={busy} onClick={() => updateStatus("completed")}>
+                        {subsidyPct < 100 && clientBodaShare > 0 && (
+                          <BodaPaymentConfirm
+                            orderId={orderId}
+                            clientShare={clientBodaShare}
+                            confirmed={bodaPaidConfirmed}
+                            onConfirmed={load}
+                          />
+                        )}
+                        <Button
+                          size="lg"
+                          disabled={busy || (subsidyPct < 100 && clientBodaShare > 0 && !bodaPaidConfirmed)}
+                          onClick={() => updateStatus("completed")}
+                        >
                           ✓ Nimepokea bidhaa — kamilisha
                         </Button>
+                        {subsidyPct < 100 && clientBodaShare > 0 && !bodaPaidConfirmed && (
+                          <p className="text-xs text-muted-foreground">
+                            Thibitisha kwanza umemkabidhi boda nauli yake ili kukamilisha.
+                          </p>
+                        )}
                         {riderPhone && (
                           <ContactActions
                             phone={riderPhone}
