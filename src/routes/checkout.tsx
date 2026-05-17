@@ -157,7 +157,9 @@ function Checkout() {
         shop_id: items[0].shopId,
         address_id: addressId,
         subtotal,
-        delivery_fee: fare.fee,
+        delivery_fee: 0, // negotiated by seller after acceptance
+        delivery_subsidy_pct: 0,
+        delivery_negotiated: false,
         distance_km: fare.km,
         eta_min: fare.min,
       })
