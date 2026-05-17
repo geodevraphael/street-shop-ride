@@ -381,7 +381,12 @@ function OrderDetail() {
   const shopPos = toPoint(shop?.lat, shop?.lng);
   const destinationPos = toPoint(address?.lat, address?.lng);
   const orderTag = `Oda #${order.id.slice(0, 8)}`;
-  const orderTotal = Number(order.subtotal) + Number(order.delivery_fee);
+  const deliveryFee = Number(order.delivery_fee) || 0;
+  const subsidyPct = Number((order as any).delivery_subsidy_pct) || 0;
+  const negotiated = Boolean((order as any).delivery_negotiated);
+  const bodaPaidConfirmed = Boolean((order as any).boda_paid_confirmed);
+  const clientBodaShare = computeClientShare(deliveryFee, subsidyPct);
+  const orderTotal = Number(order.subtotal) + clientBodaShare;
   const mapUrl = buildMapsUrl({ shop: shopPos, destination: destinationPos, rider: riderPos });
 
   // Quick-contact: the most relevant other party for the current user, right now
