@@ -567,18 +567,40 @@ function OrderDetail() {
                       </div>
                     )}
 
-                    {order.status === "accepted" && (
+                    {order.status === "accepted" && !negotiated && (
+                      <div className="space-y-3">
+                        <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-4">
+                          <div className="flex items-start gap-3">
+                            <LoaderCircle className="mt-0.5 h-5 w-5 animate-spin text-primary" />
+                            <div>
+                              <p className="font-semibold">Muuzaji anajadiliana na boda…</p>
+                              <p className="mt-1 text-sm text-muted-foreground">
+                                Anatafuta boda na kupanga nauli. Utapata mchanganuo kamili wa bei
+                                (na kama anachangia nauli) hapa hivi karibuni.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        {sellerProfile?.phone && (
+                          <ContactActions
+                            phone={sellerProfile.phone}
+                            label="muuzaji"
+                            message={`${orderTag} — naomba kupata bei`}
+                          />
+                        )}
+                      </div>
+                    )}
+
+                    {order.status === "accepted" && negotiated && (
                       <div className="space-y-3">
                         <p className="text-sm">
-                          Muuzaji amekubali. <b>Lipa sasa</b> kisha tuma uthibitisho wa malipo ili
-                          muuzaji aanze delivery.
+                          Muuzaji amepanga nauli. <b>Lipa sasa</b> kisha tuma uthibitisho.
                         </p>
-                        <div className="rounded-xl border bg-secondary/40 p-3 text-sm">
-                          <p className="font-medium">Uko hatua ya malipo sasa.</p>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            Ukibonyeza hapa chini utafungua sehemu ya kuweka namba ya muamala au kupakia picha ya risiti, kisha oda itahamia kwa muuzaji kuhakiki malipo.
-                          </p>
-                        </div>
+                        <DeliveryBreakdownCard
+                          subtotal={Number(order.subtotal)}
+                          deliveryFee={deliveryFee}
+                          subsidyPct={subsidyPct}
+                        />
                         {lipas.length > 0 ? (
                           <>
                             {lipas.length > 1 && (
