@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,14 @@ import { WizardStepper } from "@/components/WizardStepper";
 import { GeoAverager } from "@/components/GeoAverager";
 import { uploadFile } from "@/lib/upload";
 import { OrderStatusPill } from "@/components/OrderStatusPill";
-import { ShieldCheck, Locate, Radio, Package, CheckCircle2, Bike, AlertCircle, Star, TrendingUp, Calendar } from "lucide-react";
+import {
+  ShieldCheck, Locate, Radio, Package, CheckCircle2, Bike, AlertCircle,
+  Star, TrendingUp, Calendar, Navigation, Store, User as UserIcon, BellRing, Volume2,
+} from "lucide-react";
 import { useBroadcastPosition } from "@/lib/tracking";
+import {
+  alertUser, ringAlert, stopAlert, requestNotifPermission, notifPermission, playAlertOnce,
+} from "@/lib/notify";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/rider/")({ component: RiderHome });
@@ -27,6 +33,13 @@ function RiderHome() {
   const [openOrders, setOpenOrders] = useState<any[]>([]);
   const [busy, setBusy] = useState(false);
   const [earnings, setEarnings] = useState({ today: 0, week: 0, todayCount: 0 });
+  const [notifState, setNotifState] = useState<NotificationPermission | "unsupported">("default");
+  const knownOrderIds = useRef<Set<string>>(new Set());
+  const knownPickedUp = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    setNotifState(notifPermission());
+  }, []);
 
   const load = async () => {
     if (!user) return;
@@ -40,7 +53,7 @@ function RiderHome() {
       const [{ data: o }, { data: done }] = await Promise.all([
         supabase
           .from("orders")
-          .select("*, shops(name, lat, lng)")
+          .select("*, shops(name, lat, lng, street)")
           .eq("rider_id", data.id)
           .not("status", "in", "(completed,cancelled)")
           .order("created_at", { ascending: false }),
@@ -51,7 +64,24 @@ function RiderHome() {
           .in("status", ["delivered", "completed"])
           .gte("created_at", startWeek),
       ]);
-      setOpenOrders(o ?? []);
+      // Fetch destination addresses for currently open orders (no FK so we
+      // can't embed). Merge into each order under `address`.
+      let openWithAddresses = o ?? [];
+      const addressIds = Array.from(
+        new Set((o ?? []).map((x: any) => x.address_id).filter(Boolean)),
+      );
+      if (addressIds.length) {
+        const { data: addrs } = await supabase
+          .from("addresses")
+          .select("id, label, street, lat, lng")
+          .in("id", addressIds);
+        const byId = new Map((addrs ?? []).map((a: any) => [a.id, a]));
+        openWithAddresses = (o ?? []).map((x: any) => ({
+          ...x,
+          address: x.address_id ? byId.get(x.address_id) ?? null : null,
+        }));
+      }
+      setOpenOrders(openWithAddresses);
       const all = done ?? [];
       setEarnings({
         today: all.filter((x: any) => x.created_at >= startToday).reduce((s: number, x: any) => s + Number(x.delivery_fee), 0),
@@ -63,21 +93,55 @@ function RiderHome() {
 
   useEffect(() => { load(); }, [user]);
 
-  // Realtime: refresh when any assigned order changes
+  // Realtime: refresh + ring on new assignment / status flip to picked_up.
   useEffect(() => {
     if (!rider) return;
     const ch = supabase
       .channel(`rider-orders-${rider.id}`)
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders", filter: `rider_id=eq.${rider.id}` }, () => load())
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "orders", filter: `rider_id=eq.${rider.id}` },
+        (payload: any) => {
+          const next = payload.new;
+          if (next?.status === "rider_assigned" && !knownOrderIds.current.has(next.id)) {
+            knownOrderIds.current.add(next.id);
+            alertUser(
+              "🛵 Oda mpya imekuja!",
+              `Oda #${String(next.id).slice(0, 8)} imekupatia. Nenda dukani uokote.`,
+              `/orders/${next.id}`,
+            );
+          }
+          load();
+        },
+      )
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => { supabase.removeChannel(ch); stopAlert(); };
+    // eslint-disable-next-line
   }, [rider?.id]);
+
+  // Seed known ids so first load doesn't fire alerts for pre-existing orders.
+  useEffect(() => {
+    openOrders.forEach((o) => {
+      if (o.status === "rider_assigned") knownOrderIds.current.add(o.id);
+      if (o.status === "picked_up") knownPickedUp.current.add(o.id);
+    });
+  }, [openOrders]);
+
+  const enableAlerts = async () => {
+    const ok = await requestNotifPermission();
+    setNotifState(notifPermission());
+    // Prime the audio engine on the same user-gesture so future rings work.
+    playAlertOnce();
+    if (ok) toast.success("Arifa zimewashwa — utasikia sauti oda ikija");
+    else toast.error("Ruhusa imekataliwa. Wezesha arifa kwenye mipangilio ya simu.");
+  };
 
   const updateOrderStatus = async (orderId: string, status: RiderOrderStatus) => {
     setBusy(true);
     const { error } = await supabase.from("orders").update({ status }).eq("id", orderId);
     setBusy(false);
     if (error) return toast.error(error.message);
+    stopAlert();
     toast.success(status === "picked_up" ? "✅ Imeokotwa — safari imeanza!" : "🎉 Imefika — kazi nzuri!");
     load();
   };
@@ -105,6 +169,34 @@ function RiderHome() {
 
   return (
     <div className="space-y-4">
+      {/* Notification permission banner */}
+      {notifState !== "granted" && notifState !== "unsupported" && (
+        <button
+          onClick={enableAlerts}
+          className="w-full rounded-2xl border-2 border-dashed border-primary bg-primary/5 p-3 text-left transition hover:bg-primary/10"
+        >
+          <div className="flex items-center gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground">
+              <BellRing className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold">Wezesha arifa za sauti</p>
+              <p className="text-xs text-muted-foreground">Bonyeza ili usikie mlio oda mpya ikija — hata simu ikiwa imefungwa.</p>
+            </div>
+          </div>
+        </button>
+      )}
+      {notifState === "granted" && (
+        <div className="flex items-center justify-between rounded-xl border bg-success/10 px-3 py-2 text-xs">
+          <span className="flex items-center gap-2 text-success">
+            <BellRing className="h-3.5 w-3.5" /> Arifa zimewashwa
+          </span>
+          <button onClick={playAlertOnce} className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
+            <Volume2 className="h-3.5 w-3.5" /> Jaribu sauti
+          </button>
+        </div>
+      )}
+
       {/* Rider profile card */}
       <div className="rounded-2xl border bg-card p-4">
         <div className="flex items-center justify-between">
@@ -151,66 +243,23 @@ function RiderHome() {
         </div>
       </div>
 
-      {/* LIVE BROADCAST — active delivery in progress */}
+      {/* STEP 2 — Active delivery: heading to customer */}
       {activeDelivery && (
-        <div className="space-y-3">
-          <LiveBroadcastCard orderId={activeDelivery.id} riderId={rider.id} />
-          <div className="rounded-2xl border-2 border-warning bg-warning/10 p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Bike className="h-5 w-5 text-warning" />
-              <h3 className="font-bold text-base">Unasafirisha sasa hivi</h3>
-            </div>
-            <p className="text-sm text-muted-foreground mb-1">
-              <span className="font-medium text-foreground">{activeDelivery.shops?.name}</span>
-              {" → Mteja"}
-            </p>
-            <p className="text-xs text-muted-foreground mb-3">Oda #{activeDelivery.id.slice(0, 8)}</p>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                id={`delivered-btn-${activeDelivery.id}`}
-                size="lg"
-                disabled={busy}
-                onClick={() => updateOrderStatus(activeDelivery.id, "delivered")}
-                className="gap-2"
-              >
-                <CheckCircle2 className="h-4 w-4" />
-                Nimemfikishia mteja
-              </Button>
-              <Link to="/orders/$orderId" params={{ orderId: activeDelivery.id }}>
-                <Button variant="outline" size="lg">Maelezo zaidi</Button>
-              </Link>
-            </div>
-          </div>
-        </div>
+        <ActiveDeliveryCard
+          order={activeDelivery}
+          riderId={rider.id}
+          busy={busy}
+          onDelivered={() => updateOrderStatus(activeDelivery.id, "delivered")}
+        />
       )}
 
-      {/* PENDING PICKUP — assigned but not yet picked up */}
+      {/* STEP 1 — Assigned: pick up at the shop */}
       {pendingPickup && !activeDelivery && (
-        <div className="rounded-2xl border-2 border-primary bg-primary/5 p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <AlertCircle className="h-5 w-5 text-primary animate-pulse" />
-            <h3 className="font-bold text-base">Oda inakusubiri!</h3>
-          </div>
-          <p className="text-sm text-muted-foreground mb-1">
-            Nenda <span className="font-medium text-foreground">{pendingPickup.shops?.name}</span> uokote bidhaa
-          </p>
-          <p className="text-xs text-muted-foreground mb-3">Oda #{pendingPickup.id.slice(0, 8)}</p>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              id={`pickup-btn-${pendingPickup.id}`}
-              size="lg"
-              disabled={busy}
-              onClick={() => updateOrderStatus(pendingPickup.id, "picked_up")}
-              className="gap-2"
-            >
-              <Package className="h-4 w-4" />
-              Nimeokota — anza safari
-            </Button>
-            <Link to="/orders/$orderId" params={{ orderId: pendingPickup.id }}>
-              <Button variant="outline" size="lg">Maelezo zaidi</Button>
-            </Link>
-          </div>
-        </div>
+        <PendingPickupCard
+          order={pendingPickup}
+          busy={busy}
+          onPickedUp={() => updateOrderStatus(pendingPickup.id, "picked_up")}
+        />
       )}
 
       {/* Subscription status */}
@@ -253,11 +302,153 @@ function RiderHome() {
         <div className="rounded-2xl border bg-card p-6 text-center text-sm text-muted-foreground">
           <Bike className="mx-auto mb-2 h-8 w-8 opacity-30" />
           Hakuna oda kwa sasa. Weka "Niko tayari" ili muuzaji akupate.
+          <div className="mt-3">
+            <Link to="/rider/board"><Button size="sm" variant="outline">Tazama ubao wa kazi</Button></Link>
+          </div>
         </div>
       )}
     </div>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/* Step 1 — Pickup at shop                                              */
+/* ------------------------------------------------------------------ */
+
+function PendingPickupCard({
+  order, busy, onPickedUp,
+}: { order: any; busy: boolean; onPickedUp: () => void }) {
+  const shopLat = order.shops?.lat;
+  const shopLng = order.shops?.lng;
+  const hasShopGeo = Number.isFinite(shopLat) && Number.isFinite(shopLng);
+  const dirUrl = hasShopGeo
+    ? `https://www.google.com/maps/dir/?api=1&destination=${shopLat},${shopLng}&travelmode=driving`
+    : null;
+
+  return (
+    <div className="overflow-hidden rounded-2xl border-2 border-primary bg-primary/5">
+      <div className="flex items-center gap-2 bg-primary px-4 py-2 text-primary-foreground">
+        <AlertCircle className="h-4 w-4 animate-pulse" />
+        <span className="text-sm font-bold uppercase tracking-wide">Hatua 1 ya 2 · Nenda Dukani</span>
+      </div>
+      <div className="p-4">
+        <div className="flex items-start gap-3">
+          <div className="grid h-12 w-12 place-items-center rounded-xl bg-primary text-primary-foreground">
+            <Store className="h-6 w-6" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs uppercase text-muted-foreground">Okota kwenye duka</p>
+            <p className="text-base font-bold">{order.shops?.name ?? "Duka"}</p>
+            {order.shops?.street && <p className="text-xs text-muted-foreground">{order.shops.street}</p>}
+            <p className="mt-1 text-xs text-muted-foreground">Oda #{order.id.slice(0, 8)}</p>
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-2">
+          {dirUrl ? (
+            <a href={dirUrl} target="_blank" rel="noreferrer">
+              <Button size="lg" className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+                <Navigation className="h-5 w-5" /> Pata mwelekeo wa duka
+              </Button>
+            </a>
+          ) : (
+            <Button size="lg" disabled className="w-full gap-2">
+              <Navigation className="h-5 w-5" /> Eneo la duka halijapatikana
+            </Button>
+          )}
+          <Button
+            id={`pickup-btn-${order.id}`}
+            size="lg"
+            variant="outline"
+            disabled={busy}
+            onClick={onPickedUp}
+            className="w-full gap-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+          >
+            <Package className="h-5 w-5" /> Nimeokota — anza safari
+          </Button>
+          <Link to="/orders/$orderId" params={{ orderId: order.id }}>
+            <Button variant="ghost" size="sm" className="w-full">Maelezo zaidi ya oda</Button>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Step 2 — Deliver to customer                                         */
+/* ------------------------------------------------------------------ */
+
+function ActiveDeliveryCard({
+  order, riderId, busy, onDelivered,
+}: { order: any; riderId: string; busy: boolean; onDelivered: () => void }) {
+  const destLat = order.address?.lat;
+  const destLng = order.address?.lng;
+  const hasDestGeo = Number.isFinite(destLat) && Number.isFinite(destLng);
+  const dirUrl = hasDestGeo
+    ? `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}&travelmode=driving`
+    : null;
+
+  return (
+    <div className="space-y-3">
+      <LiveBroadcastCard orderId={order.id} riderId={riderId} />
+      <div className="overflow-hidden rounded-2xl border-2 border-warning bg-warning/10">
+        <div className="flex items-center gap-2 bg-warning px-4 py-2 text-warning-foreground">
+          <Bike className="h-4 w-4" />
+          <span className="text-sm font-bold uppercase tracking-wide">Hatua 2 ya 2 · Nenda kwa Mteja</span>
+        </div>
+        <div className="p-4">
+          <div className="flex items-start gap-3">
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-warning text-warning-foreground">
+              <UserIcon className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs uppercase text-muted-foreground">Mfikishe mteja</p>
+              <p className="text-base font-bold">
+                {order.address?.label ?? "Mteja"}
+              </p>
+              {order.address?.street && (
+                <p className="text-xs text-muted-foreground">{order.address.street}</p>
+              )}
+              <p className="mt-1 text-xs text-muted-foreground">Oda #{order.id.slice(0, 8)}</p>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-2">
+            {dirUrl ? (
+              <a href={dirUrl} target="_blank" rel="noreferrer">
+                <Button size="lg" className="w-full gap-2 bg-warning text-warning-foreground hover:bg-warning/90">
+                  <Navigation className="h-5 w-5" /> Pata mwelekeo kwa mteja
+                </Button>
+              </a>
+            ) : (
+              <Button size="lg" disabled className="w-full gap-2">
+                <Navigation className="h-5 w-5" /> Eneo la mteja halijapatikana
+              </Button>
+            )}
+            <Button
+              id={`delivered-btn-${order.id}`}
+              size="lg"
+              variant="outline"
+              disabled={busy}
+              onClick={onDelivered}
+              className="w-full gap-2 border-warning text-warning-foreground hover:bg-warning hover:text-warning-foreground"
+            >
+              <CheckCircle2 className="h-5 w-5" /> Nimemfikishia mteja
+            </Button>
+            <Link to="/orders/$orderId" params={{ orderId: order.id }}>
+              <Button variant="ghost" size="sm" className="w-full">Maelezo zaidi ya oda</Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Onboarding wizard                                                    */
+/* ------------------------------------------------------------------ */
 
 function RiderWizard({ onDone }: { onDone: () => void }) {
   const { user } = useAuth();
