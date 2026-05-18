@@ -8,9 +8,11 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { Toaster } from "sonner";
+import { useEffect } from "react";
 
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { SplashScreen } from "@/components/SplashScreen";
+import { registerAlertServiceWorker } from "@/lib/notify";
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
@@ -126,6 +128,19 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    registerAlertServiceWorker();
+    if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+      const handler = (e: MessageEvent) => {
+        if (e.data?.type === "navigate" && typeof e.data.url === "string") {
+          window.location.href = e.data.url;
+        }
+      };
+      navigator.serviceWorker.addEventListener("message", handler);
+      return () => navigator.serviceWorker.removeEventListener("message", handler);
+    }
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
