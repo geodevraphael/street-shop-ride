@@ -11,6 +11,7 @@ import { Toaster } from "sonner";
 import { useEffect } from "react";
 
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { NativeAppRuntime } from "@/components/NativeAppRuntime";
 import { SplashScreen } from "@/components/SplashScreen";
 import { registerAlertServiceWorker } from "@/lib/notify";
 import appCss from "../styles.css?url";
@@ -78,22 +79,43 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#f08a3c" },
+      { name: "color-scheme", content: "light dark" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "apple-mobile-web-app-title", content: "Soko" },
       { title: "Soko — Buy local, deliver fast" },
-      { name: "description", content: "Order from local shops, pay with Lipa, get it delivered by nearby boda boda riders." },
+      {
+        name: "description",
+        content:
+          "Order from local shops, pay with Lipa, get it delivered by nearby boda boda riders.",
+      },
       { name: "author", content: "Soko" },
       { property: "og:title", content: "Soko — Buy local, deliver fast" },
-      { property: "og:description", content: "Order from local shops, pay with Lipa, get it delivered by nearby boda boda riders." },
+      {
+        property: "og:description",
+        content:
+          "Order from local shops, pay with Lipa, get it delivered by nearby boda boda riders.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "Soko — Buy local, deliver fast" },
-      { name: "twitter:description", content: "Order from local shops, pay with Lipa, get it delivered by nearby boda boda riders." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/1fd3b425-f7a9-4f9e-b6ca-ed04518033ab" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/1fd3b425-f7a9-4f9e-b6ca-ed04518033ab" },
+      {
+        name: "twitter:description",
+        content:
+          "Order from local shops, pay with Lipa, get it delivered by nearby boda boda riders.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/1fd3b425-f7a9-4f9e-b6ca-ed04518033ab",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/1fd3b425-f7a9-4f9e-b6ca-ed04518033ab",
+      },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -103,7 +125,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", type: "image/png", sizes: "512x512", href: "/icon-512.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
+      },
     ],
   }),
   shellComponent: RootShell,
@@ -146,6 +171,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <Outlet />
       <Toaster richColors position="top-center" />
+      <NativeAppRuntime />
       <InstallPrompt />
       <SplashScreen />
     </QueryClientProvider>

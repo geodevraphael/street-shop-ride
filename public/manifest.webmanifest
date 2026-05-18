@@ -1,5 +1,6 @@
 {
-  "name": "Soko — Buy local, deliver fast",
+  "id": "/",
+  "name": "Soko - Buy local, deliver fast",
   "short_name": "Soko",
   "description": "Order from local shops, pay with Lipa, get it delivered by nearby boda boda riders.",
   "start_url": "/",
@@ -9,8 +10,24 @@
   "orientation": "portrait",
   "background_color": "#fdfbf7",
   "theme_color": "#F97316",
+  "categories": ["shopping", "food", "business", "navigation"],
+  "prefer_related_applications": false,
   "icons": [
     { "src": "/icon-192.png", "type": "image/png", "sizes": "192x192", "purpose": "any maskable" },
     { "src": "/icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "My Orders",
+      "short_name": "Orders",
+      "url": "/orders",
+      "icons": [{ "src": "/icon-192.png", "type": "image/png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Find Shops",
+      "short_name": "Shops",
+      "url": "/shops",
+      "icons": [{ "src": "/icon-192.png", "type": "image/png", "sizes": "192x192" }]
+    }
   ]
 }
