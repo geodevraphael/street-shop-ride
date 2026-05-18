@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.soko.streetshopride",
+      "sha256_cert_fingerprints": [
+        "C9:DA:53:ED:6C:CF:1B:13:EA:25:8C:D0:28:98:E5:34:4B:6E:2C:E8:71:3A:47:59:93:47:41:E2:FA:E2:37:34"
+      ]
+    }
+  }
+]
