@@ -13,7 +13,7 @@ import { uploadFile } from "@/lib/upload";
 import { OrderStatusPill } from "@/components/OrderStatusPill";
 import {
   ShieldCheck, Locate, Radio, Package, CheckCircle2, Bike, AlertCircle,
-  Star, TrendingUp, Calendar, Navigation, Store, User as UserIcon, BellRing, BellOff, Volume2,
+  Star, TrendingUp, Calendar, Navigation, Store, User as UserIcon, BellRing, Volume2,
 } from "lucide-react";
 import { useBroadcastPosition } from "@/lib/tracking";
 import {
@@ -53,7 +53,7 @@ function RiderHome() {
       const [{ data: o }, { data: done }] = await Promise.all([
         supabase
           .from("orders")
-          .select("*, shops(name, lat, lng, street), addresses(label, street, lat, lng)")
+          .select("*, shops(name, lat, lng, street)")
           .eq("rider_id", data.id)
           .not("status", "in", "(completed,cancelled)")
           .order("created_at", { ascending: false }),
@@ -64,7 +64,24 @@ function RiderHome() {
           .in("status", ["delivered", "completed"])
           .gte("created_at", startWeek),
       ]);
-      setOpenOrders(o ?? []);
+      // Fetch destination addresses for currently open orders (no FK so we
+      // can't embed). Merge into each order under `address`.
+      let openWithAddresses = o ?? [];
+      const addressIds = Array.from(
+        new Set((o ?? []).map((x: any) => x.address_id).filter(Boolean)),
+      );
+      if (addressIds.length) {
+        const { data: addrs } = await supabase
+          .from("addresses")
+          .select("id, label, street, lat, lng")
+          .in("id", addressIds);
+        const byId = new Map((addrs ?? []).map((a: any) => [a.id, a]));
+        openWithAddresses = (o ?? []).map((x: any) => ({
+          ...x,
+          address: x.address_id ? byId.get(x.address_id) ?? null : null,
+        }));
+      }
+      setOpenOrders(openWithAddresses);
       const all = done ?? [];
       setEarnings({
         today: all.filter((x: any) => x.created_at >= startToday).reduce((s: number, x: any) => s + Number(x.delivery_fee), 0),
@@ -365,8 +382,8 @@ function PendingPickupCard({
 function ActiveDeliveryCard({
   order, riderId, busy, onDelivered,
 }: { order: any; riderId: string; busy: boolean; onDelivered: () => void }) {
-  const destLat = order.addresses?.lat;
-  const destLng = order.addresses?.lng;
+  const destLat = order.address?.lat;
+  const destLng = order.address?.lng;
   const hasDestGeo = Number.isFinite(destLat) && Number.isFinite(destLng);
   const dirUrl = hasDestGeo
     ? `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}&travelmode=driving`
