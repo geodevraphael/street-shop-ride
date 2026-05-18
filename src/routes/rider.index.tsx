@@ -405,10 +405,10 @@ function ActiveDeliveryCard({
             <div className="min-w-0 flex-1">
               <p className="text-xs uppercase text-muted-foreground">Mfikishe mteja</p>
               <p className="text-base font-bold">
-                {order.addresses?.label ?? "Mteja"}
+                {order.address?.label ?? "Mteja"}
               </p>
-              {order.addresses?.street && (
-                <p className="text-xs text-muted-foreground">{order.addresses.street}</p>
+              {order.address?.street && (
+                <p className="text-xs text-muted-foreground">{order.address.street}</p>
               )}
               <p className="mt-1 text-xs text-muted-foreground">Oda #{order.id.slice(0, 8)}</p>
             </div>
